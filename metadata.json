@@ -1,0 +1,7 @@
+{
+  "name": "MetroNav Delhi-NCR",
+  "description": "Real-time multi-modal transit navigation, live metro & bus schedules, expected delays, and introvert-friendly first/last mile guide for Delhi and Gurgaon.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
