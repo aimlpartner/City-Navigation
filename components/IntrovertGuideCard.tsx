@@ -158,11 +158,11 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
             {routeAlerts.slice(0, 1).map(alert => (
               <div
                 key={alert.id}
-                className="p-2.5 sm:p-3 rounded-xl bg-amber-500/15 border border-amber-400/30 text-xs text-amber-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
+                className="p-2.5 sm:p-3 rounded-xl bg-amber-500/15 border border-amber-400/30 text-xs text-amber-100 flex items-center justify-between gap-2.5 overflow-hidden"
               >
-                <div className="flex items-start sm:items-center gap-2">
-                  <Flame className="w-4 h-4 text-amber-300 shrink-0 mt-0.5 sm:mt-0" strokeWidth={1.75} />
-                  <span className="font-medium leading-relaxed">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <Flame className="w-4 h-4 text-amber-300 shrink-0" strokeWidth={1.75} />
+                  <span className="font-medium leading-relaxed truncate">
                     <strong className="text-amber-200 font-bold">Live Advisory:</strong> {alert.title} — {alert.impact}
                   </span>
                 </div>
@@ -170,9 +170,9 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
                 {onOpenTransitRadar && (
                   <button
                     onClick={onOpenTransitRadar}
-                    className="self-end sm:self-auto px-2.5 py-1 rounded-lg bg-amber-400/20 hover:bg-amber-400/30 text-amber-200 border border-amber-400/30 font-bold shrink-0 text-[11px] transition flex items-center gap-1.5"
+                    className="px-2.5 py-1 rounded-lg bg-amber-400/20 hover:bg-amber-400/30 text-amber-200 border border-amber-400/30 font-bold shrink-0 text-[11px] whitespace-nowrap transition flex items-center gap-1.5"
                   >
-                    <Radar className="w-3 h-3 text-amber-300" strokeWidth={1.75} />
+                    <Radar className="w-3 h-3 text-amber-300 shrink-0" strokeWidth={1.75} />
                     <span>Radar</span>
                   </button>
                 )}
@@ -550,8 +550,8 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
       <div className="rounded-2xl bg-white border border-[#E2E4DC] p-6 sm:p-7 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#143428] flex items-center justify-center font-bold text-white shadow-xs">
-              <Sparkle className="w-4 h-4 text-emerald-300" strokeWidth={1.75} />
+            <div className="w-8 h-8 rounded-xl bg-[#143428] flex items-center justify-center font-bold text-white shadow-xs shrink-0">
+              <Sparkle className="w-4 h-4 text-emerald-300 shrink-0" strokeWidth={1.75} />
             </div>
             <div>
               <h3 className="text-sm font-bold text-[#17201B] font-sans">

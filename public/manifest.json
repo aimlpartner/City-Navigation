@@ -1,0 +1,63 @@
+{
+  "name": "MetroNav Delhi-NCR | Live Transit & Introvert Guide",
+  "short_name": "MetroNav",
+  "description": "Real-time multi-modal transit navigation, live metro & bus schedules, expected delays, and introvert-friendly first/last mile guide for Delhi and Gurgaon.",
+  "start_url": "/",
+  "id": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "window-controls-overlay", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#143428",
+  "theme_color": "#143428",
+  "lang": "en",
+  "categories": ["travel", "navigation", "transportation"],
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Live Transit Radar",
+      "short_name": "Transit Radar",
+      "description": "View live metro line status and delays",
+      "url": "/?view=radar",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Search Destination",
+      "short_name": "Search",
+      "description": "Find nearest metro station and quiet exit gates",
+      "url": "/?view=search",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

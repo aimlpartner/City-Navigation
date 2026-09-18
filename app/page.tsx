@@ -13,6 +13,7 @@ import { MapComponent } from '@/components/MapComponent';
 import { IntrovertGuideCard } from '@/components/IntrovertGuideCard';
 import { CityQuickGuide } from '@/components/CityQuickGuide';
 import { LiveTransitRadarModal } from '@/components/LiveTransitRadarModal';
+import { MobileAppShell } from '@/components/MobileAppShell';
 import {
   TrainFront,
   Radar,
@@ -36,8 +37,11 @@ import {
   X,
   ChevronRight,
   Plane,
-  Compass
+  Compass,
+  Download
 } from 'lucide-react';
+import { triggerPwaInstall } from '@/components/PwaInstallPrompt';
+
 
 const COMMON_ORIGINS = [
   { name: 'DLF Cyber City, Gurgaon', lat: 28.4950, lng: 77.0890 },
@@ -315,13 +319,42 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F5F0] text-[#17201B] antialiased selection:bg-[#143428] selection:text-white pb-20 relative overflow-x-hidden">
-      {/* Top Application Header */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-[#E2E4DC] shadow-xs">
+    <>
+      {/* Mobile-First Experience (<1024px) */}
+      <MobileAppShell
+        originName={originName}
+        originCoords={originCoords}
+        selectedDestination={selectedDestination}
+        tripPlan={tripPlan}
+        aiGuide={aiGuide}
+        isDetectingLocation={isDetectingLocation}
+        onDetectLocation={handleDetectLocation}
+        onSelectOrigin={(name, coords) => {
+          setOriginName(name);
+          setOriginCoords(coords);
+        }}
+        onSelectDestination={handleSelectFamousDest}
+        onOpenTransitRadar={() => setIsTransitRadarOpen(true)}
+        onRequestAiRefresh={() => {
+          if (tripPlan) {
+            fetchAiTransitGrounding(
+              tripPlan.origin.name,
+              tripPlan.destination.name,
+              { lat: tripPlan.origin.lat, lng: tripPlan.origin.lng },
+              { lat: tripPlan.destination.lat, lng: tripPlan.destination.lng }
+            );
+          }
+        }}
+      />
+
+      {/* Desktop Dashboard Experience (>=1024px) */}
+      <div className="hidden lg:block min-h-screen bg-[#F4F5F0] text-[#17201B] antialiased selection:bg-[#143428] selection:text-white pb-20 relative overflow-x-hidden">
+        {/* Top Application Header */}
+        <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-[#E2E4DC] shadow-xs">
         <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 lg:px-10 xl:px-12 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#143428] text-white flex items-center justify-center shadow-xs shrink-0">
-              <TrainFront className="w-5 h-5 text-emerald-300" strokeWidth={1.75} />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#143428] border border-emerald-400/30 text-white flex items-center justify-center shadow-xs shrink-0">
+              <TrainFront className="w-5 h-5 text-[#5ee9b5]" strokeWidth={1.85} />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
@@ -342,6 +375,16 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2">
+            {/* Download / Install App Button */}
+            <button
+              onClick={triggerPwaInstall}
+              className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 rounded-xl bg-white hover:bg-[#F8F9F5] text-[#143428] border border-[#D5D8CD] text-xs font-bold transition shadow-xs shrink-0 cursor-pointer active:scale-95"
+              title="Download & Install App (PWA)"
+            >
+              <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#143428]" strokeWidth={2} />
+              <span>Download App</span>
+            </button>
+
             <button
               onClick={() => setIsTransitRadarOpen(true)}
               className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 rounded-xl bg-[#143428] hover:bg-[#1A3E31] text-white text-xs font-bold transition shadow-xs shrink-0"
@@ -745,41 +788,10 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Mobile Segmented View Toggle (Steps vs Interactive Map) */}
-        <div className="flex lg:hidden items-center p-1 rounded-xl bg-white border border-[#E2E4DC] mb-4 shadow-xs">
-          <button
-            onClick={() => setMobileActiveTab('steps')}
-            className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
-              mobileActiveTab === 'steps'
-                ? 'bg-[#143428] text-white shadow-xs'
-                : 'text-[#53584E] hover:text-[#17201B]'
-            }`}
-          >
-            <Route className="w-3.5 h-3.5 text-emerald-300" strokeWidth={2} />
-            <span>Transit Steps</span>
-          </button>
-          <button
-            onClick={() => setMobileActiveTab('map')}
-            className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
-              mobileActiveTab === 'map'
-                ? 'bg-[#143428] text-white shadow-xs'
-                : 'text-[#53584E] hover:text-[#17201B]'
-            }`}
-          >
-            <Waypoints className="w-3.5 h-3.5 text-emerald-300" strokeWidth={2} />
-            <span>Live Route Map</span>
-            {tripPlan && (
-              <span className="px-1.5 py-0.5 rounded-md bg-[#B9552C] text-white text-[9px] font-bold">
-                Gate {tripPlan.metroExit.gateNumber}
-              </span>
-            )}
-          </button>
-        </div>
-
         {/* Dual-Pane Interface: Step-by-step Guide & Interactive Map */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
           {/* Left Column: Multi-modal Navigation Guide */}
-          <div className={`${mobileActiveTab === 'steps' ? 'block' : 'hidden lg:block'} lg:col-span-7 xl:col-span-7 space-y-6 sm:space-y-8`}>
+          <div className="lg:col-span-7 xl:col-span-7 space-y-6 sm:space-y-8">
             {tripPlan && (
               <IntrovertGuideCard
                 plan={tripPlan}
@@ -803,7 +815,7 @@ export default function HomePage() {
           </div>
 
           {/* Right Column: Sticky Google Map with Route Visualization */}
-          <div id="interactive-transit-map" className={`${mobileActiveTab === 'map' ? 'block' : 'hidden lg:block'} lg:col-span-5 xl:col-span-5 lg:sticky lg:top-20 space-y-4`}>
+          <div id="interactive-transit-map" className="lg:col-span-5 xl:col-span-5 lg:sticky lg:top-20 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-md bg-[#143428]/10 text-[#143428] flex items-center justify-center">
@@ -869,125 +881,7 @@ export default function HomePage() {
           </div>
         </div>
       </main>
-
-      {/* Floating Action Button (FAB) for Map on Mobile */}
-      <div className="fixed bottom-5 right-4 z-40 lg:hidden pointer-events-auto">
-        <button
-          onClick={() => setIsMobileMapModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-3 rounded-full bg-[#143428] text-white font-bold text-xs shadow-2xl border border-emerald-400/40 hover:bg-[#1A3E31] active:scale-95 transition duration-150 group"
-          aria-label="Open Interactive Map"
-        >
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
-          </span>
-          <Waypoints className="w-4 h-4 text-emerald-300 group-hover:rotate-12 transition" strokeWidth={2} />
-          <span className="tracking-wide">Live Map</span>
-          {tripPlan && (
-            <span className="px-2 py-0.5 rounded-full bg-[#B9552C] text-white text-[10px] font-bold shadow-xs">
-              Gate {tripPlan.metroExit.gateNumber}
-            </span>
-          )}
-        </button>
-      </div>
-
-      {/* Dedicated Native Mobile Map Sheet Modal */}
-      <AnimatePresence>
-        {isMobileMapModalOpen && (
-          <motion.div
-            key="mobile-map-modal-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={() => setIsMobileMapModalOpen(false)}
-            className="fixed inset-0 z-50 flex flex-col bg-black/60 backdrop-blur-xs lg:hidden"
-          >
-            <motion.div
-              key="mobile-map-sheet"
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              onClick={e => e.stopPropagation()}
-              className="mt-auto w-full h-[90vh] bg-white rounded-t-[28px] shadow-2xl flex flex-col overflow-hidden border-t border-[#1E4837]"
-            >
-              {/* Subtle grab handle indicator */}
-              <div className="w-full bg-[#143428] pt-2.5 pb-0.5 flex justify-center shrink-0">
-                <div className="w-10 h-1 rounded-full bg-white/25" />
-              </div>
-
-              {/* Modal Sheet Header */}
-              <div className="bg-[#143428] text-white p-4 pt-2 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-white/10 text-emerald-300 flex items-center justify-center border border-white/15">
-                    <Waypoints className="w-5 h-5" strokeWidth={2} />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-sm text-white">Live Route Map</h3>
-                      {tripPlan && (
-                        <span className="px-2 py-0.5 rounded-full bg-[#B9552C] text-white text-[10px] font-bold">
-                          Gate {tripPlan.metroExit.gateNumber}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-emerald-100/70 truncate max-w-[220px]">
-                      {tripPlan ? `${tripPlan.originStation.name} → ${tripPlan.destinationStation.name}` : 'Transit GPS View'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      setIsMobileMapModalOpen(false);
-                      setMobileActiveTab('map');
-                    }}
-                    className="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[11px] font-medium border border-white/15 transition"
-                  >
-                    Inline
-                  </button>
-                  <button
-                    onClick={() => setIsMobileMapModalOpen(false)}
-                    className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition"
-                    aria-label="Close Map"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Interactive Map Area */}
-              <div className="flex-1 w-full relative bg-[#F4F5F0]">
-                <MapComponent plan={tripPlan} userCoords={originCoords} />
-              </div>
-
-              {/* Bottom Quick Bar */}
-              {tripPlan && (
-                <div className="p-3 bg-white border-t border-[#E2E4DC] flex items-center justify-between text-[11px] text-[#53584E] shrink-0">
-                  <div className="flex items-center gap-1.5 truncate">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#143428] shrink-0"></span>
-                    <span className="truncate">{tripPlan.originStation.name}</span>
-                    <span>→</span>
-                    <span
-                      className="w-2.5 h-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: tripPlan.destinationStation.lineColor }}
-                    ></span>
-                    <span className="truncate">{tripPlan.destinationStation.name}</span>
-                  </div>
-                  <button
-                    onClick={() => setIsMobileMapModalOpen(false)}
-                    className="px-3 py-1.5 rounded-lg bg-[#143428] text-white text-xs font-bold shrink-0 ml-2"
-                  >
-                    Done
-                  </button>
-                </div>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+    </div>
 
       {/* All 39 Popular Destinations Explorer Modal */}
       <AnimatePresence>
@@ -1168,7 +1062,7 @@ export default function HomePage() {
         defaultOrigin={originName}
         defaultDest={selectedDestination ? selectedDestination.name : customDestCoords?.name || 'Ambience Mall, Gurugram'}
       />
-    </div>
+    </>
   );
 }
 

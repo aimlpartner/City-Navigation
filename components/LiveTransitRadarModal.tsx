@@ -58,8 +58,9 @@ export function LiveTransitRadarModal({
           timeZone: 'Asia/Kolkata',
           hour: '2-digit',
           minute: '2-digit',
-          second: '2-digit'
-        })
+          second: '2-digit',
+          hour12: true
+        }).toUpperCase()
       );
     };
     updateTime();
@@ -141,32 +142,32 @@ export function LiveTransitRadarModal({
             aria-modal="true"
           >
             {/* Modal Header in British Racing Green */}
-        <div className="p-5 sm:p-6 bg-[#143428] text-white flex items-center justify-between border-b border-[#1E4837]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/10 text-white flex items-center justify-center font-bold border border-white/15">
-              <Radar className="w-5 h-5 text-emerald-300" strokeWidth={1.75} />
+        <div className="p-4 sm:p-6 bg-[#143428] text-white flex items-center justify-between border-b border-[#1E4837] gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-xl bg-white/10 text-white flex items-center justify-center font-bold border border-white/15 shrink-0">
+              <Radar className="w-5 h-5 text-emerald-300 shrink-0" strokeWidth={1.75} />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base sm:text-lg font-bold tracking-tight text-white font-sans">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+                <h3 className="text-base sm:text-lg font-bold tracking-tight text-white font-sans truncate">
                   Delhi & Gurugram Transit Radar
                 </h3>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/10 text-emerald-200 text-[10px] font-mono font-medium border border-white/15">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  {currentTimeStr} IST
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/10 text-emerald-200 text-[10px] font-mono font-medium border border-white/15 whitespace-nowrap shrink-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
+                  <span>{currentTimeStr} IST</span>
                 </span>
               </div>
-              <p className="text-xs text-emerald-100/80 mt-0.5">
+              <p className="text-xs text-emerald-100/80 mt-0.5 truncate">
                 Real-time multi-modal status: DMRC, Rapid Metro & Gurugaman buses
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white transition flex items-center gap-1.5 text-xs font-medium"
+              className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white transition flex items-center gap-1.5 text-xs font-medium shrink-0"
               title="Refresh live data"
             >
               <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} strokeWidth={2} />
@@ -175,7 +176,7 @@ export function LiveTransitRadarModal({
             <button
               onClick={onClose}
               aria-label="Close Live Transit Radar"
-              className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-emerald-100 hover:text-white transition border border-white/15"
+              className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-emerald-100 hover:text-white transition border border-white/15 shrink-0"
             >
               <X className="w-5 h-5" strokeWidth={2} />
             </button>
@@ -183,40 +184,40 @@ export function LiveTransitRadarModal({
         </div>
 
         {/* Mode / Tabs Switcher */}
-        <div className="flex items-center gap-2 px-5 py-3 border-b border-[#E2E4DC] bg-[#F8F9F5]">
+        <div className="flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 border-b border-[#E2E4DC] bg-[#F8F9F5] overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('lines')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap shrink-0 ${
               activeTab === 'lines'
                 ? 'bg-[#143428] text-white shadow-xs'
                 : 'text-[#53584E] hover:bg-[#EAECE4]'
             }`}
           >
-            <TrainFront className="w-3.5 h-3.5" strokeWidth={2} />
+            <TrainFront className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
             <span>Metro Lines ({linesList.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('buses')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap shrink-0 ${
               activeTab === 'buses'
                 ? 'bg-[#143428] text-white shadow-xs'
                 : 'text-[#53584E] hover:bg-[#EAECE4]'
             }`}
           >
-            <BusFront className="w-3.5 h-3.5" strokeWidth={2} />
+            <BusFront className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
             <span>Feeder Buses ({LIVE_BUS_ROUTES.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('alerts')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap shrink-0 ${
               activeTab === 'alerts'
                 ? 'bg-[#B9552C] text-white shadow-xs'
                 : 'text-[#53584E] hover:bg-[#EAECE4]'
             }`}
           >
-            <AlertTriangle className="w-3.5 h-3.5" strokeWidth={2} />
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
             <span>Service Advisories ({ACTIVE_TRANSIT_ALERTS.length})</span>
           </button>
         </div>
@@ -226,9 +227,9 @@ export function LiveTransitRadarModal({
           {/* AI Live Transit Query Banner */}
           <div className="rounded-2xl bg-white border border-[#E2E4DC] p-4 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[#143428]/10 text-[#143428] flex items-center justify-center font-bold">
-                  <Sparkle className="w-4 h-4" strokeWidth={2} />
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-[#143428]/10 text-[#143428] flex items-center justify-center font-bold shrink-0">
+                  <Sparkle className="w-4 h-4 shrink-0" strokeWidth={2} />
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-[#17201B]">
