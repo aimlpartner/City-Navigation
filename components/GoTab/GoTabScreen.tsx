@@ -12,6 +12,7 @@ interface GoTabScreenProps {
   originName: string;
   originCoords: { lat: number; lng: number };
   selectedDestination: FamousDestination | null;
+  customDestCoords?: { name: string; lat: number; lng: number } | null;
   tripPlan: MultiModalTripPlan | null;
   aiGuide?: {
     loading: boolean;
@@ -20,9 +21,17 @@ interface GoTabScreenProps {
     links: { title: string; uri: string; source?: string }[];
   };
   isDetectingLocation: boolean;
+  locationError?: string | null;
+  detectedLocation?: {
+    name: string;
+    coords: { lat: number; lng: number };
+    nearestStation?: string;
+    distanceKm?: number;
+    accuracyM?: number;
+  } | null;
   onDetectLocation: () => void;
   onSelectOrigin: (name: string, coords: { lat: number; lng: number }) => void;
-  onSelectDestination: (dest: FamousDestination) => void;
+  onSelectDestination: (dest: any) => void;
   onSwitchToMap: () => void;
   onOpenTransitRadar?: () => void;
 }
@@ -30,7 +39,10 @@ interface GoTabScreenProps {
 export function GoTabScreen({
   originName,
   originCoords,
+  detectedLocation,
+  locationError,
   selectedDestination,
+  customDestCoords,
   tripPlan,
   aiGuide,
   isDetectingLocation,
@@ -130,8 +142,11 @@ export function GoTabScreen({
             <LocationPicker
               currentOriginName={originName}
               isDetectingLocation={isDetectingLocation}
+              locationError={locationError}
+              detectedLocation={detectedLocation}
               onDetectLocation={onDetectLocation}
               onSelectOrigin={handlePickOrigin}
+              onProceedToDestination={() => setCurrentStep('destination')}
             />
           </motion.div>
         )}
@@ -146,6 +161,7 @@ export function GoTabScreen({
           >
             <DestinationPicker
               currentDestination={selectedDestination}
+              customDestination={customDestCoords}
               originName={originName}
               onSelectDestination={handlePickDestination}
               onBackToOrigin={() => setCurrentStep('origin')}

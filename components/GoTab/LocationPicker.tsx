@@ -10,7 +10,8 @@ import {
   MapPin,
   Check,
   Sparkles,
-  Loader2
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 
 export interface OriginOption {
@@ -38,42 +39,42 @@ export const POPULAR_ORIGINS: OriginOption[] = [
   },
   {
     name: 'DLF Phase 3 (U-Block), Gurgaon',
-    subtitle: 'Phase 3 Metro & Micromax Moulsari',
+    subtitle: 'Moulsari Avenue, Cyber City Walkway',
     lat: 28.4912,
     lng: 77.0967,
     iconType: 'office',
   },
   {
     name: 'Golf Course Road (Sec 54), Gurgaon',
-    subtitle: 'Sector 53-54 & Horizon Centre',
+    subtitle: 'Sector 54 Chowk & Rapid Metro South',
     lat: 28.4417,
     lng: 77.1065,
     iconType: 'office',
   },
   {
     name: 'Saket / Malviya Nagar, Delhi',
-    subtitle: 'Select Citywalk & Yellow Line',
+    subtitle: 'Select CITYWALK & Saket Metro Gate 2',
     lat: 28.5204,
     lng: 77.2014,
-    iconType: 'landmark',
+    iconType: 'metro',
   },
   {
     name: 'Hauz Khas, South Delhi',
-    subtitle: 'Yellow & Magenta Interchange Hub',
+    subtitle: 'Yellow / Magenta Line Interchange & HKV',
     lat: 28.5494,
     lng: 77.2001,
-    iconType: 'landmark',
+    iconType: 'food',
   },
   {
     name: 'Connaught Place, Central Delhi',
-    subtitle: 'Rajiv Chowk Metro (Central Interchange)',
+    subtitle: 'Rajiv Chowk Metro, Inner & Outer Circle',
     lat: 28.6328,
     lng: 77.2195,
-    iconType: 'landmark',
+    iconType: 'metro',
   },
   {
     name: 'IGI Airport Terminal 3',
-    subtitle: 'Airport Express Metro Terminal',
+    subtitle: 'Airport Express Line & Aerocity Hub',
     lat: 28.5562,
     lng: 77.0864,
     iconType: 'airport',
@@ -83,16 +84,32 @@ export const POPULAR_ORIGINS: OriginOption[] = [
 interface LocationPickerProps {
   currentOriginName: string;
   isDetectingLocation: boolean;
+  locationError?: string | null;
+  detectedLocation?: {
+    name: string;
+    coords: { lat: number; lng: number };
+    nearestStation?: string;
+    distanceKm?: number;
+    accuracyM?: number;
+  } | null;
   onDetectLocation: () => void;
   onSelectOrigin: (name: string, coords: { lat: number; lng: number }) => void;
+  onProceedToDestination?: () => void;
 }
 
 export function LocationPicker({
   currentOriginName,
   isDetectingLocation,
+  locationError,
+  detectedLocation,
   onDetectLocation,
   onSelectOrigin,
+  onProceedToDestination,
 }: LocationPickerProps) {
+  const isDetected = Boolean(
+    detectedLocation && currentOriginName === detectedLocation.name
+  );
+
   const getOriginIcon = (type?: string) => {
     switch (type) {
       case 'airport':
@@ -100,6 +117,7 @@ export function LocationPicker({
       case 'food':
         return <Utensils className="w-5 h-5 text-[#B9552C]" strokeWidth={2} />;
       case 'landmark':
+      case 'metro':
         return <Landmark className="w-5 h-5 text-[#143428]" strokeWidth={2} />;
       default:
         return <Building2 className="w-5 h-5 text-[#143428]" strokeWidth={2} />;
@@ -122,35 +140,124 @@ export function LocationPicker({
         </p>
       </div>
 
-      {/* Giant GPS Auto-Detect Button */}
-      <button
-        type="button"
-        onClick={onDetectLocation}
-        disabled={isDetectingLocation}
-        className="w-full relative overflow-hidden flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-[#143428] to-[#1E4837] text-white shadow-md active:scale-[0.99] transition-all border border-[#1E4837] group"
-      >
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center shrink-0 shadow-inner">
-            {isDetectingLocation ? (
-              <Loader2 className="w-6 h-6 text-[#5ee9b5] animate-spin" />
-            ) : (
-              <LocateFixed className="w-6 h-6 text-[#5ee9b5] group-hover:scale-110 transition-transform" strokeWidth={2.2} />
-            )}
+      {/* Location Error Notice if GPS encountered an issue */}
+      {locationError && (
+        <div className="rounded-2xl border-2 border-amber-300 bg-amber-50/95 p-4 text-[#17201B] space-y-3 shadow-sm animate-in fade-in">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-xl bg-amber-200 text-amber-900 flex items-center justify-center shrink-0 mt-0.5">
+              <AlertCircle className="w-4 h-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-xs font-bold text-amber-950 uppercase tracking-wide">
+                GPS Signal Notice
+              </h4>
+              <p className="text-xs text-amber-900 mt-1 leading-relaxed">
+                {locationError}
+              </p>
+            </div>
           </div>
-          <div className="text-left">
-            <span className="text-base font-extrabold block text-white">
-              {isDetectingLocation ? 'Locating your GPS...' : 'Use My Current Location'}
-            </span>
-            <span className="text-xs text-emerald-200/90 font-medium">
-              Finds nearest metro gate automatically
-            </span>
-          </div>
+          <button
+            type="button"
+            onClick={onDetectLocation}
+            disabled={isDetectingLocation}
+            className="w-full py-2.5 px-3 rounded-xl bg-[#143428] hover:bg-[#1A3E31] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition cursor-pointer"
+          >
+            <LocateFixed className={`w-3.5 h-3.5 ${isDetectingLocation ? 'animate-spin' : ''}`} />
+            <span>{isDetectingLocation ? 'Pinpointing GPS...' : 'Retry Pinpoint GPS Detection'}</span>
+          </button>
         </div>
+      )}
 
-        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/80 shrink-0">
-          <MapPin className="w-4 h-4 text-[#5ee9b5]" />
+      {/* Giant GPS Auto-Detect Button or Verified Detected Card */}
+      {isDetected && detectedLocation ? (
+        <div className="rounded-2xl border-2 border-emerald-600 bg-white p-4 sm:p-5 shadow-md space-y-3.5 transition-all">
+          <div className="flex items-center justify-between gap-2">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-800 text-[#5ee9b5] text-[11px] font-bold shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-[#5ee9b5] animate-pulse" />
+              <span>Exact Pinpoint Detected</span>
+            </div>
+            <button
+              type="button"
+              onClick={onDetectLocation}
+              disabled={isDetectingLocation}
+              className="text-xs font-bold text-[#143428] hover:text-[#B9552C] flex items-center gap-1 transition cursor-pointer"
+            >
+              <LocateFixed className={`w-3.5 h-3.5 ${isDetectingLocation ? 'animate-spin' : ''}`} />
+              <span>{isDetectingLocation ? 'Re-detecting...' : 'Re-detect'}</span>
+            </button>
+          </div>
+
+          <div className="flex items-start gap-3.5">
+            <div className="w-11 h-11 rounded-xl bg-[#143428] text-[#5ee9b5] flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+              <MapPin className="w-5 h-5" strokeWidth={2.2} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-extrabold text-[#6B7267] uppercase tracking-wider block">
+                  Starting Pinpoint:
+                </span>
+                {detectedLocation.accuracyM !== undefined && (
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
+                    ±{detectedLocation.accuracyM}m accuracy
+                  </span>
+                )}
+              </div>
+              <h3 className="text-base sm:text-lg font-black text-[#17201B] leading-snug break-words mt-1">
+                {detectedLocation.name}
+              </h3>
+              {detectedLocation.nearestStation && (
+                <p className="text-xs text-[#53584E] mt-2 flex items-center gap-1.5 font-medium">
+                  <span className="w-2 h-2 rounded-full bg-emerald-600 shrink-0" />
+                  <span>
+                    Nearest Metro Hub: <strong className="text-[#143428]">{detectedLocation.nearestStation}</strong>
+                    {detectedLocation.distanceKm !== undefined ? ` (~${detectedLocation.distanceKm} km away)` : ''}
+                  </span>
+                </p>
+              )}
+            </div>
+          </div>
+
+          {onProceedToDestination && (
+            <button
+              type="button"
+              onClick={onProceedToDestination}
+              className="w-full py-2.5 px-4 rounded-xl bg-[#143428] hover:bg-[#1A3E31] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs active:scale-98 transition cursor-pointer"
+            >
+              <span>Next: Choose Where to Go</span>
+              <span className="text-[#5ee9b5] font-black">➔</span>
+            </button>
+          )}
         </div>
-      </button>
+      ) : (
+        <button
+          type="button"
+          onClick={onDetectLocation}
+          disabled={isDetectingLocation}
+          className="w-full relative overflow-hidden flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-[#143428] to-[#1E4837] text-white shadow-md active:scale-[0.99] transition-all border border-[#1E4837] group cursor-pointer"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center shrink-0 shadow-inner">
+              {isDetectingLocation ? (
+                <Loader2 className="w-6 h-6 text-[#5ee9b5] animate-spin" />
+              ) : (
+                <LocateFixed className="w-6 h-6 text-[#5ee9b5] group-hover:scale-110 transition-transform" strokeWidth={2.2} />
+              )}
+            </div>
+            <div className="text-left">
+              <span className="text-base font-extrabold block text-white">
+                {isDetectingLocation ? 'Acquiring Exact Coordinates...' : 'Use My Current Location'}
+              </span>
+              <span className="text-xs text-emerald-200/90 font-medium">
+                {isDetectingLocation ? 'Resolving street, block & nearest metro gate...' : 'Finds nearest metro gate automatically'}
+              </span>
+            </div>
+          </div>
+
+          <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/80 shrink-0">
+            <MapPin className="w-4 h-4 text-[#5ee9b5]" />
+          </div>
+        </button>
+      )}
 
       {/* Section Divider */}
       <div className="flex items-center gap-3 pt-1">

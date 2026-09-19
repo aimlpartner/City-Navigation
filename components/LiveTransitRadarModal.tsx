@@ -128,7 +128,7 @@ export function LiveTransitRadarModal({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
           onClick={onClose}
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs"
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-2.5 sm:p-6 pb-[max(env(safe-area-inset-bottom,0px),12px)] sm:pb-6 bg-black/60 backdrop-blur-xs"
         >
           <motion.div
             key="transit-radar-card"
@@ -137,7 +137,7 @@ export function LiveTransitRadarModal({
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             onClick={e => e.stopPropagation()}
-            className="relative w-full max-w-4xl bg-white rounded-[24px] shadow-2xl border border-[#E2E4DC] flex flex-col max-h-[90vh] overflow-hidden"
+            className="relative w-full max-w-4xl bg-white rounded-3xl sm:rounded-[24px] shadow-2xl border border-[#E2E4DC] flex flex-col max-h-[88dvh] sm:max-h-[90vh] overflow-hidden"
             role="dialog"
             aria-modal="true"
           >

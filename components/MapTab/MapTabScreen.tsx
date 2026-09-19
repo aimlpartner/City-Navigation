@@ -30,7 +30,7 @@ export function MapTabScreen({
     : 0;
 
   return (
-    <div className="relative w-full h-[calc(100vh-145px)] rounded-3xl overflow-hidden border border-[#E2E4DC] shadow-sm bg-[#e5e7eb]">
+    <div className="relative w-full h-full min-h-[380px] rounded-3xl overflow-hidden border border-[#E2E4DC] shadow-sm bg-[#e5e7eb]">
       {/* Interactive Map */}
       <div className="absolute inset-0 z-0">
         <MapComponent

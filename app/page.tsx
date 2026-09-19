@@ -7,7 +7,8 @@ import {
   FamousDestination,
   planMultiModalTrip,
   MultiModalTripPlan,
-  METRO_STATIONS
+  METRO_STATIONS,
+  findNearestMetroStation
 } from '@/lib/delhi-ncr-transit';
 import { MapComponent } from '@/components/MapComponent';
 import { IntrovertGuideCard } from '@/components/IntrovertGuideCard';
@@ -38,7 +39,10 @@ import {
   ChevronRight,
   Plane,
   Compass,
-  Download
+  Download,
+  Check,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import { triggerPwaInstall } from '@/components/PwaInstallPrompt';
 
@@ -62,6 +66,18 @@ export default function HomePage() {
     lng: 77.0890
   });
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [detectedLocation, setDetectedLocation] = useState<{
+    name: string;
+    coords: { lat: number; lng: number };
+    nearestStation?: string;
+    distanceKm?: number;
+    accuracyM?: number;
+  } | null>(null);
+  const [locationToast, setLocationToast] = useState<{
+    message: string;
+    subtext?: string;
+  } | null>(null);
 
   // Destination Search & State
   const [searchQuery, setSearchQuery] = useState(FAMOUS_DESTINATIONS[0].name);
@@ -229,30 +245,151 @@ export default function HomePage() {
     };
   }, [tripPlan]);
 
-  // Browser Geolocation
-  const handleDetectLocation = () => {
+  // Two-tier Pinpoint Browser Geolocation with Zero Fake Fallbacks
+  const handleDetectLocation = async () => {
     if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser');
+      setLocationError('Geolocation is not supported by your browser.');
+      setLocationToast({
+        message: 'GPS Not Supported',
+        subtext: 'Your device or browser does not support geolocation detection.'
+      });
+      setTimeout(() => setLocationToast(null), 6000);
       return;
     }
+
     setIsDetectingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        setIsDetectingLocation(false);
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        setOriginCoords({ lat, lng });
-        setOriginName('My Detected GPS Location');
-      },
-      err => {
-        setIsDetectingLocation(false);
-        console.warn('Geolocation failed:', err);
-        // Default to Gurgaon Cyber City if location permission denied
-        setOriginCoords({ lat: 28.4950, lng: 77.0890 });
-        setOriginName('DLF Cyber City, Gurgaon');
-      },
-      { timeout: 10000, enableHighAccuracy: true }
-    );
+    setLocationError(null);
+
+    // Helper: Acquire coordinates with High Accuracy first, falling back to Network positioning
+    const acquirePosition = (): Promise<{ lat: number; lng: number; accuracyM: number }> => {
+      return new Promise((resolve, reject) => {
+        // Attempt 1: High Accuracy GPS (Hardware/Satellite lock)
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            resolve({
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              accuracyM: Math.round(pos.coords.accuracy)
+            });
+          },
+          highAccErr => {
+            // If the user denied permission, stop immediately
+            if (highAccErr.code === highAccErr.PERMISSION_DENIED) {
+              reject(new Error('PERMISSION_DENIED'));
+              return;
+            }
+
+            console.warn('High accuracy GPS timed out or unavailable, attempting standard network/Wi-Fi fix...', highAccErr);
+
+            // Attempt 2: Standard Network/Wi-Fi Geolocation (Cell tower / Wi-Fi triangulation)
+            navigator.geolocation.getCurrentPosition(
+              netPos => {
+                resolve({
+                  lat: netPos.coords.latitude,
+                  lng: netPos.coords.longitude,
+                  accuracyM: Math.round(netPos.coords.accuracy)
+                });
+              },
+              netErr => {
+                if (netErr.code === netErr.PERMISSION_DENIED) {
+                  reject(new Error('PERMISSION_DENIED'));
+                } else if (netErr.code === netErr.POSITION_UNAVAILABLE) {
+                  reject(new Error('POSITION_UNAVAILABLE'));
+                } else if (netErr.code === netErr.TIMEOUT) {
+                  reject(new Error('TIMEOUT'));
+                } else {
+                  reject(new Error(netErr.message || 'UNKNOWN_ERROR'));
+                }
+              },
+              {
+                enableHighAccuracy: false,
+                timeout: 10000,
+                maximumAge: 0
+              }
+            );
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 12000,
+            maximumAge: 0
+          }
+        );
+      });
+    };
+
+    try {
+      const { lat, lng, accuracyM } = await acquirePosition();
+
+      // Set origin coordinates immediately
+      setOriginCoords({ lat, lng });
+
+      // Calculate nearest metro station immediately
+      const nearest = findNearestMetroStation(lat, lng);
+      let resolvedName = `Near ${nearest.station.name} (${nearest.station.line})`;
+      let nearestStationName = nearest.station.name;
+      let distance = nearest.distanceKm;
+
+      // Reverse geocode to exact street/block/building address
+      try {
+        const res = await fetch(`/api/geocode?lat=${lat}&lng=${lng}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.locationName) {
+            resolvedName = data.locationName;
+          }
+          if (data.nearestStation) {
+            nearestStationName = data.nearestStation;
+          }
+          if (data.distanceKm !== undefined) {
+            distance = data.distanceKm;
+          }
+        }
+      } catch (e) {
+        console.warn('Geocoding fetch error:', e);
+      }
+
+      const detectedInfo = {
+        name: resolvedName,
+        coords: { lat, lng },
+        nearestStation: nearestStationName,
+        distanceKm: distance,
+        accuracyM
+      };
+
+      setOriginName(resolvedName);
+      setDetectedLocation(detectedInfo);
+      setLocationError(null);
+      setIsDetectingLocation(false);
+
+      // Show prominent toast notification confirming exact pinpoint location
+      setLocationToast({
+        message: resolvedName,
+        subtext: `Nearest Metro: ${nearestStationName} (~${distance} km away) • GPS Accuracy: ±${accuracyM}m`
+      });
+      setTimeout(() => setLocationToast(null), 6000);
+    } catch (err: any) {
+      setIsDetectingLocation(false);
+      let userFriendlyTitle = 'Unable to pinpoint your GPS location';
+      let subtext = 'Please check your connection or choose a starting point below.';
+
+      if (err.message === 'PERMISSION_DENIED') {
+        userFriendlyTitle = 'Location Access Denied';
+        subtext = 'Please enable location permission in your browser address bar so we can detect your exact spot.';
+      } else if (err.message === 'POSITION_UNAVAILABLE') {
+        userFriendlyTitle = 'GPS Signal Unavailable';
+        subtext = 'Your device cannot lock your coordinates. Please check your GPS/Wi-Fi toggle and retry.';
+      } else if (err.message === 'TIMEOUT') {
+        userFriendlyTitle = 'GPS Request Timed Out';
+        subtext = 'Could not acquire coordinates in time. Please check your signal and tap to retry.';
+      }
+
+      setLocationError(subtext);
+      setLocationToast({
+        message: userFriendlyTitle,
+        subtext: subtext
+      });
+      setTimeout(() => setLocationToast(null), 7000);
+    }
   };
 
   // Handle destination live search query
@@ -318,13 +455,70 @@ export default function HomePage() {
     setIsSearchFocused(false);
   };
 
+  // Generic destination selector handling both curated landmarks and arbitrary Google Maps places
+  const handleSelectAnyDestination = (placeOrDest: any) => {
+    if (placeOrDest.curatedData) {
+      handleSelectFamousDest(placeOrDest.curatedData);
+    } else if (placeOrDest.nearestStationId && typeof placeOrDest.nearestStationId === 'string' && !placeOrDest.curatedData) {
+      handleSelectFamousDest(placeOrDest as FamousDestination);
+    } else {
+      handleSelectSearchResult(placeOrDest);
+    }
+  };
+
   return (
     <>
+      {/* Floating GPS Location Detection Toast */}
+      <AnimatePresence>
+        {locationToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -24, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.96 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed top-3 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:max-w-md z-[115] p-3.5 rounded-2xl bg-[#143428] text-white border border-emerald-400/50 shadow-2xl flex items-center justify-between gap-3"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-[#5ee9b5] text-[#0d211a] flex items-center justify-center font-bold shrink-0 shadow-xs">
+                <Check className="w-5 h-5" strokeWidth={2.5} />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-300">
+                    GPS Location Detected
+                  </span>
+                </div>
+                <h4 className="text-xs sm:text-sm font-extrabold text-white truncate mt-0.5">
+                  {locationToast.message}
+                </h4>
+                {locationToast.subtext && (
+                  <p className="text-[11px] text-emerald-200/80 truncate">
+                    {locationToast.subtext}
+                  </p>
+                )}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setLocationToast(null)}
+              className="text-emerald-200/60 hover:text-white p-1 rounded-lg transition shrink-0 cursor-pointer"
+              aria-label="Dismiss toast"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Mobile-First Experience (<1024px) */}
       <MobileAppShell
         originName={originName}
         originCoords={originCoords}
+        detectedLocation={detectedLocation}
+        locationError={locationError}
         selectedDestination={selectedDestination}
+        customDestCoords={customDestCoords}
         tripPlan={tripPlan}
         aiGuide={aiGuide}
         isDetectingLocation={isDetectingLocation}
@@ -333,7 +527,7 @@ export default function HomePage() {
           setOriginName(name);
           setOriginCoords(coords);
         }}
-        onSelectDestination={handleSelectFamousDest}
+        onSelectDestination={handleSelectAnyDestination}
         onOpenTransitRadar={() => setIsTransitRadarOpen(true)}
         onRequestAiRefresh={() => {
           if (tripPlan) {
@@ -476,6 +670,54 @@ export default function HomePage() {
                   className="w-full px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl bg-[#F8F9F5] border border-[#E2E4DC] text-sm text-[#17201B] font-medium placeholder:text-[#8E9487] focus:bg-white focus:border-[#143428] focus:ring-2 focus:ring-[#143428]/15 focus:outline-none transition shadow-xs"
                 />
               </div>
+
+              {locationError && (
+                <div className="flex items-start gap-2.5 text-xs font-medium text-amber-900 bg-amber-50 border border-amber-300 p-3 rounded-xl animate-in fade-in">
+                  <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <span className="font-bold block text-amber-950">GPS Signal Note</span>
+                    <span className="text-amber-900 leading-relaxed">{locationError}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleDetectLocation}
+                    disabled={isDetectingLocation}
+                    className="text-xs font-bold text-[#143428] hover:text-[#B9552C] underline shrink-0 cursor-pointer"
+                  >
+                    Retry GPS
+                  </button>
+                </div>
+              )}
+
+              {detectedLocation && originName === detectedLocation.name && (
+                <div className="flex items-center justify-between gap-3 text-xs font-semibold text-emerald-900 bg-emerald-50 border border-emerald-300 p-3 rounded-xl animate-in fade-in">
+                  <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-emerald-950">Exact Pinpoint Active</span>
+                        {detectedLocation.accuracyM !== undefined && (
+                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold">
+                            ±{detectedLocation.accuracyM}m accuracy
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-emerald-800 font-normal truncate mt-0.5">
+                        Nearest Metro: <strong>{detectedLocation.nearestStation}</strong>
+                        {detectedLocation.distanceKm !== undefined ? ` (~${detectedLocation.distanceKm} km away)` : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleDetectLocation}
+                    disabled={isDetectingLocation}
+                    className="text-[11px] font-bold text-[#143428] hover:text-[#B9552C] underline shrink-0 cursor-pointer"
+                  >
+                    {isDetectingLocation ? 'Updating...' : 'Re-detect'}
+                  </button>
+                </div>
+              )}
 
               {/* Quick Origin Preset Pills (Horizontal Scroll on Mobile) */}
               <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
@@ -893,7 +1135,7 @@ export default function HomePage() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={() => setIsAllPlacesModalOpen(false)}
-            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs"
+            className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-2.5 sm:p-4 pb-[max(env(safe-area-inset-bottom,0px),12px)] sm:pb-4 bg-black/60 backdrop-blur-xs"
           >
             <motion.div
               key="all-places-dialog"
@@ -902,7 +1144,7 @@ export default function HomePage() {
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               onClick={e => e.stopPropagation()}
-              className="bg-white border border-[#E2E4DC] w-full max-w-4xl max-h-[88vh] rounded-2xl sm:rounded-[24px] shadow-2xl flex flex-col overflow-hidden"
+              className="bg-white border border-[#E2E4DC] w-full max-w-4xl max-h-[88dvh] sm:max-h-[88vh] rounded-2xl sm:rounded-[24px] shadow-2xl flex flex-col overflow-hidden"
             >
               {/* Modal Header */}
               <div className="p-5 border-b border-[#1E4837] flex items-center justify-between bg-[#143428] text-white">

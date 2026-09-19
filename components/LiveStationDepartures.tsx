@@ -81,15 +81,15 @@ export function LiveStationDepartures({
   return (
     <div className="rounded-2xl bg-white text-[#17201B] border border-[#E2E4DC] shadow-xs overflow-hidden">
       {/* PIDS Header (Passenger Information Display System Style) */}
-      <div className="p-4 sm:p-5 bg-white border-b border-[#E2E4DC] flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-[#143428] text-white flex items-center justify-center shrink-0 shadow-xs">
-            <TrainFront className="w-5 h-5 text-emerald-300" strokeWidth={1.75} />
+      <div className="p-3.5 sm:p-5 bg-white border-b border-[#E2E4DC] flex items-center justify-between gap-2.5">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#143428] text-white flex items-center justify-center shrink-0 shadow-xs">
+            <TrainFront className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-300" strokeWidth={1.75} />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="text-[10px] font-bold uppercase tracking-wider text-[#6B7267] flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-              <span>Live Platform Board</span>
+              <span className="truncate">Live Platform Board</span>
             </div>
             <h4 className="text-sm sm:text-base font-extrabold text-[#17201B] truncate">
               {stationName}
@@ -97,18 +97,18 @@ export function LiveStationDepartures({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <span className="px-2.5 py-1 rounded-lg bg-[#F4F5F0] border border-[#E2E4DC] text-xs text-[#143428] font-mono whitespace-nowrap font-bold">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-[#F4F5F0] border border-[#E2E4DC] text-[11px] sm:text-xs text-[#143428] font-mono whitespace-nowrap font-bold">
             {schedule.headwayText}
           </span>
-          <span className="text-[11px] text-[#8E9487] font-mono hidden xs:inline">
+          <span className="text-[11px] text-[#8E9487] font-mono hidden sm:inline">
             sync in {secondsUntilRefresh}s
           </span>
           <button
             onClick={handleManualRefresh}
             disabled={isRefreshing}
             aria-label="Refresh live schedule"
-            className="p-1.5 sm:p-2 rounded-lg bg-[#F4F5F0] hover:bg-[#E2E4DC] text-[#17201B] transition disabled:opacity-50 border border-[#E2E4DC] shrink-0"
+            className="p-1.5 sm:p-2 rounded-lg bg-[#F4F5F0] hover:bg-[#E2E4DC] text-[#17201B] transition disabled:opacity-50 border border-[#E2E4DC] shrink-0 active:scale-95"
             title="Refresh schedule"
           >
             <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} strokeWidth={2} />

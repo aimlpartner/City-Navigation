@@ -280,6 +280,15 @@ function MapControls({
     map.setMapTypeId(isSatellite ? 'hybrid' : 'roadmap');
   }, [map, isSatellite]);
 
+  // Auto-center map when userCoords updates and no plan is active
+  useEffect(() => {
+    if (!map || plan) return;
+    if (userCoords) {
+      map.panTo(userCoords);
+      map.setZoom(15);
+    }
+  }, [map, userCoords, plan]);
+
   const handleFitRoute = useCallback(() => {
     if (!map) return;
     if (plan) {
@@ -294,7 +303,7 @@ function MapControls({
       map.fitBounds(bounds, { top: 90, bottom: 90, left: 60, right: 60 });
     } else if (userCoords) {
       map.panTo(userCoords);
-      map.setZoom(13);
+      map.setZoom(15);
     } else {
       map.panTo({ lat: 28.4950, lng: 77.0890 });
       map.setZoom(13);
@@ -561,7 +570,7 @@ function MapView({
         {/* Render multi-layer transit and walking polylines */}
         {plan && <RoutePolylines plan={plan} />}
 
-        {/* --- START ORIGIN MARKER --- */}
+        {/* --- START ORIGIN MARKER (When route plan is active) --- */}
         {plan && (
           <AdvancedMarker
             position={{ lat: plan.origin.lat, lng: plan.origin.lng }}
@@ -570,15 +579,37 @@ function MapView({
           >
             <div className="flex flex-col items-center group cursor-pointer">
               {/* Floating Pill Tag */}
-              <div className="mb-1 px-2 py-0.5 rounded-full bg-[#143428] text-white text-[11px] font-bold shadow-md border border-white/40 whitespace-nowrap flex items-center gap-1 transition-transform group-hover:scale-105">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                <span>Start</span>
+              <div className="mb-1 px-2.5 py-0.5 rounded-full bg-[#143428] text-[#5ee9b5] text-[11px] font-bold shadow-md border border-white/40 whitespace-nowrap flex items-center gap-1.5 transition-transform group-hover:scale-105">
+                <span className="w-2 h-2 rounded-full bg-[#5ee9b5] animate-pulse"></span>
+                <span>{plan.origin.name ? plan.origin.name.split(',')[0] : 'Start'}</span>
               </div>
               {/* Pin Badge with beacon ring */}
               <div className="relative flex items-center justify-center">
-                <span className="absolute -inset-1 rounded-full bg-emerald-500/30 animate-ping"></span>
+                <span className="absolute -inset-1.5 rounded-full bg-emerald-500/35 animate-ping"></span>
                 <div className="relative w-8 h-8 rounded-full bg-[#143428] text-white shadow-lg border-2 border-white flex items-center justify-center">
-                  <Navigation className="w-4 h-4 text-emerald-300" strokeWidth={2} />
+                  <Navigation className="w-4 h-4 text-[#5ee9b5]" strokeWidth={2.2} />
+                </div>
+              </div>
+            </div>
+          </AdvancedMarker>
+        )}
+
+        {/* --- STANDALONE USER GPS PINPOINT MARKER (When no route plan is loaded) --- */}
+        {!plan && userCoords && (
+          <AdvancedMarker
+            position={userCoords}
+            title="Your Exact GPS Pinpoint Location"
+            onClick={() => setSelectedMarker('userCoords')}
+          >
+            <div className="flex flex-col items-center group cursor-pointer">
+              <div className="mb-1 px-2.5 py-0.5 rounded-full bg-[#143428] text-[#5ee9b5] text-[11px] font-bold shadow-md border border-white/40 whitespace-nowrap flex items-center gap-1.5 transition-transform group-hover:scale-105">
+                <span className="w-2 h-2 rounded-full bg-[#5ee9b5] animate-pulse"></span>
+                <span>Your GPS Pinpoint</span>
+              </div>
+              <div className="relative flex items-center justify-center">
+                <span className="absolute -inset-2 rounded-full bg-emerald-500/40 animate-ping"></span>
+                <div className="relative w-9 h-9 rounded-full bg-[#143428] text-white shadow-xl border-2 border-white flex items-center justify-center">
+                  <Navigation className="w-4.5 h-4.5 text-[#5ee9b5]" strokeWidth={2.2} />
                 </div>
               </div>
             </div>
@@ -714,6 +745,28 @@ function MapView({
           })}
 
         {/* --- CUSTOM DESIGNED INFO WINDOWS --- */}
+        {!plan && selectedMarker === 'userCoords' && userCoords && (
+          <InfoWindow
+            position={userCoords}
+            onCloseClick={() => setSelectedMarker(null)}
+          >
+            <div className="p-1 text-[#17201B] max-w-xs space-y-1.5 font-sans">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="text-[10px] font-bold text-[#143428] uppercase tracking-wider">
+                  Your Pinpoint GPS Location
+                </span>
+              </div>
+              <div className="font-bold text-sm text-[#17201B]">
+                {userCoords.lat.toFixed(5)}, {userCoords.lng.toFixed(5)}
+              </div>
+              <p className="text-xs text-[#53584E]">
+                Select any destination in the Go Tab to calculate your multi-modal transit route from here.
+              </p>
+            </div>
+          </InfoWindow>
+        )}
+
         {plan && selectedMarker === 'origin' && (
           <InfoWindow
             position={{ lat: plan.origin.lat, lng: plan.origin.lng }}
