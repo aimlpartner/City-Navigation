@@ -7,6 +7,9 @@ import {
   FamousDestination,
   planMultiModalTrip,
   MultiModalTripPlan,
+  RideMode,
+  FareBreakdown,
+  LiveTrafficInfo,
   METRO_STATIONS,
   findNearestMetroStation
 } from '@/lib/delhi-ncr-transit';
@@ -121,8 +124,26 @@ export default function HomePage() {
     links: []
   });
 
-  // Calculate route plan when origin or destination changes (pure memoized computation)
-  const tripPlan = useMemo(() => {
+  // Passenger & Ride Mode State
+  const [passengerCount, setPassengerCount] = useState<number>(1);
+  const [firstMileMode, setFirstMileMode] = useState<RideMode>('cab');
+  const [lastMileMode, setLastMileMode] = useState<RideMode>('cab');
+
+  // Live Trip Estimate & Real Google Traffic State
+  const [liveTripEstimate, setLiveTripEstimate] = useState<{
+    liveTraffic?: LiveTrafficInfo;
+    fareBreakdown?: FareBreakdown;
+    deepLinks?: {
+      uberFirstMileUrl?: string;
+      uberLastMileUrl?: string;
+      uberDirectUrl?: string;
+      rapidoUrl?: string;
+    };
+    loading: boolean;
+  }>({ loading: false });
+
+  // Calculate base route plan when origin or destination changes (pure memoized computation)
+  const baseTripPlan = useMemo(() => {
     const destName = selectedDestination
       ? selectedDestination.name
       : customDestCoords?.name || 'Ambience Mall, Gurugram';
@@ -136,9 +157,99 @@ export default function HomePage() {
       destName,
       destLat,
       destLng,
-      selectedDestination || undefined
+      selectedDestination || undefined,
+      passengerCount,
+      firstMileMode,
+      lastMileMode
     );
-  }, [originName, originCoords, selectedDestination, customDestCoords]);
+  }, [originName, originCoords, selectedDestination, customDestCoords, passengerCount, firstMileMode, lastMileMode]);
+
+  // Combine base plan with live traffic & dynamic fare estimation
+  const tripPlan = useMemo(() => {
+    if (!baseTripPlan) return null;
+    if (!liveTripEstimate.fareBreakdown && !liveTripEstimate.liveTraffic) return baseTripPlan;
+
+    return {
+      ...baseTripPlan,
+      fareBreakdown: liveTripEstimate.fareBreakdown || baseTripPlan.fareBreakdown,
+      liveTraffic: liveTripEstimate.liveTraffic || baseTripPlan.liveTraffic
+    };
+  }, [baseTripPlan, liveTripEstimate]);
+
+  // Query /api/trip-estimate for live Google Maps traffic and real-world ride-hailing fares
+  useEffect(() => {
+    if (!baseTripPlan) return;
+    let isCancelled = false;
+
+    const fetchEstimate = async () => {
+      try {
+        setLiveTripEstimate(prev => ({ ...prev, loading: true }));
+        const res = await fetch('/api/trip-estimate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            origin: {
+              lat: baseTripPlan.origin.lat,
+              lng: baseTripPlan.origin.lng,
+              name: baseTripPlan.origin.name
+            },
+            destination: {
+              lat: baseTripPlan.destination.lat,
+              lng: baseTripPlan.destination.lng,
+              name: baseTripPlan.destination.name
+            },
+            originStation: {
+              lat: baseTripPlan.originStation.lat,
+              lng: baseTripPlan.originStation.lng,
+              name: baseTripPlan.originStation.name
+            },
+            destinationStation: {
+              lat: baseTripPlan.destinationStation.lat,
+              lng: baseTripPlan.destinationStation.lng,
+              name: baseTripPlan.destinationStation.name
+            },
+            passengerCount,
+            firstMileMode,
+            lastMileMode,
+            totalStops: baseTripPlan.metroLeg.totalStops
+          })
+        });
+
+        if (isCancelled) return;
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            setLiveTripEstimate({
+              liveTraffic: data.liveTraffic,
+              fareBreakdown: data.fareBreakdown,
+              deepLinks: data.deepLinks,
+              loading: false
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('Trip estimate fetch error:', err);
+      } finally {
+        if (!isCancelled) {
+          setLiveTripEstimate(prev => ({ ...prev, loading: false }));
+        }
+      }
+    };
+
+    const timer = setTimeout(fetchEstimate, 100);
+    return () => {
+      isCancelled = true;
+      clearTimeout(timer);
+    };
+  }, [
+    baseTripPlan.origin.lat,
+    baseTripPlan.origin.lng,
+    baseTripPlan.destination.lat,
+    baseTripPlan.destination.lng,
+    passengerCount,
+    firstMileMode,
+    lastMileMode
+  ]);
 
   // Fetch AI Transit Grounding via /api/transit-ai
   const fetchAiTransitGrounding = async (
@@ -520,6 +631,13 @@ export default function HomePage() {
         selectedDestination={selectedDestination}
         customDestCoords={customDestCoords}
         tripPlan={tripPlan}
+        passengerCount={passengerCount}
+        onPassengerCountChange={setPassengerCount}
+        firstMileMode={firstMileMode}
+        onFirstMileModeChange={setFirstMileMode}
+        lastMileMode={lastMileMode}
+        onLastMileModeChange={setLastMileMode}
+        deepLinks={liveTripEstimate.deepLinks}
         aiGuide={aiGuide}
         isDetectingLocation={isDetectingLocation}
         onDetectLocation={handleDetectLocation}
@@ -1037,6 +1155,13 @@ export default function HomePage() {
             {tripPlan && (
               <IntrovertGuideCard
                 plan={tripPlan}
+                passengerCount={passengerCount}
+                onPassengerCountChange={setPassengerCount}
+                firstMileMode={firstMileMode}
+                onFirstMileModeChange={setFirstMileMode}
+                lastMileMode={lastMileMode}
+                onLastMileModeChange={setLastMileMode}
+                deepLinks={liveTripEstimate.deepLinks}
                 aiGuide={aiGuide}
                 onOpenTransitRadar={() => setIsTransitRadarOpen(true)}
                 onRequestAiRefresh={() => {

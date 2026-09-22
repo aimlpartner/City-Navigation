@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MultiModalTripPlan, FamousDestination } from '@/lib/delhi-ncr-transit';
+import { MultiModalTripPlan, FamousDestination, RideMode } from '@/lib/delhi-ncr-transit';
 import { LocationPicker } from './LocationPicker';
 import { DestinationPicker } from './DestinationPicker';
 import { RouteResult } from './RouteResult';
@@ -14,6 +14,18 @@ interface GoTabScreenProps {
   selectedDestination: FamousDestination | null;
   customDestCoords?: { name: string; lat: number; lng: number } | null;
   tripPlan: MultiModalTripPlan | null;
+  passengerCount?: number;
+  onPassengerCountChange?: (count: number) => void;
+  firstMileMode?: RideMode;
+  onFirstMileModeChange?: (mode: RideMode) => void;
+  lastMileMode?: RideMode;
+  onLastMileModeChange?: (mode: RideMode) => void;
+  deepLinks?: {
+    uberFirstMileUrl?: string;
+    uberLastMileUrl?: string;
+    uberDirectUrl?: string;
+    rapidoUrl?: string;
+  };
   aiGuide?: {
     loading: boolean;
     text: string | null;
@@ -44,6 +56,13 @@ export function GoTabScreen({
   selectedDestination,
   customDestCoords,
   tripPlan,
+  passengerCount,
+  onPassengerCountChange,
+  firstMileMode,
+  onFirstMileModeChange,
+  lastMileMode,
+  onLastMileModeChange,
+  deepLinks,
   aiGuide,
   isDetectingLocation,
   onDetectLocation,
@@ -179,6 +198,13 @@ export function GoTabScreen({
           >
             <RouteResult
               plan={tripPlan}
+              passengerCount={passengerCount}
+              onPassengerCountChange={onPassengerCountChange}
+              firstMileMode={firstMileMode}
+              onFirstMileModeChange={onFirstMileModeChange}
+              lastMileMode={lastMileMode}
+              onLastMileModeChange={onLastMileModeChange}
+              deepLinks={deepLinks}
               aiGuide={aiGuide}
               onSwitchToMap={onSwitchToMap}
               onChangeDestination={() => setCurrentStep('destination')}

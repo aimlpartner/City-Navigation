@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { MultiModalTripPlan, FamousDestination } from '@/lib/delhi-ncr-transit';
+import { MultiModalTripPlan, FamousDestination, RideMode } from '@/lib/delhi-ncr-transit';
 import { BottomTabBar, MobileTab } from './BottomTabBar';
 import { GoTabScreen } from './GoTab/GoTabScreen';
 import { MapTabScreen } from './MapTab/MapTabScreen';
@@ -17,6 +17,18 @@ interface MobileAppShellProps {
   selectedDestination: FamousDestination | null;
   customDestCoords?: { name: string; lat: number; lng: number } | null;
   tripPlan: MultiModalTripPlan | null;
+  passengerCount?: number;
+  onPassengerCountChange?: (count: number) => void;
+  firstMileMode?: RideMode;
+  onFirstMileModeChange?: (mode: RideMode) => void;
+  lastMileMode?: RideMode;
+  onLastMileModeChange?: (mode: RideMode) => void;
+  deepLinks?: {
+    uberFirstMileUrl?: string;
+    uberLastMileUrl?: string;
+    uberDirectUrl?: string;
+    rapidoUrl?: string;
+  };
   aiGuide?: {
     loading: boolean;
     text: string | null;
@@ -47,6 +59,13 @@ export function MobileAppShell({
   selectedDestination,
   customDestCoords,
   tripPlan,
+  passengerCount,
+  onPassengerCountChange,
+  firstMileMode,
+  onFirstMileModeChange,
+  lastMileMode,
+  onLastMileModeChange,
+  deepLinks,
   aiGuide,
   isDetectingLocation,
   onDetectLocation,
@@ -433,6 +452,13 @@ export function MobileAppShell({
                 selectedDestination={selectedDestination}
                 customDestCoords={customDestCoords}
                 tripPlan={tripPlan}
+                passengerCount={passengerCount}
+                onPassengerCountChange={onPassengerCountChange}
+                firstMileMode={firstMileMode}
+                onFirstMileModeChange={onFirstMileModeChange}
+                lastMileMode={lastMileMode}
+                onLastMileModeChange={onLastMileModeChange}
+                deepLinks={deepLinks}
                 aiGuide={aiGuide}
                 isDetectingLocation={isDetectingLocation}
                 onDetectLocation={onDetectLocation}

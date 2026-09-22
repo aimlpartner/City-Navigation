@@ -1654,7 +1654,7 @@ export interface MultiModalTripPlan {
   originStation: MetroStation;
   destinationStation: MetroStation;
   firstMile: {
-    mode: 'walk' | 'auto_or_cab';
+    mode: RideMode | 'auto_or_cab';
     distanceKm: number;
     durationMin: number;
     estimatedCostInr: number;
@@ -1696,6 +1696,84 @@ export interface MultiModalTripPlan {
     antiAnxietyTip: string;
   };
   introvertChecklist: string[];
+  fareBreakdown: FareBreakdown;
+  liveTraffic?: LiveTrafficInfo;
+}
+
+export type RideMode = 'cab' | 'auto' | 'e-rickshaw' | 'walk';
+
+export interface FareBreakdown {
+  totalEstimatedFareInr: number;
+  passengerCount: number;
+  firstMileMode: RideMode;
+  firstMileCostInr: number;
+  metroFarePerPersonInr: number;
+  metroTotalFareInr: number;
+  lastMileMode: RideMode;
+  lastMileCostInr: number;
+  firstMileOptions: {
+    cab: number;
+    auto: number;
+    eRickshaw?: number;
+    walk: number;
+  };
+  lastMileOptions: {
+    cab: number;
+    auto: number;
+    eRickshaw?: number;
+    walk: number;
+  };
+  directCabComparison?: {
+    estimatedCostInr: number;
+    durationMin: number;
+    savingsInr: number;
+    timeDiffMin: number;
+  };
+}
+
+export interface LiveTrafficInfo {
+  status: 'live' | 'estimated';
+  trafficCondition: 'clear' | 'moderate' | 'heavy';
+  firstMileDurationMin: number;
+  firstMileDelayMin: number;
+  metroDurationMin: number;
+  lastMileDurationMin: number;
+  lastMileDelayMin: number;
+  totalDurationMin: number;
+  firstMilePolyline?: string;
+  lastMilePolyline?: string;
+  directCabDurationMin?: number;
+  lastUpdated?: string;
+}
+
+// Official DMRC slab-based fare per passenger
+export function calculateDmrcMetroFare(stops: number): number {
+  if (stops <= 2) return 10;
+  if (stops <= 5) return 20;
+  if (stops <= 10) return 30;
+  if (stops <= 17) return 40;
+  if (stops <= 25) return 50;
+  return 60;
+}
+
+// Realistic Delhi-NCR ride-hailing market rates (Uber, Rapido, Street Auto)
+export function estimateRideHailingFares(roadDistanceKm: number, durationMin: number) {
+  const dist = Math.max(0.4, roadDistanceKm);
+  const time = Math.max(3, durationMin);
+
+  // Uber Go / Ola Mini: Base ₹60 + ₹15/km + ₹1.5/min in traffic, min ₹100
+  const cab = Math.max(100, Math.round(60 + dist * 15 + time * 1.5));
+
+  // Uber Auto / Rapido Auto / Meter: Base ₹30 (first 1.5km) + ₹12/km + ₹1/min, min ₹45
+  const auto = Math.max(45, Math.round(30 + Math.max(0, dist - 1.5) * 12 + time * 1.0));
+
+  // Rapido Bike: Base ₹25 + ₹7.5/km, min ₹35
+  const bike = Math.max(35, Math.round(25 + dist * 7.5));
+
+  // Shared E-Rickshaw / Feeder: ₹15 for <= 1.5km, ₹20 for <= 3km
+  const eRickshaw = dist <= 3.2 ? (dist <= 1.5 ? 15 : 20) : undefined;
+
+  return { cab, auto, bike, eRickshaw, walk: 0 };
 }
 
 // Compute comprehensive trip plan
@@ -1706,7 +1784,10 @@ export function planMultiModalTrip(
   destName: string,
   destLat: number,
   destLng: number,
-  knownDestination?: FamousDestination
+  knownDestination?: FamousDestination,
+  passengerCount: number = 1,
+  firstMileModeOverride?: RideMode,
+  lastMileModeOverride?: RideMode
 ): MultiModalTripPlan {
   const originStationMatch = findNearestMetroStation(originLat, originLng);
   const destStationMatch = knownDestination
@@ -1716,16 +1797,35 @@ export function planMultiModalTrip(
   const oStation = originStationMatch.station;
   const dStation = destStationMatch.station;
 
-  // First mile
+  // First mile calculations
   const isFirstMileWalkable = originStationMatch.distanceKm <= 0.8;
+  const firstMileRoadDist = Math.round(originStationMatch.distanceKm * 1.25 * 10) / 10;
+  // Realistic urban road speed in Delhi-NCR (~18-20 km/h) = ~3.2 min/km + 4m cab/auto wait time
+  const firstMileRoadDurationMin = Math.max(7, Math.round(firstMileRoadDist * 3.3) + 4);
+  const firstMileWalkDurationMin = Math.max(3, Math.round(originStationMatch.distanceKm * 12));
+  const firstMileFareOptions = estimateRideHailingFares(firstMileRoadDist, firstMileRoadDurationMin);
+
+  const selectedFirstMileMode: RideMode = firstMileModeOverride || (isFirstMileWalkable ? 'walk' : 'auto');
+  const selectedFirstMileCost =
+    selectedFirstMileMode === 'walk'
+      ? 0
+      : selectedFirstMileMode === 'cab'
+      ? firstMileFareOptions.cab
+      : selectedFirstMileMode === 'e-rickshaw' && firstMileFareOptions.eRickshaw
+      ? firstMileFareOptions.eRickshaw * passengerCount
+      : firstMileFareOptions.auto;
+
+  const firstMileDurationMin =
+    selectedFirstMileMode === 'walk' ? firstMileWalkDurationMin : firstMileRoadDurationMin;
+
   const firstMile = {
-    mode: isFirstMileWalkable ? ('walk' as const) : ('auto_or_cab' as const),
+    mode: selectedFirstMileMode,
     distanceKm: originStationMatch.distanceKm,
-    durationMin: isFirstMileWalkable ? Math.max(3, Math.round(originStationMatch.distanceKm * 12)) : 6,
-    estimatedCostInr: isFirstMileWalkable ? 0 : Math.min(100, Math.max(40, Math.round(originStationMatch.distanceKm * 20))),
+    durationMin: firstMileDurationMin,
+    estimatedCostInr: selectedFirstMileCost,
     instructions: isFirstMileWalkable
       ? `Walk approximately ${originStationMatch.distanceKm} km directly to ${oStation.name} metro station.`
-      : `Take a quick auto or cab from your location to ${oStation.name} Metro Station.`,
+      : `Take a ${selectedFirstMileMode === 'cab' ? 'cab' : 'quick auto'} (~${firstMileRoadDist} km) to ${oStation.name} Metro Station.`,
     antiAnxietyTip: isFirstMileWalkable
       ? 'Look for the standard overhead blue/red DMRC logo sign as you approach.'
       : 'Book via Uber Auto or Rapido so you do not have to negotiate fare or explain directions to anyone.'
@@ -1747,7 +1847,6 @@ export function planMultiModalTrip(
       stopsCount: estimateStopsCount(oStation, dStation)
     });
   } else {
-    // Check common interchanges:
     // Rapid Metro <-> Yellow Line: Sikanderpur
     if (
       (oStation.line === 'Rapid Metro' && dStation.line === 'Yellow') ||
@@ -1794,7 +1893,6 @@ export function planMultiModalTrip(
         stopsCount: 5
       });
     } else {
-      // General transfer via Rajiv Chowk or Central Sec
       requiresTransfer = true;
       transferStation = METRO_STATIONS['sikanderpur-yellow'];
       lines.push({
@@ -1817,8 +1915,9 @@ export function planMultiModalTrip(
   }
 
   const totalStops = lines.reduce((acc, l) => acc + l.stopsCount, 0);
-  const totalDurationMin = totalStops * 2.5 + (requiresTransfer ? 6 : 0) + 4;
-  const estimatedFareInr = Math.min(60, Math.max(20, Math.round(totalStops * 4)));
+  const metroTransitDurationMin = totalStops * 2.5 + (requiresTransfer ? 6 : 0) + 4;
+  const metroFarePerPersonInr = calculateDmrcMetroFare(totalStops);
+  const metroTotalFareInr = metroFarePerPersonInr * Math.max(1, passengerCount);
 
   // Destination station exit details
   const exitInfo = dStation.exitGates[0] || {
@@ -1833,14 +1932,31 @@ export function planMultiModalTrip(
   // Last mile
   const lastMileDistance = destStationMatch.distanceKm;
   const isLastMileWalkable = lastMileDistance <= 0.6;
-  
+  const lastMileRoadDist = Math.round(lastMileDistance * 1.25 * 10) / 10;
+  const lastMileRoadDurationMin = Math.max(5, Math.round(lastMileRoadDist * 3.3) + 3);
+  const lastMileWalkDurationMin = Math.max(3, Math.round(lastMileDistance * 12));
+  const lastMileFareOptions = estimateRideHailingFares(lastMileRoadDist, lastMileRoadDurationMin);
+
+  const selectedLastMileMode: RideMode = lastMileModeOverride || (isLastMileWalkable ? 'walk' : 'auto');
+  const selectedLastMileCost =
+    selectedLastMileMode === 'walk'
+      ? 0
+      : selectedLastMileMode === 'cab'
+      ? lastMileFareOptions.cab
+      : selectedLastMileMode === 'e-rickshaw' && lastMileFareOptions.eRickshaw
+      ? lastMileFareOptions.eRickshaw * passengerCount
+      : lastMileFareOptions.auto;
+
+  const lastMileDurationMin =
+    selectedLastMileMode === 'walk' ? lastMileWalkDurationMin : lastMileRoadDurationMin;
+
   const lastMile = {
     distanceKm: lastMileDistance,
     options: knownDestination?.lastMileOptions || [
       {
         mode: (isLastMileWalkable ? 'walk' : 'auto') as 'walk' | 'auto',
-        durationMin: isLastMileWalkable ? Math.round(lastMileDistance * 12) : 5,
-        estimatedCostInr: isLastMileWalkable ? 0 : 40,
+        durationMin: isLastMileWalkable ? lastMileWalkDurationMin : lastMileRoadDurationMin,
+        estimatedCostInr: isLastMileWalkable ? 0 : lastMileFareOptions.auto,
         description: isLastMileWalkable
           ? `Walk ${lastMileDistance} km directly to ${destName}.`
           : `Take an auto from outside Gate ${gateNumber} to ${destName}.`
@@ -1862,6 +1978,45 @@ export function planMultiModalTrip(
     `Exit confidently: Head straight for Exit Gate ${gateNumber} using overhead arrow signs.`,
     'Last Mile ride: Open Uber / Rapido while exiting the metro escalator so your auto/cab is arriving right as you reach the street gate.'
   ];
+
+  // Total End-to-End Fare
+  const totalEstimatedFareInr = selectedFirstMileCost + metroTotalFareInr + selectedLastMileCost;
+
+  // Direct road ride comparison (origin all the way to destination by cab)
+  const directDistanceStraight = calculateDistance(originLat, originLng, destLat, destLng);
+  const directRoadDistance = Math.round(directDistanceStraight * 1.35 * 10) / 10;
+  const directDrivingTimeMin = Math.round(directRoadDistance * 3.6) + 6;
+  const directCabFare = estimateRideHailingFares(directRoadDistance, directDrivingTimeMin).cab;
+  const totalTripDurationMin = Math.round(firstMileDurationMin + metroTransitDurationMin + lastMileDurationMin);
+
+  const fareBreakdown: FareBreakdown = {
+    totalEstimatedFareInr,
+    passengerCount: Math.max(1, passengerCount),
+    firstMileMode: selectedFirstMileMode,
+    firstMileCostInr: selectedFirstMileCost,
+    metroFarePerPersonInr,
+    metroTotalFareInr,
+    lastMileMode: selectedLastMileMode,
+    lastMileCostInr: selectedLastMileCost,
+    firstMileOptions: {
+      cab: firstMileFareOptions.cab,
+      auto: firstMileFareOptions.auto,
+      eRickshaw: firstMileFareOptions.eRickshaw,
+      walk: 0
+    },
+    lastMileOptions: {
+      cab: lastMileFareOptions.cab,
+      auto: lastMileFareOptions.auto,
+      eRickshaw: lastMileFareOptions.eRickshaw,
+      walk: 0
+    },
+    directCabComparison: {
+      estimatedCostInr: directCabFare,
+      durationMin: directDrivingTimeMin,
+      savingsInr: Math.max(0, directCabFare - totalEstimatedFareInr),
+      timeDiffMin: directDrivingTimeMin - totalTripDurationMin
+    }
+  };
 
   return {
     origin: {
@@ -1885,8 +2040,8 @@ export function planMultiModalTrip(
       transferStation,
       lines,
       totalStops,
-      totalDurationMin: Math.round(totalDurationMin),
-      estimatedFareInr,
+      totalDurationMin: Math.round(metroTransitDurationMin),
+      estimatedFareInr: metroFarePerPersonInr,
       transferInstruction: requiresTransfer
         ? `Change trains at ${transferStation?.name || 'Sikanderpur'}. Walk through the dedicated connecting skybridge. You do NOT need to buy a new token or exit the gates.`
         : undefined
@@ -1897,7 +2052,8 @@ export function planMultiModalTrip(
       signageTip: `Look for overhead ceiling signage marking "Gate ${gateNumber} - ${leadsTo}".`
     },
     lastMile,
-    introvertChecklist
+    introvertChecklist,
+    fareBreakdown
   };
 }
 

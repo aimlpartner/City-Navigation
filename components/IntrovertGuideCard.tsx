@@ -30,11 +30,26 @@ import {
   VolumeX,
   Eye,
   GitCommitVertical,
-  Radar
+  Radar,
+  Users,
+  ExternalLink
 } from 'lucide-react';
+import { RideMode } from '@/lib/delhi-ncr-transit';
 
 interface IntrovertGuideCardProps {
   plan: MultiModalTripPlan;
+  passengerCount?: number;
+  onPassengerCountChange?: (count: number) => void;
+  firstMileMode?: RideMode;
+  onFirstMileModeChange?: (mode: RideMode) => void;
+  lastMileMode?: RideMode;
+  onLastMileModeChange?: (mode: RideMode) => void;
+  deepLinks?: {
+    uberFirstMileUrl?: string;
+    uberLastMileUrl?: string;
+    uberDirectUrl?: string;
+    rapidoUrl?: string;
+  };
   aiGuide: {
     loading: boolean;
     text: string | null;
@@ -47,6 +62,13 @@ interface IntrovertGuideCardProps {
 
 export function IntrovertGuideCard({
   plan,
+  passengerCount,
+  onPassengerCountChange,
+  firstMileMode,
+  onFirstMileModeChange,
+  lastMileMode,
+  onLastMileModeChange,
+  deepLinks,
   aiGuide,
   onRequestAiRefresh,
   onOpenTransitRadar
@@ -125,17 +147,31 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
               <span className="truncate">Est. Duration</span>
             </div>
             <div className="text-sm sm:text-xl font-extrabold text-white mt-1 tabular-nums flex items-center justify-center gap-0.5">
-              <span>~{plan.firstMile.durationMin + plan.metroLeg.totalDurationMin + (plan.lastMile.options[0]?.durationMin || 5)} min</span>
+              <span>~{plan.liveTraffic?.totalDurationMin || (plan.firstMile.durationMin + plan.metroLeg.totalDurationMin + (plan.lastMile.options[0]?.durationMin || 5))} min</span>
             </div>
+            {plan.liveTraffic?.trafficCondition === 'heavy' ? (
+              <div className="text-[9px] text-rose-300 font-bold mt-0.5 flex items-center justify-center gap-1">
+                <Flame className="w-2.5 h-2.5 text-rose-400" />
+                <span>Heavy Traffic (+{plan.liveTraffic.firstMileDelayMin + plan.liveTraffic.lastMileDelayMin}m)</span>
+              </div>
+            ) : (
+              <div className="text-[9px] text-emerald-300/80 font-bold mt-0.5 flex items-center justify-center gap-1">
+                <Zap className="w-2.5 h-2.5 text-emerald-300" />
+                <span>Live Google Traffic</span>
+              </div>
+            )}
           </div>
 
-          <div className="bg-[#1A3E31]/85 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 border border-[#235241]">
-            <div className="text-[10px] sm:text-[11px] text-emerald-200/80 font-bold uppercase tracking-wider flex items-center justify-center gap-1">
+          <div className="bg-[#1A3E31]/85 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 border border-amber-400/30">
+            <div className="text-[10px] sm:text-[11px] text-amber-200 font-bold uppercase tracking-wider flex items-center justify-center gap-1">
               <IndianRupee className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-300 shrink-0" strokeWidth={1.75} />
-              <span className="truncate">Metro Fare</span>
+              <span className="truncate">Total Trip Fare</span>
             </div>
             <div className="text-sm sm:text-xl font-extrabold text-amber-200 mt-1 tabular-nums">
-              ₹{plan.metroLeg.estimatedFareInr}
+              ₹{plan.fareBreakdown?.totalEstimatedFareInr || (plan.firstMile.estimatedCostInr + plan.metroLeg.estimatedFareInr + (plan.lastMile.options[0]?.estimatedCostInr || 40))}
+            </div>
+            <div className="text-[9px] text-amber-100/70 font-medium mt-0.5 truncate">
+              Cab/Auto + Metro ({plan.fareBreakdown?.passengerCount || 1} pax)
             </div>
           </div>
 
@@ -149,7 +185,27 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
                 Gate {plan.metroExit.gateNumber}
               </span>
             </div>
+            <div className="text-[9px] text-[#F3A585]/80 font-medium mt-0.5 truncate">
+              Direct street exit
+            </div>
           </div>
+        </div>
+
+        {/* Transparent Fare Breakdown Strip */}
+        <div className="mt-3 p-3 rounded-xl bg-white/10 border border-white/15 text-xs text-emerald-100 flex flex-wrap items-center justify-between gap-2 relative z-10">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-white">Itemized:</span>
+            <span>First-mile ~₹{plan.fareBreakdown?.firstMileCostInr || plan.firstMile.estimatedCostInr}</span>
+            <span>+</span>
+            <span>Metro ~₹{plan.fareBreakdown?.metroTotalFareInr || plan.metroLeg.estimatedFareInr}</span>
+            <span>+</span>
+            <span>Last-mile ~₹{plan.fareBreakdown?.lastMileCostInr || plan.lastMile.options[0]?.estimatedCostInr || 40}</span>
+          </div>
+          {plan.fareBreakdown?.directCabComparison && (
+            <div className="text-[11px] text-amber-200 font-bold">
+              Direct Cab: ~₹{plan.fareBreakdown.directCabComparison.estimatedCostInr} ({plan.fareBreakdown.directCabComparison.durationMin}m)
+            </div>
+          )}
         </div>
 
         {/* Live Service Alerts & Status Banner */}
@@ -180,6 +236,35 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
             ))}
           </div>
         )}
+      </div>
+
+      {/* Commuters / Passengers Control Bar */}
+      <div className="p-4 rounded-2xl bg-white border border-[#E2E4DC] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-[#143428]/10 text-[#143428] flex items-center justify-center">
+            <Users className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-black text-[#17201B]">Commuters / Passengers</div>
+            <div className="text-[11px] text-[#6B7267]">Metro tickets multiply per person; cab & auto fares are shared</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5 bg-[#F4F5F0] p-1 rounded-xl self-start sm:self-auto">
+          {[1, 2, 3, 4].map(num => (
+            <button
+              key={num}
+              type="button"
+              onClick={() => onPassengerCountChange?.(num)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black transition active:scale-95 ${
+                (passengerCount || plan.fareBreakdown?.passengerCount || 1) === num
+                  ? 'bg-[#143428] text-white shadow-xs'
+                  : 'text-[#53584E] hover:text-[#17201B]'
+              }`}
+            >
+              {num} {num === 1 ? 'person' : 'people'}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Transit Journey Section Header */}
@@ -220,7 +305,7 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
           </div>
 
           <span className="self-start sm:self-auto px-3.5 py-1.5 rounded-xl bg-[#F8F9F5] border border-[#E2E4DC] text-[#17201B] text-xs font-bold flex items-center gap-2 shrink-0">
-            {plan.firstMile.mode === 'walk' ? (
+            {firstMileMode === 'walk' || plan.firstMile.mode === 'walk' ? (
               <>
                 <PersonStanding className="w-4 h-4 text-[#143428]" strokeWidth={2} />
                 <span>Walk ~{plan.firstMile.distanceKm} km</span>
@@ -228,11 +313,83 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
             ) : (
               <>
                 <CarTaxiFront className="w-4 h-4 text-[#B9552C]" strokeWidth={2} />
-                <span>Auto/Cab ~{plan.firstMile.distanceKm} km</span>
+                <span>{firstMileMode === 'cab' ? 'Cab' : 'Auto'} ~{plan.firstMile.distanceKm} km</span>
               </>
             )}
           </span>
         </div>
+
+        {/* First-Mile Mode Selector Buttons */}
+        <div className="space-y-1.5">
+          <div className="text-xs font-bold text-[#53584E]">Choose First-Mile Mode:</div>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => onFirstMileModeChange?.('cab')}
+              className={`p-2.5 rounded-xl border text-left transition active:scale-95 ${
+                (firstMileMode || plan.fareBreakdown?.firstMileMode) === 'cab'
+                  ? 'bg-[#143428] text-white border-[#143428] shadow-xs'
+                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40'
+              }`}
+            >
+              <div className="flex items-center justify-between text-xs font-extrabold">
+                <span>🚕 Cab</span>
+                <span>₹{plan.fareBreakdown?.firstMileOptions?.cab || 150}</span>
+              </div>
+              <div className="text-[10px] text-emerald-200/80 mt-0.5">Uber Go / Ola</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onFirstMileModeChange?.('auto')}
+              className={`p-2.5 rounded-xl border text-left transition active:scale-95 ${
+                (firstMileMode || plan.fareBreakdown?.firstMileMode) === 'auto'
+                  ? 'bg-[#143428] text-white border-[#143428] shadow-xs'
+                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40'
+              }`}
+            >
+              <div className="flex items-center justify-between text-xs font-extrabold">
+                <span>🛺 Auto</span>
+                <span>₹{plan.fareBreakdown?.firstMileOptions?.auto || 95}</span>
+              </div>
+              <div className="text-[10px] text-emerald-200/80 mt-0.5">Uber Auto / Rapido</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onFirstMileModeChange?.('walk')}
+              className={`p-2.5 rounded-xl border text-left transition active:scale-95 ${
+                (firstMileMode || plan.fareBreakdown?.firstMileMode) === 'walk'
+                  ? 'bg-[#143428] text-white border-[#143428] shadow-xs'
+                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40'
+              }`}
+            >
+              <div className="flex items-center justify-between text-xs font-extrabold">
+                <span>🚶 Walk</span>
+                <span>Free</span>
+              </div>
+              <div className="text-[10px] text-emerald-200/80 mt-0.5">~{Math.round(plan.firstMile.distanceKm * 12)}m walk</div>
+            </button>
+          </div>
+        </div>
+
+        {/* Uber Link */}
+        {(firstMileMode || plan.fareBreakdown?.firstMileMode) !== 'walk' && (
+          <div className="pt-1">
+            <a
+              href={
+                deepLinks?.uberFirstMileUrl ||
+                `https://m.uber.com/ul/?action=setPickup&client_id=metronav&pickup[latitude]=${plan.origin.lat}&pickup[longitude]=${plan.origin.lng}&dropoff[latitude]=${plan.originStation.lat}&dropoff[longitude]=${plan.originStation.lng}`
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-black text-white text-xs font-bold hover:bg-neutral-800 transition active:scale-95 shadow-xs"
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Book Ride to {plan.originStation.name} on Uber</span>
+            </a>
+          </div>
+        )}
 
         <p className="text-sm text-[#53584E] leading-relaxed">
           {plan.firstMile.instructions}
@@ -428,31 +585,87 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
           {plan.lastMile.exactInstructions}
         </p>
 
-        {/* Last Mile Mode Comparison (Clean chips with generous breathing room) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-          {plan.lastMile.options.map((opt, i) => (
-            <div
-              key={i}
-              className="p-4 rounded-xl bg-[#F8F9F5] text-xs space-y-1.5"
+        {/* Interactive Last Mile Mode Selector */}
+        <div className="space-y-1.5 pt-1">
+          <div className="text-xs font-bold text-[#53584E]">Choose Last-Mile Mode:</div>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => onLastMileModeChange?.('cab')}
+              className={`p-2.5 rounded-xl border text-left transition active:scale-95 ${
+                (lastMileMode || plan.fareBreakdown?.lastMileMode) === 'cab'
+                  ? 'bg-[#143428] text-white border-[#143428] shadow-xs'
+                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40'
+              }`}
             >
-              <div className="flex items-center justify-between font-bold text-[#17201B]">
-                <span className="capitalize flex items-center gap-2 text-sm">
-                  {opt.mode === 'walk' && <PersonStanding className="w-4 h-4 text-[#143428]" strokeWidth={2} />}
-                  {opt.mode === 'auto' && <CarTaxiFront className="w-4 h-4 text-[#B9552C]" strokeWidth={2} />}
-                  {opt.mode === 'e-rickshaw' && <Zap className="w-4 h-4 text-[#143428]" strokeWidth={2} />}
-                  {opt.mode === 'cab' && <CarTaxiFront className="w-4 h-4 text-[#53584E]" strokeWidth={2} />}
-                  {opt.mode}
-                </span>
-                <span className="font-extrabold tabular-nums text-[#143428]">
-                  {opt.estimatedCostInr === 0 ? 'Free' : `₹${opt.estimatedCostInr}`}
-                </span>
+              <div className="flex items-center justify-between text-xs font-extrabold">
+                <span>🚕 Cab</span>
+                <span>₹{plan.fareBreakdown?.lastMileOptions?.cab || 150}</span>
               </div>
-              <div className="text-[#6B7267] text-xs leading-relaxed">
-                {opt.durationMin} mins • {opt.description}
+              <div className="text-[10px] text-emerald-200/80 mt-0.5">Uber Go / Ola</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onLastMileModeChange?.('auto')}
+              className={`p-2.5 rounded-xl border text-left transition active:scale-95 ${
+                (lastMileMode || plan.fareBreakdown?.lastMileMode) === 'auto'
+                  ? 'bg-[#143428] text-white border-[#143428] shadow-xs'
+                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40'
+              }`}
+            >
+              <div className="flex items-center justify-between text-xs font-extrabold">
+                <span>🛺 Auto</span>
+                <span>₹{plan.fareBreakdown?.lastMileOptions?.auto || 95}</span>
               </div>
-            </div>
-          ))}
+              <div className="text-[10px] text-emerald-200/80 mt-0.5">Uber Auto / Rapido</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onLastMileModeChange?.('walk')}
+              className={`p-2.5 rounded-xl border text-left transition active:scale-95 ${
+                (lastMileMode || plan.fareBreakdown?.lastMileMode) === 'walk'
+                  ? 'bg-[#143428] text-white border-[#143428] shadow-xs'
+                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40'
+              }`}
+            >
+              <div className="flex items-center justify-between text-xs font-extrabold">
+                <span>🚶 Walk</span>
+                <span>Free</span>
+              </div>
+              <div className="text-[10px] text-emerald-200/80 mt-0.5">~{Math.round(plan.lastMile.distanceKm * 12)}m walk</div>
+            </button>
+          </div>
         </div>
+
+        {/* Uber & Rapido Booking Buttons */}
+        {(lastMileMode || plan.fareBreakdown?.lastMileMode) !== 'walk' && (
+          <div className="flex items-center gap-2 pt-1">
+            <a
+              href={
+                deepLinks?.uberLastMileUrl ||
+                `https://m.uber.com/ul/?action=setPickup&client_id=metronav&pickup[latitude]=${plan.destinationStation.lat}&pickup[longitude]=${plan.destinationStation.lng}&dropoff[latitude]=${plan.destination.lat}&dropoff[longitude]=${plan.destination.lng}`
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-black text-white text-xs font-bold hover:bg-neutral-800 transition active:scale-95 shadow-xs"
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Book Ride from Station on Uber</span>
+            </a>
+
+            <a
+              href="https://rapido.bike/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400 text-amber-950 text-xs font-black hover:bg-amber-300 transition active:scale-95 shadow-xs"
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-amber-900" />
+              <span>Rapido Auto</span>
+            </a>
+          </div>
+        )}
 
         {/* Connecting Feeder Bus (Flattened with clean list items) */}
         {destinationConnectingBuses.length > 0 && (

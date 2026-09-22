@@ -14,6 +14,7 @@ import {
   MetroStation,
   MultiModalTripPlan
 } from '@/lib/delhi-ncr-transit';
+import { decodeGooglePolyline } from '@/lib/utils';
 import {
   MapPinned,
   Navigation,
@@ -65,11 +66,16 @@ function RoutePolylines({ plan }: { plan: MultiModalTripPlan }) {
 
     const polylines: google.maps.Polyline[] = [];
 
-    // 1. FIRST-MILE PATH: Origin -> Boarding Metro Station
-    const firstMileCoords = [
-      { lat: plan.origin.lat, lng: plan.origin.lng },
-      { lat: plan.originStation.lat, lng: plan.originStation.lng }
-    ];
+    // 1. FIRST-MILE PATH: Origin -> Boarding Metro Station (use real Google road polyline if available)
+    const decodedFm = plan.liveTraffic?.firstMilePolyline
+      ? decodeGooglePolyline(plan.liveTraffic.firstMilePolyline)
+      : [];
+    const firstMileCoords = decodedFm.length > 0
+      ? decodedFm
+      : [
+          { lat: plan.origin.lat, lng: plan.origin.lng },
+          { lat: plan.originStation.lat, lng: plan.originStation.lng }
+        ];
 
     // Under-layer casing (soft translucent track)
     const firstMileUnder = new mapsLib.Polyline({
@@ -191,11 +197,16 @@ function RoutePolylines({ plan }: { plan: MultiModalTripPlan }) {
       polylines.push(directTrack);
     }
 
-    // 3. LAST-MILE PATH: Deboarding Metro Station Exit Gate -> Final Destination
-    const lastMileCoords = [
-      { lat: plan.destinationStation.lat, lng: plan.destinationStation.lng },
-      { lat: plan.destination.lat, lng: plan.destination.lng }
-    ];
+    // 3. LAST-MILE PATH: Deboarding Metro Station Exit Gate -> Final Destination (use real Google road polyline if available)
+    const decodedLm = plan.liveTraffic?.lastMilePolyline
+      ? decodeGooglePolyline(plan.liveTraffic.lastMilePolyline)
+      : [];
+    const lastMileCoords = decodedLm.length > 0
+      ? decodedLm
+      : [
+          { lat: plan.destinationStation.lat, lng: plan.destinationStation.lng },
+          { lat: plan.destination.lat, lng: plan.destination.lng }
+        ];
 
     // Under-layer casing (warm terracotta hint)
     const lastMileUnder = new mapsLib.Polyline({

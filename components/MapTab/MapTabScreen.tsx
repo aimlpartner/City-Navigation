@@ -69,12 +69,12 @@ export function MapTabScreen({
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1 text-xs font-bold text-[#143428]">
                 <Timer className="w-3.5 h-3.5 text-[#143428]" />
-                <span>~{totalDuration} min</span>
+                <span>~{tripPlan.liveTraffic?.totalDurationMin || totalDuration} min</span>
               </div>
               <span className="text-[#D5D8CD] font-bold">•</span>
               <div className="flex items-center gap-1 text-xs font-bold text-[#B9552C]">
                 <IndianRupee className="w-3.5 h-3.5 text-[#B9552C]" />
-                <span>₹{tripPlan.metroLeg.estimatedFareInr}</span>
+                <span>₹{tripPlan.fareBreakdown?.totalEstimatedFareInr || tripPlan.metroLeg.estimatedFareInr}</span>
               </div>
             </div>
 
