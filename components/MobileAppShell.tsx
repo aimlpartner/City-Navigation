@@ -377,15 +377,9 @@ export function MobileAppShell({
   };
 
   return (
-    <div className="lg:hidden h-[100dvh] max-h-[100dvh] bg-[#F4F5F0] flex flex-col text-[#17201B] overflow-hidden select-none">
+    <div className="lg:hidden fixed inset-0 w-full h-full bg-[#F4F5F0] flex flex-col text-[#17201B] overflow-hidden select-none z-30">
       {/* Mobile App Top Header */}
-      <header
-        className="shrink-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#E2E4DC] px-4 shadow-xs"
-        style={{
-          paddingTop: 'calc(max(env(safe-area-inset-top, 0px), 12px) + 6px)',
-          paddingBottom: '10px',
-        }}
-      >
+      <header className="shrink-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#E2E4DC] px-4 shadow-xs top-header-safe pb-2.5">
         <div className="max-w-md mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-9 h-9 rounded-xl bg-[#143428] text-white flex items-center justify-center shadow-xs shrink-0">

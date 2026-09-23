@@ -1,4 +1,4 @@
-const CACHE_NAME = 'metronav-v1';
+const CACHE_NAME = 'metronav-v4';
 
 const STATIC_ASSETS = [
   '/',

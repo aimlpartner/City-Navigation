@@ -145,11 +145,7 @@ export function BottomTabBar({ activeTab, onTabChange, hasActiveRoute = false }:
   return (
     <nav
       aria-label="Mobile navigation"
-      className="w-full shrink-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#E2E4DC] shadow-[0_-4px_20px_rgba(0,0,0,0.06)] lg:hidden"
-      style={{
-        paddingTop: '6px',
-        paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 12px) + 8px)',
-      }}
+      className="w-full shrink-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#E2E4DC] shadow-[0_-4px_20px_rgba(0,0,0,0.06)] lg:hidden pt-1.5 bottom-nav-safe"
     >
       <div className="max-w-md mx-auto px-4 flex items-center justify-around">
         {tabs.map((tab) => {

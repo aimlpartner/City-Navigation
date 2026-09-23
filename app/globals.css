@@ -51,11 +51,23 @@
   }
 
   .pt-safe {
-    padding-top: max(env(safe-area-inset-top, 0px), 14px);
+    padding-top: 16px;
+    padding-top: max(env(safe-area-inset-top, 0px), 16px);
   }
 
   .pb-safe {
-    padding-bottom: max(env(safe-area-inset-bottom, 0px), 14px);
+    padding-bottom: 20px;
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
+  }
+
+  .top-header-safe {
+    padding-top: 16px;
+    padding-top: max(calc(env(safe-area-inset-top, 0px) + 8px), 16px);
+  }
+
+  .bottom-nav-safe {
+    padding-bottom: 20px;
+    padding-bottom: max(calc(env(safe-area-inset-bottom, 0px) + 8px), 20px);
   }
 }
 

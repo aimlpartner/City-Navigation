@@ -62,6 +62,7 @@ export function PwaInstallPrompt() {
         navigator.serviceWorker
           .register('/sw.js')
           .then((reg) => {
+            reg.update();
             console.log('MetroNav Service Worker registered with scope:', reg.scope);
           })
           .catch((err) => {
