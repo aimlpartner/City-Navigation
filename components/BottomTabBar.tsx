@@ -145,12 +145,13 @@ export function BottomTabBar({ activeTab, onTabChange, hasActiveRoute = false }:
   return (
     <nav
       aria-label="Mobile navigation"
-      className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#E2E4DC] shadow-[0_-4px_20px_rgba(0,0,0,0.06)] lg:hidden"
+      className="w-full shrink-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#E2E4DC] shadow-[0_-4px_20px_rgba(0,0,0,0.06)] lg:hidden"
       style={{
-        paddingBottom: 'max(env(safe-area-inset-bottom), 8px)',
+        paddingTop: '6px',
+        paddingBottom: 'calc(max(env(safe-area-inset-bottom, 0px), 12px) + 8px)',
       }}
     >
-      <div className="max-w-md mx-auto px-4 pt-1.5 flex items-center justify-around">
+      <div className="max-w-md mx-auto px-4 flex items-center justify-around">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
 
@@ -160,7 +161,7 @@ export function BottomTabBar({ activeTab, onTabChange, hasActiveRoute = false }:
               onClick={() => onTabChange(tab.id)}
               aria-selected={isActive}
               role="tab"
-              className={`flex flex-col items-center justify-center min-w-[72px] min-h-[50px] py-1 px-2 transition-all duration-200 relative cursor-pointer ${
+              className={`flex flex-col items-center justify-center min-w-[72px] min-h-[44px] py-0.5 px-2 transition-all duration-200 relative cursor-pointer ${
                 isActive
                   ? 'text-[#143428]'
                   : 'text-[#6B7267] hover:text-[#17201B] active:scale-95'
@@ -174,7 +175,7 @@ export function BottomTabBar({ activeTab, onTabChange, hasActiveRoute = false }:
               </div>
 
               <span
-                className={`text-[12px] font-sans mt-1 tracking-tight transition-colors ${
+                className={`text-[11.5px] font-sans mt-0.5 tracking-tight transition-colors ${
                   isActive ? 'font-bold text-[#143428]' : 'font-medium text-[#6B7267]'
                 }`}
               >

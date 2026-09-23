@@ -191,7 +191,7 @@ export function PwaInstallPrompt() {
 
       {/* Install Success Toast */}
       {installSuccess && (
-        <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#143428] border border-emerald-400/50 text-white text-xs font-bold shadow-2xl animate-in fade-in slide-in-from-top duration-300">
+        <div className="fixed top-[calc(max(env(safe-area-inset-top,0px),12px)+8px)] left-1/2 -translate-x-1/2 z-[110] flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#143428] border border-emerald-400/50 text-white text-xs font-bold shadow-2xl animate-in fade-in slide-in-from-top duration-300">
           <CheckCircle2 className="w-4 h-4 text-[#5ee9b5]" />
           <span>MetroNav added to your Home Screen!</span>
         </div>
@@ -199,7 +199,7 @@ export function PwaInstallPrompt() {
 
       {/* Floating Bottom Install Banner for Mobile/Desktop */}
       {!isInstalled && showBanner && (
-        <div className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+74px)] lg:bottom-6 left-3 right-3 lg:left-auto lg:right-6 max-w-md lg:max-w-sm mx-auto lg:mx-0 z-40 bg-[#143428]/95 backdrop-blur-xl border border-emerald-400/30 rounded-2xl p-3 sm:p-4 text-white shadow-2xl transition-all duration-300">
+        <div className="fixed bottom-[calc(max(env(safe-area-inset-bottom,0px),12px)+84px)] lg:bottom-6 left-3 right-3 lg:left-auto lg:right-6 max-w-md lg:max-w-sm mx-auto lg:mx-0 z-40 bg-[#143428]/95 backdrop-blur-xl border border-emerald-400/30 rounded-2xl p-3 sm:p-4 text-white shadow-2xl transition-all duration-300">
           <div className="flex items-start gap-2.5 sm:gap-3">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#102a20] border border-emerald-400/30 flex items-center justify-center shrink-0 p-1.5 shadow-inner">
               <Image

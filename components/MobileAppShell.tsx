@@ -379,33 +379,39 @@ export function MobileAppShell({
   return (
     <div className="lg:hidden h-[100dvh] max-h-[100dvh] bg-[#F4F5F0] flex flex-col text-[#17201B] overflow-hidden select-none">
       {/* Mobile App Top Header */}
-      <header className="shrink-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#E2E4DC] px-4 py-2.5 shadow-xs">
-        <div className="max-w-md mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#143428] text-white flex items-center justify-center shadow-xs">
+      <header
+        className="shrink-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#E2E4DC] px-4 shadow-xs"
+        style={{
+          paddingTop: 'calc(max(env(safe-area-inset-top, 0px), 12px) + 6px)',
+          paddingBottom: '10px',
+        }}
+      >
+        <div className="max-w-md mx-auto flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-[#143428] text-white flex items-center justify-center shadow-xs shrink-0">
               <TrainFront className="w-5 h-5 text-[#5ee9b5]" strokeWidth={2.2} />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <h1 className="font-extrabold text-base tracking-tight text-[#17201B] font-sans leading-none">
                   MetroNav
                 </h1>
-                <span className="px-1.5 py-0.5 rounded bg-[#143428]/10 text-[#143428] text-[10px] font-extrabold uppercase leading-none">
+                <span className="px-1.5 py-0.5 rounded bg-[#143428]/10 text-[#143428] text-[10px] font-extrabold uppercase leading-none shrink-0">
                   NCR
                 </span>
               </div>
-              <p className="text-[11px] text-[#6B7267] font-medium mt-0.5 leading-none">
+              <p className="text-[11px] text-[#6B7267] font-medium mt-0.5 leading-none truncate">
                 Delhi • Gurgaon • Airport
               </p>
             </div>
           </div>
 
           {/* Header Action Buttons */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
               onClick={triggerPwaInstall}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#143428] text-white text-xs font-bold shadow-xs active:scale-95 transition hover:bg-[#1A3E31] cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#143428] text-white text-xs font-bold shadow-xs active:scale-95 transition hover:bg-[#1A3E31] cursor-pointer shrink-0"
               title="Download & Install MetroNav App"
             >
               <Download className="w-3.5 h-3.5 text-[#5ee9b5]" />
@@ -416,7 +422,7 @@ export function MobileAppShell({
               <button
                 type="button"
                 onClick={onOpenTransitRadar}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white hover:bg-[#F8F9F5] border border-[#D5D8CD] text-xs font-bold text-[#143428] shadow-xs active:scale-95 transition cursor-pointer"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white hover:bg-[#F8F9F5] border border-[#D5D8CD] text-xs font-bold text-[#143428] shadow-xs active:scale-95 transition cursor-pointer shrink-0"
               >
                 <Radar className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
                 <span>Radar</span>
@@ -442,7 +448,7 @@ export function MobileAppShell({
           }}
         >
           {/* Slide 0: Go Tab Screen */}
-          <div className="w-full min-w-full h-full overflow-y-auto overscroll-y-contain px-4 pt-3 pb-24 no-scrollbar">
+          <div className="w-full min-w-full h-full overflow-y-auto overscroll-y-contain px-4 pt-3 pb-10 no-scrollbar">
             <div className="max-w-md mx-auto w-full">
               <GoTabScreen
                 originName={originName}
@@ -471,7 +477,7 @@ export function MobileAppShell({
           </div>
 
           {/* Slide 1: Map Tab Screen */}
-          <div className="w-full min-w-full h-full overflow-hidden relative px-3 pt-2 pb-20">
+          <div className="w-full min-w-full h-full overflow-hidden relative px-3 pt-2 pb-2">
             <div className="max-w-md mx-auto w-full h-full">
               <MapTabScreen
                 tripPlan={tripPlan}
@@ -482,7 +488,7 @@ export function MobileAppShell({
           </div>
 
           {/* Slide 2: Guide Tab Screen */}
-          <div className="w-full min-w-full h-full overflow-y-auto overscroll-y-contain px-4 pt-3 pb-24 no-scrollbar">
+          <div className="w-full min-w-full h-full overflow-y-auto overscroll-y-contain px-4 pt-3 pb-10 no-scrollbar">
             <div className="max-w-md mx-auto w-full">
               <GuideTabScreen
                 tripPlan={tripPlan}
@@ -496,13 +502,11 @@ export function MobileAppShell({
       </div>
 
       {/* Bottom Tab Navigation Bar */}
-      <div className="shrink-0 z-40">
-        <BottomTabBar
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          hasActiveRoute={!!tripPlan}
-        />
-      </div>
+      <BottomTabBar
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        hasActiveRoute={!!tripPlan}
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { calculateDmrcMetroFare, estimateRideHailingFares, RideMode } from "@/lib/delhi-ncr-transit";
+import { calculateMetroFare, calculateDmrcMetroFare, estimateRideHailingFares, RideMode } from "@/lib/delhi-ncr-transit";
 
 interface LegTrafficResult {
   distanceKm: number;
@@ -105,8 +105,9 @@ export async function POST(req: NextRequest) {
 
     // 1. First-mile calculations
     const fmDistKm = firstMileTraffic?.distanceKm || 3.5;
-    const fmDriveDurationMin = firstMileTraffic?.durationInTrafficMin || Math.max(7, Math.round(fmDistKm * 3.3) + 4);
-    const fmWalkDurationMin = Math.round(fmDistKm * 12);
+    // Live traffic drive time from Google Maps + 5 mins driver dispatch/arrival buffer
+    const fmDriveDurationMin = (firstMileTraffic?.durationInTrafficMin || Math.max(8, Math.round(fmDistKm * 3.4) + 4)) + (firstMileMode === "walk" ? 0 : 5);
+    const fmWalkDurationMin = Math.round(fmDistKm * 13);
     const fmDelayMin = firstMileTraffic?.delayMin || 0;
 
     const fmOptions = estimateRideHailingFares(fmDistKm, fmDriveDurationMin);
@@ -123,14 +124,16 @@ export async function POST(req: NextRequest) {
     const selectedFmDuration = selectedFmMode === "walk" ? fmWalkDurationMin : fmDriveDurationMin;
 
     // 2. Metro calculations
-    const metroFarePerPerson = calculateDmrcMetroFare(totalStops || 10);
+    const metroFarePerPerson = calculateMetroFare(originStation, destinationStation, totalStops || 10);
     const metroTotalFare = metroFarePerPerson * Math.max(1, passengerCount);
-    const metroTransitDuration = Math.round((totalStops || 10) * 2.5 + 4);
+    // Real metro journey: in-train running + 4m station security/frisking + 3m platform headway + 3m deboard/exit = +10m buffer
+    const metroTransitDuration = Math.round((totalStops || 10) * 2.4 + 10);
 
     // 3. Last-mile calculations
     const lmDistKm = lastMileTraffic?.distanceKm || 3.0;
-    const lmDriveDurationMin = lastMileTraffic?.durationInTrafficMin || Math.max(5, Math.round(lmDistKm * 3.3) + 3);
-    const lmWalkDurationMin = Math.round(lmDistKm * 12);
+    // Live traffic drive time from Google Maps + 4 mins station exit & driver pickup buffer
+    const lmDriveDurationMin = (lastMileTraffic?.durationInTrafficMin || Math.max(6, Math.round(lmDistKm * 3.4) + 3)) + (lastMileMode === "walk" ? 0 : 4);
+    const lmWalkDurationMin = Math.round(lmDistKm * 13);
     const lmDelayMin = lastMileTraffic?.delayMin || 0;
 
     const lmOptions = estimateRideHailingFares(lmDistKm, lmDriveDurationMin);
@@ -152,7 +155,7 @@ export async function POST(req: NextRequest) {
 
     // 5. Direct Road Cab baseline
     const directDistKm = directCabTraffic?.distanceKm || 16.0;
-    const directDurationTrafficMin = directCabTraffic?.durationInTrafficMin || Math.max(35, Math.round(directDistKm * 3.5) + 6);
+    const directDurationTrafficMin = directCabTraffic?.durationInTrafficMin || Math.max(35, Math.round(directDistKm * 3.8) + 8);
     const directCabFare = estimateRideHailingFares(directDistKm, directDurationTrafficMin).cab;
     const directSavingsInr = Math.max(0, directCabFare - totalEstimatedFareInr);
     const directTimeDiffMin = directDurationTrafficMin - totalTripDurationMin;

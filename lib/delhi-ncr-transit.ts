@@ -1746,32 +1746,113 @@ export interface LiveTrafficInfo {
   lastUpdated?: string;
 }
 
-// Official DMRC slab-based fare per passenger
-export function calculateDmrcMetroFare(stops: number): number {
-  if (stops <= 2) return 10;
-  if (stops <= 5) return 20;
-  if (stops <= 10) return 30;
-  if (stops <= 17) return 40;
-  if (stops <= 25) return 50;
+/**
+ * Official DMRC distance slab fare calculator
+ * Based on official distance-slab tariffs (0-2km: ₹10, 2-5km: ₹20, 5-12km: ₹30, 12-21km: ₹40, 21-32km: ₹50, >32km: ₹60)
+ */
+export function getDmrcDistanceFare(trackDistanceKm: number): number {
+  if (trackDistanceKm <= 2) return 10;
+  if (trackDistanceKm <= 5) return 20;
+  if (trackDistanceKm <= 12) return 30;
+  if (trackDistanceKm <= 21) return 40;
+  if (trackDistanceKm <= 32) return 50;
   return 60;
 }
 
-// Realistic Delhi-NCR ride-hailing market rates (Uber, Rapido, Street Auto)
+/**
+ * Highly accurate multi-network Delhi-NCR Metro Fare Calculator
+ * Accounts for DMRC distance slabs, Rapid Metro flat ₹20 fare,
+ * Sikanderpur interchange combined tickets, and Airport Express lines.
+ */
+export function calculateMetroFare(
+  originStation?: { lat?: number; lng?: number; line?: string; name?: string } | null,
+  destinationStation?: { lat?: number; lng?: number; line?: string; name?: string } | null,
+  stopsCount: number = 8
+): number {
+  if (!originStation || !destinationStation) {
+    return calculateDmrcMetroFare(stopsCount);
+  }
+
+  const oLine = originStation.line || '';
+  const dLine = destinationStation.line || '';
+
+  // 1. Pure Rapid Metro trip (within Gurugram, e.g. Cyber City to Moulsari / Sector 55-56)
+  if (oLine === 'Rapid Metro' && dLine === 'Rapid Metro') {
+    return 20; // Official flat fare for Rapid Metro Gurugram
+  }
+
+  // 2. Airport Express Line
+  if (oLine === 'Airport Express' || dLine === 'Airport Express') {
+    const isShortAerocity =
+      (originStation.name?.includes('Aerocity') && destinationStation.name?.includes('Airport')) ||
+      (destinationStation.name?.includes('Aerocity') && originStation.name?.includes('Airport'));
+    return isShortAerocity ? 20 : 60;
+  }
+
+  // 3. Rapid Metro <-> DMRC Interchange (via Sikanderpur)
+  const hasRapid = oLine === 'Rapid Metro' || dLine === 'Rapid Metro';
+  const hasDmrc = oLine !== 'Rapid Metro' || dLine !== 'Rapid Metro';
+
+  if (hasRapid && hasDmrc) {
+    const dmrcStation = oLine !== 'Rapid Metro' ? originStation : destinationStation;
+    // Sikanderpur station coordinates: 28.4819, 77.0928
+    const distToSikanderpur = dmrcStation.lat && dmrcStation.lng
+      ? calculateDistance(dmrcStation.lat, dmrcStation.lng, 28.4819, 77.0928) * 1.28
+      : 14;
+    const dmrcLegFare = getDmrcDistanceFare(distToSikanderpur);
+    // DMRC distance fare + Rapid Metro ₹20 surcharge ticket
+    return Math.min(80, dmrcLegFare + 20);
+  }
+
+  // 4. Standard DMRC Network (Yellow, Blue, Magenta, Pink, Violet, Red, Green)
+  if (originStation.lat && originStation.lng && destinationStation.lat && destinationStation.lng) {
+    const straightDist = calculateDistance(
+      originStation.lat,
+      originStation.lng,
+      destinationStation.lat,
+      destinationStation.lng
+    );
+    // Track winding factor (metro tracks follow road curves ~1.28x straight line)
+    const trackDistKm = Math.max(1, straightDist * 1.28);
+    return getDmrcDistanceFare(trackDistKm);
+  }
+
+  // Fallback to stop-based slab
+  return calculateDmrcMetroFare(stopsCount);
+}
+
+// Backward-compatible export
+export function calculateDmrcMetroFare(stops: number): number {
+  if (stops <= 2) return 10;
+  if (stops <= 4) return 20;
+  if (stops <= 9) return 30;
+  if (stops <= 16) return 40;
+  if (stops <= 24) return 50;
+  return 60;
+}
+
+// Realistic Delhi-NCR ride-hailing market rates (Uber Go, Uber Auto, Rapido, Street Auto)
+// Calibrated to real-world ground truth (cab min ₹150, auto min ₹90)
 export function estimateRideHailingFares(roadDistanceKm: number, durationMin: number) {
-  const dist = Math.max(0.4, roadDistanceKm);
-  const time = Math.max(3, durationMin);
+  const dist = Math.max(0.5, roadDistanceKm);
+  const time = Math.max(5, durationMin);
 
-  // Uber Go / Ola Mini: Base ₹60 + ₹15/km + ₹1.5/min in traffic, min ₹100
-  const cab = Math.max(100, Math.round(60 + dist * 15 + time * 1.5));
+  // Uber Go / Ola Mini / InDrive Cab:
+  // Base fare: ₹90, ₹16/km, ₹2.0/min in traffic.
+  // Standard NCR minimum fare for cab bookings is ₹140 - ₹150 (short trips to/from metro are ₹140-₹160).
+  const cab = Math.max(150, Math.round(90 + dist * 16 + time * 2.0));
 
-  // Uber Auto / Rapido Auto / Meter: Base ₹30 (first 1.5km) + ₹12/km + ₹1/min, min ₹45
-  const auto = Math.max(45, Math.round(30 + Math.max(0, dist - 1.5) * 12 + time * 1.0));
+  // Uber Auto / Rapido Auto / Street Auto:
+  // Base fare: ₹45, ₹13/km, ₹1.5/min in traffic.
+  // NCR auto drivers / Uber Auto minimum is ₹80 - ₹95 (Gurgaon autos rarely accept under ₹90-₹100).
+  const auto = Math.max(90, Math.round(45 + Math.max(0, dist - 1.5) * 13 + time * 1.5));
 
-  // Rapido Bike: Base ₹25 + ₹7.5/km, min ₹35
-  const bike = Math.max(35, Math.round(25 + dist * 7.5));
+  // Rapido Bike / Uber Moto:
+  // Base ₹30 + ₹9/km, minimum ₹50.
+  const bike = Math.max(50, Math.round(30 + dist * 9));
 
-  // Shared E-Rickshaw / Feeder: ₹15 for <= 1.5km, ₹20 for <= 3km
-  const eRickshaw = dist <= 3.2 ? (dist <= 1.5 ? 15 : 20) : undefined;
+  // Shared E-Rickshaw / Metro Feeder: ₹15 for <= 1.8km, ₹25 for <= 3.5km (per seat)
+  const eRickshaw = dist <= 3.5 ? (dist <= 1.8 ? 15 : 25) : undefined;
 
   return { cab, auto, bike, eRickshaw, walk: 0 };
 }
@@ -1800,9 +1881,9 @@ export function planMultiModalTrip(
   // First mile calculations
   const isFirstMileWalkable = originStationMatch.distanceKm <= 0.8;
   const firstMileRoadDist = Math.round(originStationMatch.distanceKm * 1.25 * 10) / 10;
-  // Realistic urban road speed in Delhi-NCR (~18-20 km/h) = ~3.2 min/km + 4m cab/auto wait time
-  const firstMileRoadDurationMin = Math.max(7, Math.round(firstMileRoadDist * 3.3) + 4);
-  const firstMileWalkDurationMin = Math.max(3, Math.round(originStationMatch.distanceKm * 12));
+  // Realistic urban road speed in Delhi-NCR (~18-20 km/h) + 5m cab/auto dispatch & wait buffer
+  const firstMileRoadDurationMin = Math.max(10, Math.round(firstMileRoadDist * 3.4) + 5);
+  const firstMileWalkDurationMin = Math.max(3, Math.round(originStationMatch.distanceKm * 13));
   const firstMileFareOptions = estimateRideHailingFares(firstMileRoadDist, firstMileRoadDurationMin);
 
   const selectedFirstMileMode: RideMode = firstMileModeOverride || (isFirstMileWalkable ? 'walk' : 'auto');
@@ -1915,8 +1996,9 @@ export function planMultiModalTrip(
   }
 
   const totalStops = lines.reduce((acc, l) => acc + l.stopsCount, 0);
-  const metroTransitDurationMin = totalStops * 2.5 + (requiresTransfer ? 6 : 0) + 4;
-  const metroFarePerPersonInr = calculateDmrcMetroFare(totalStops);
+  // Realistic metro time: train travel (2.4m/stop) + security frisking & bag scan (4m) + platform headway wait (3m) + transfer walk (6m if interchange) + exit (3m)
+  const metroTransitDurationMin = Math.round(totalStops * 2.4 + (requiresTransfer ? 6 : 0) + 10);
+  const metroFarePerPersonInr = calculateMetroFare(oStation, dStation, totalStops);
   const metroTotalFareInr = metroFarePerPersonInr * Math.max(1, passengerCount);
 
   // Destination station exit details
@@ -1933,8 +2015,9 @@ export function planMultiModalTrip(
   const lastMileDistance = destStationMatch.distanceKm;
   const isLastMileWalkable = lastMileDistance <= 0.6;
   const lastMileRoadDist = Math.round(lastMileDistance * 1.25 * 10) / 10;
-  const lastMileRoadDurationMin = Math.max(5, Math.round(lastMileRoadDist * 3.3) + 3);
-  const lastMileWalkDurationMin = Math.max(3, Math.round(lastMileDistance * 12));
+  // Live urban road travel + 4m station exit & driver pickup buffer
+  const lastMileRoadDurationMin = Math.max(8, Math.round(lastMileRoadDist * 3.4) + 4);
+  const lastMileWalkDurationMin = Math.max(3, Math.round(lastMileDistance * 13));
   const lastMileFareOptions = estimateRideHailingFares(lastMileRoadDist, lastMileRoadDurationMin);
 
   const selectedLastMileMode: RideMode = lastMileModeOverride || (isLastMileWalkable ? 'walk' : 'auto');
@@ -1982,10 +2065,10 @@ export function planMultiModalTrip(
   // Total End-to-End Fare
   const totalEstimatedFareInr = selectedFirstMileCost + metroTotalFareInr + selectedLastMileCost;
 
-  // Direct road ride comparison (origin all the way to destination by cab)
+  // Direct road ride comparison (origin all the way to destination by cab in NCR traffic)
   const directDistanceStraight = calculateDistance(originLat, originLng, destLat, destLng);
   const directRoadDistance = Math.round(directDistanceStraight * 1.35 * 10) / 10;
-  const directDrivingTimeMin = Math.round(directRoadDistance * 3.6) + 6;
+  const directDrivingTimeMin = Math.max(35, Math.round(directRoadDistance * 3.8) + 8);
   const directCabFare = estimateRideHailingFares(directRoadDistance, directDrivingTimeMin).cab;
   const totalTripDurationMin = Math.round(firstMileDurationMin + metroTransitDurationMin + lastMileDurationMin);
 

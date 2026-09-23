@@ -10,7 +10,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const viewport: Viewport = {
-  themeColor: '#143428',
+  themeColor: '#F4F5F0',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'black-translucent',
+    statusBarStyle: 'default',
     title: 'MetroNav',
   },
   formatDetection: {
@@ -62,7 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={plusJakartaSans.className}>
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="MetroNav" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>

@@ -201,12 +201,14 @@ export default function HomePage() {
             originStation: {
               lat: baseTripPlan.originStation.lat,
               lng: baseTripPlan.originStation.lng,
-              name: baseTripPlan.originStation.name
+              name: baseTripPlan.originStation.name,
+              line: baseTripPlan.originStation.line
             },
             destinationStation: {
               lat: baseTripPlan.destinationStation.lat,
               lng: baseTripPlan.destinationStation.lng,
-              name: baseTripPlan.destinationStation.name
+              name: baseTripPlan.destinationStation.name,
+              line: baseTripPlan.destinationStation.line
             },
             passengerCount,
             firstMileMode,

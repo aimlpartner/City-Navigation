@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { MultiModalTripPlan, RideMode } from '@/lib/delhi-ncr-transit';
 import { LiveStationDepartures } from '@/components/LiveStationDepartures';
 import { ACTIVE_TRANSIT_ALERTS, getConnectingBusesForStation } from '@/lib/realtime-transit';
+import { openRapidoApp } from '@/lib/utils';
 import {
   TrainFront,
   DoorOpen,
@@ -362,7 +363,7 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
         </div>
 
         {isFareBreakdownOpen && (
-          <div className="space-y-2 pt-2 border-t border-[#E2E4DC] text-xs">
+          <div className="space-y-2.5 pt-2 border-t border-[#E2E4DC] text-xs">
             {/* Leg 1 */}
             <div className="flex items-center justify-between py-1 border-b border-[#EAECE4]">
               <div className="flex items-center gap-2 text-[#53584E]">
@@ -373,9 +374,12 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
                   First Mile to Metro ({fmMode === 'cab' ? 'Cab' : fmMode === 'auto' ? 'Auto' : fmMode === 'walk' ? 'Walk' : 'E-Rickshaw'})
                 </span>
               </div>
-              <span className="font-extrabold text-[#17201B]">
-                {firstMileCost === 0 ? 'Free' : `₹${firstMileCost}`}
-              </span>
+              <div className="text-right">
+                <span className="font-extrabold text-[#17201B]">
+                  {firstMileCost === 0 ? 'Free' : `₹${firstMileCost}`}
+                </span>
+                <span className="text-[10px] text-[#6B7267] ml-1.5 font-medium">(~{firstMileDuration}m)</span>
+              </div>
             </div>
 
             {/* Leg 2 */}
@@ -385,40 +389,57 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
                   02
                 </span>
                 <span>
-                  Metro Fare (₹{metroFarePerPerson} × {pax} {pax === 1 ? 'pax' : 'pax'})
+                  Metro Fare (₹{metroFarePerPerson} × {pax} {pax === 1 ? 'person' : 'passengers'})
                 </span>
               </div>
-              <span className="font-extrabold text-[#17201B]">₹{metroTotalCost}</span>
+              <div className="text-right">
+                <span className="font-extrabold text-[#17201B]">₹{metroTotalCost}</span>
+                <span className="text-[10px] text-[#6B7267] ml-1.5 font-medium">(~{metroDuration}m)</span>
+              </div>
             </div>
 
             {/* Leg 3 */}
             <div className="flex items-center justify-between py-1 border-b border-[#EAECE4]">
               <div className="flex items-center gap-2 text-[#53584E]">
                 <span className="px-1.5 py-0.5 rounded bg-[#B9552C]/10 text-[#B9552C] font-mono font-bold text-[10px]">
-                  04
+                  03
                 </span>
                 <span>
                   Last Mile to Destination ({lmMode === 'cab' ? 'Cab' : lmMode === 'auto' ? 'Auto' : lmMode === 'walk' ? 'Walk' : 'E-Rickshaw'})
                 </span>
               </div>
-              <span className="font-extrabold text-[#17201B]">
-                {lastMileCost === 0 ? 'Free' : `₹${lastMileCost}`}
-              </span>
+              <div className="text-right">
+                <span className="font-extrabold text-[#17201B]">
+                  {lastMileCost === 0 ? 'Free' : `₹${lastMileCost}`}
+                </span>
+                <span className="text-[10px] text-[#6B7267] ml-1.5 font-medium">(~{lastMileDuration}m)</span>
+              </div>
             </div>
 
             {/* Total Row */}
             <div className="flex items-center justify-between pt-1 font-black text-sm text-[#143428]">
               <span>Grand Total Multi-Modal</span>
-              <span className="text-base text-emerald-700">₹{totalTripFare}</span>
+              <div className="text-right">
+                <span className="text-base text-emerald-700">₹{totalTripFare}</span>
+                <span className="text-xs text-[#53584E] ml-2 font-bold">~{totalTripDuration} mins</span>
+              </div>
+            </div>
+
+            {/* Accuracy Note */}
+            <div className="text-[10px] text-[#6B7267] bg-[#F4F5F0] p-2 rounded-lg flex items-start gap-1.5">
+              <span className="shrink-0 text-emerald-700 font-bold">⏱️</span>
+              <span>
+                Accurate travel times include live Google Maps road traffic + 15m urban transit buffers (cab dispatch, station security scan & platform wait).
+              </span>
             </div>
 
             {/* Direct Cab comparison banner */}
-            <div className="mt-2.5 p-3 rounded-xl bg-white border border-[#D9DFD5] flex items-center justify-between gap-2">
+            <div className="mt-2 p-3 rounded-xl bg-white border border-[#D9DFD5] flex items-center justify-between gap-2">
               <div className="min-w-0">
                 <div className="text-[11px] font-black text-[#17201B] flex items-center gap-1">
                   <span>Direct Cab (No Metro):</span>
                   <span className="text-amber-800 font-extrabold">~₹{directCab.estimatedCostInr}</span>
-                  <span className="text-[#6B7267] font-normal">({directCab.durationMin}m drive)</span>
+                  <span className="text-[#6B7267] font-normal">({directCab.durationMin}m in traffic)</span>
                 </div>
                 <div className="text-[10px] text-emerald-700 font-bold flex items-center gap-1 mt-0.5">
                   <TrendingDown className="w-3 h-3 text-emerald-600" />
@@ -544,18 +565,27 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
           </div>
         </div>
 
-        {/* Uber Deep Link Button */}
+        {/* Ride Booking Buttons (Uber & Rapido) */}
         {fmMode !== 'walk' && (
-          <div className="pt-1">
+          <div className="grid grid-cols-2 gap-2 pt-1">
             <a
               href={uberFmLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-black text-white text-xs font-bold hover:bg-neutral-800 transition active:scale-98 shadow-xs"
+              className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-black text-white text-xs font-bold hover:bg-neutral-800 transition active:scale-98 shadow-xs"
             >
               <ExternalLink className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Book Ride to {plan.originStation.name} on Uber</span>
+              <span>Book on Uber</span>
             </a>
+
+            <button
+              type="button"
+              onClick={openRapidoApp}
+              className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-amber-400 text-amber-950 text-xs font-black hover:bg-amber-300 transition active:scale-98 shadow-xs cursor-pointer"
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-amber-900" />
+              <span>Book on Rapido</span>
+            </button>
           </div>
         )}
 
@@ -802,15 +832,14 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
               <span>Book on Uber</span>
             </a>
 
-            <a
-              href="https://rapido.bike/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-amber-400 text-amber-950 text-xs font-black hover:bg-amber-300 transition active:scale-98 shadow-xs"
+            <button
+              type="button"
+              onClick={openRapidoApp}
+              className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-amber-400 text-amber-950 text-xs font-black hover:bg-amber-300 transition active:scale-98 shadow-xs cursor-pointer"
             >
               <ExternalLink className="w-3.5 h-3.5 text-amber-900" />
-              <span>Rapido Auto</span>
-            </a>
+              <span>Book on Rapido</span>
+            </button>
           </div>
         )}
 

@@ -74,7 +74,7 @@ export function MapTabScreen({
               <span className="text-[#D5D8CD] font-bold">•</span>
               <div className="flex items-center gap-1 text-xs font-bold text-[#B9552C]">
                 <IndianRupee className="w-3.5 h-3.5 text-[#B9552C]" />
-                <span>₹{tripPlan.fareBreakdown?.totalEstimatedFareInr || tripPlan.metroLeg.estimatedFareInr}</span>
+                <span>₹{tripPlan.fareBreakdown?.totalEstimatedFareInr || (tripPlan.firstMile.estimatedCostInr + tripPlan.metroLeg.estimatedFareInr + (tripPlan.lastMile.options[0]?.estimatedCostInr || 90))}</span>
               </div>
             </div>
 

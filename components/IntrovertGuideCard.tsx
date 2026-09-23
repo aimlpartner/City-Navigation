@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { MultiModalTripPlan } from '@/lib/delhi-ncr-transit';
 import { LiveStationDepartures } from '@/components/LiveStationDepartures';
 import { ACTIVE_TRANSIT_ALERTS, getConnectingBusesForStation } from '@/lib/realtime-transit';
+import { openRapidoApp } from '@/lib/utils';
 import {
   TrainFront,
   DoorOpen,
@@ -90,7 +91,7 @@ export function IntrovertGuideCard({
 1. Start at ${plan.origin.name} -> Head to ${plan.originStation.name} (${plan.firstMile.mode === 'walk' ? 'Walk' : 'Auto/Cab ~₹' + plan.firstMile.estimatedCostInr})
 2. Metro: Board ${plan.originStation.line} at ${plan.originStation.name}
 ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation?.name} without exiting gates\n` : ''}3. Deboard: ${plan.destinationStation.name} -> EXIT GATE ${plan.metroExit.gateNumber}
-4. Last Mile: ${plan.lastMile.options[0]?.description || 'Auto to destination'} (~₹${plan.lastMile.options[0]?.estimatedCostInr || 40})
+4. Last Mile: ${plan.lastMile.options[0]?.description || 'Auto to destination'} (~₹${plan.lastMile.options[0]?.estimatedCostInr || 90})
 (Generated via MetroNav Delhi-NCR)`;
 
     navigator.clipboard.writeText(summary);
@@ -168,7 +169,7 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
               <span className="truncate">Total Trip Fare</span>
             </div>
             <div className="text-sm sm:text-xl font-extrabold text-amber-200 mt-1 tabular-nums">
-              ₹{plan.fareBreakdown?.totalEstimatedFareInr || (plan.firstMile.estimatedCostInr + plan.metroLeg.estimatedFareInr + (plan.lastMile.options[0]?.estimatedCostInr || 40))}
+              ₹{plan.fareBreakdown?.totalEstimatedFareInr || (plan.firstMile.estimatedCostInr + plan.metroLeg.estimatedFareInr + (plan.lastMile.options[0]?.estimatedCostInr || 90))}
             </div>
             <div className="text-[9px] text-amber-100/70 font-medium mt-0.5 truncate">
               Cab/Auto + Metro ({plan.fareBreakdown?.passengerCount || 1} pax)
@@ -199,7 +200,7 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
             <span>+</span>
             <span>Metro ~₹{plan.fareBreakdown?.metroTotalFareInr || plan.metroLeg.estimatedFareInr}</span>
             <span>+</span>
-            <span>Last-mile ~₹{plan.fareBreakdown?.lastMileCostInr || plan.lastMile.options[0]?.estimatedCostInr || 40}</span>
+            <span>Last-mile ~₹{plan.fareBreakdown?.lastMileCostInr || plan.lastMile.options[0]?.estimatedCostInr || 90}</span>
           </div>
           {plan.fareBreakdown?.directCabComparison && (
             <div className="text-[11px] text-amber-200 font-bold">
@@ -373,9 +374,9 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
           </div>
         </div>
 
-        {/* Uber Link */}
+        {/* Uber & Rapido Booking Buttons */}
         {(firstMileMode || plan.fareBreakdown?.firstMileMode) !== 'walk' && (
-          <div className="pt-1">
+          <div className="flex flex-wrap items-center gap-2 pt-1">
             <a
               href={
                 deepLinks?.uberFirstMileUrl ||
@@ -386,8 +387,17 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-black text-white text-xs font-bold hover:bg-neutral-800 transition active:scale-95 shadow-xs"
             >
               <ExternalLink className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Book Ride to {plan.originStation.name} on Uber</span>
+              <span>Book on Uber</span>
             </a>
+
+            <button
+              type="button"
+              onClick={openRapidoApp}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400 text-amber-950 text-xs font-black hover:bg-amber-300 transition active:scale-95 shadow-xs cursor-pointer"
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-amber-900" />
+              <span>Book on Rapido</span>
+            </button>
           </div>
         )}
 
@@ -655,15 +665,14 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
               <span>Book Ride from Station on Uber</span>
             </a>
 
-            <a
-              href="https://rapido.bike/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400 text-amber-950 text-xs font-black hover:bg-amber-300 transition active:scale-95 shadow-xs"
+            <button
+              type="button"
+              onClick={openRapidoApp}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400 text-amber-950 text-xs font-black hover:bg-amber-300 transition active:scale-95 shadow-xs cursor-pointer"
             >
               <ExternalLink className="w-3.5 h-3.5 text-amber-900" />
-              <span>Rapido Auto</span>
-            </a>
+              <span>Book on Rapido</span>
+            </button>
           </div>
         )}
 
