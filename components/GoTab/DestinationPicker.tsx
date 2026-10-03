@@ -165,29 +165,12 @@ export function DestinationPicker({
   const isSearchActive = searchQuery.trim().length >= 2;
 
   return (
-    <div className="space-y-5 pb-6">
-      {/* Top Navigation & Step Indicator */}
-      <div className="flex items-center justify-between gap-3">
-        <button
-          type="button"
-          onClick={onBackToOrigin}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-[#F4F5F0] border border-[#E2E4DC] text-xs font-bold text-[#143428] shadow-xs active:scale-95 transition cursor-pointer"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Change Starting Point</span>
-        </button>
-
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#143428]/10 text-[#143428] text-xs font-bold">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Step 2 of 2</span>
-        </div>
-      </div>
-
+    <div className="space-y-4 pb-6">
       {/* Starting Location Confirmation Bar */}
-      <div className="p-3 rounded-2xl bg-white border border-[#E2E4DC] shadow-xs flex items-center justify-between gap-2">
+      <div className="p-2.5 sm:p-3 rounded-2xl bg-white/90 backdrop-blur-md border border-[#E2E4DC] shadow-xs flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-7 h-7 rounded-lg bg-[#143428]/10 flex items-center justify-center text-[#143428] shrink-0">
-            <MapPin className="w-4 h-4" />
+            <MapPin className="w-3.5 h-3.5" />
           </div>
           <span className="text-xs text-[#53584E] truncate">
             Starting from: <strong className="text-[#17201B] font-bold">{originName}</strong>
@@ -196,7 +179,7 @@ export function DestinationPicker({
         <button
           type="button"
           onClick={onBackToOrigin}
-          className="text-xs font-bold text-[#B9552C] hover:underline shrink-0 cursor-pointer"
+          className="btn-tactile text-xs font-bold text-[#143428] hover:text-[#B9552C] bg-[#F4F5F0] hover:bg-[#FAF2EE] px-2.5 py-1 rounded-lg transition shrink-0 cursor-pointer"
         >
           Change
         </button>
@@ -221,8 +204,8 @@ export function DestinationPicker({
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search any place (e.g. Batra Hospital, Primanti, DU, CP)..."
-          className="w-full pl-11 pr-11 py-3.5 rounded-2xl bg-white border-2 border-[#D5D8CD] focus:border-[#143428] focus:ring-2 focus:ring-[#143428]/20 text-[#17201B] placeholder-[#8E9487] text-base font-medium shadow-xs outline-none transition"
+          placeholder="Search landmark, sector, mall, hospital..."
+          className="w-full pl-11 pr-11 py-3.5 rounded-2xl bg-white/95 backdrop-blur-md border-2 border-[#D5D8CD] focus:border-[#143428] focus:ring-2 focus:ring-[#143428]/20 text-[#17201B] placeholder-[#8E9487] text-base font-medium shadow-xs outline-none transition duration-200"
         />
         <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center gap-1.5">
           {isSearchingPlaces && (
@@ -235,7 +218,7 @@ export function DestinationPicker({
                 setSearchQuery('');
                 setPlacesResults([]);
               }}
-              className="p-1 rounded-full text-[#8E9487] hover:text-[#17201B] hover:bg-[#F4F5F0] transition cursor-pointer"
+              className="btn-tactile p-1.5 rounded-full text-[#8E9487] hover:text-[#17201B] hover:bg-[#F4F5F0] transition cursor-pointer active:rotate-90"
               aria-label="Clear search"
             >
               <X className="w-4 h-4" />
@@ -262,7 +245,7 @@ export function DestinationPicker({
                 setSearchQuery('');
                 setPlacesResults([]);
               }}
-              className="text-xs text-[#8E9487] hover:text-[#17201B] font-semibold"
+              className="chip-tactile text-xs text-[#8E9487] hover:text-[#17201B] font-semibold px-2 py-0.5 rounded-md hover:bg-[#F4F5F0]"
             >
               Show All
             </button>
@@ -296,14 +279,14 @@ export function DestinationPicker({
                     key={place.id || `${place.name}-${place.lat}`}
                     type="button"
                     onClick={() => onSelectDestination(place)}
-                    className={`w-full p-3.5 rounded-2xl border text-left flex items-center justify-between gap-3 transition-all group active:scale-[0.98] cursor-pointer ${
+                    className={`card-interactive w-full p-3.5 rounded-[20px] border text-left flex items-center justify-between gap-3 group cursor-pointer ${
                       isSelected
                         ? 'bg-[#FAF6F3] border-[#B9552C] ring-2 ring-[#B9552C] shadow-sm'
-                        : 'bg-white hover:bg-[#F8F9F5] border-[#E2E4DC] hover:border-[#143428]/40 shadow-xs'
+                        : 'bg-white/95 backdrop-blur-xs hover:bg-[#F8F9F5] border-[#E2E4DC] hover:border-[#143428]/40 shadow-xs'
                     }`}
                   >
                     <div className="flex items-start gap-3 min-w-0 flex-1">
-                      <div className="w-9 h-9 rounded-xl bg-[#F4F5F0] group-hover:bg-[#EAECE4] flex items-center justify-center shrink-0 border border-[#E2E4DC] transition-colors mt-0.5">
+                      <div className="w-9 h-9 rounded-[10px] bg-[#F4F5F0] group-hover:bg-[#EAECE4] group-hover:scale-105 flex items-center justify-center shrink-0 border border-[#E2E4DC] transition-all duration-200 mt-0.5">
                         {getPlaceIcon(place)}
                       </div>
 
@@ -341,7 +324,7 @@ export function DestinationPicker({
                         {place.nearestStation && (
                           <div className="flex items-center gap-1.5 text-[11px] text-[#53584E] font-medium mt-1.5 flex-wrap">
                             <span
-                              className="w-2 h-2 rounded-full shrink-0"
+                              className="w-2 h-2 rounded-full shrink-0 group-hover:scale-125 transition-transform"
                               style={{ backgroundColor: place.nearestStation.lineColor || '#0284c7' }}
                             />
                             <span>
@@ -349,7 +332,7 @@ export function DestinationPicker({
                             </span>
                             <span className="text-[#8E9487]">• ~{place.nearestStation.distanceKm} km</span>
                             {place.bestExitGate && (
-                              <span className="bg-[#B9552C] text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded">
+                              <span className="bg-[#B9552C] text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded transition-transform group-hover:scale-105">
                                 Gate {place.bestExitGate}
                               </span>
                             )}
@@ -358,7 +341,7 @@ export function DestinationPicker({
                       </div>
                     </div>
 
-                    <ChevronRight className="w-4 h-4 text-[#8E9487] group-hover:text-[#143428] group-hover:translate-x-0.5 transition-transform shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-[#8E9487] group-hover:text-[#143428] group-hover:translate-x-1 transition-transform shrink-0" />
                   </button>
                 );
               })}
@@ -380,7 +363,7 @@ export function DestinationPicker({
                   setSearchQuery('');
                   setPlacesResults([]);
                 }}
-                className="mt-2 text-xs font-bold text-[#143428] underline"
+                className="chip-tactile mt-2 inline-block text-xs font-bold text-[#143428] underline px-3 py-1 rounded-lg hover:bg-[#F4F5F0]"
               >
                 Clear search and view all places
               </button>
@@ -401,7 +384,7 @@ export function DestinationPicker({
                   key={chip.label}
                   type="button"
                   onClick={() => setSearchQuery(chip.query)}
-                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#F4F5F0] border border-[#E2E4DC] text-xs font-semibold text-[#17201B] whitespace-nowrap shrink-0 transition active:scale-95 shadow-xs cursor-pointer"
+                  className="chip-tactile px-3.5 py-1.5 rounded-full bg-white/90 hover:bg-[#F4F5F0] border border-[#E2E4DC] text-xs font-semibold text-[#17201B] whitespace-nowrap shrink-0 transition shadow-xs cursor-pointer hover:border-[#143428]/30"
                 >
                   {chip.label}
                 </button>
@@ -410,28 +393,34 @@ export function DestinationPicker({
           </div>
 
           {/* Curated Filter Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar pt-1">
-            {(['All', 'Gurgaon', 'Delhi', 'Mall', 'Food'] as const).map((filter) => {
-              const isActive = activeFilter === filter;
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar pt-0.5">
+            {([
+              { key: 'All', label: 'All' },
+              { key: 'Gurgaon', label: 'Gurgaon' },
+              { key: 'Delhi', label: 'Delhi' },
+              { key: 'Mall', label: 'Malls' },
+              { key: 'Food', label: 'Dining' },
+            ] as const).map((filter) => {
+              const isActive = activeFilter === filter.key;
               return (
                 <button
-                  key={filter}
+                  key={filter.key}
                   type="button"
-                  onClick={() => setActiveFilter(filter)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                  onClick={() => setActiveFilter(filter.key)}
+                  className={`chip-tactile px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
                     isActive
                       ? 'bg-[#143428] text-white shadow-xs'
-                      : 'bg-white text-[#53584E] border border-[#E2E4DC] hover:bg-[#F8F9F5]'
+                      : 'bg-white/90 text-[#53584E] border border-[#E2E4DC] hover:bg-[#F8F9F5] hover:border-[#143428]/30'
                   }`}
                 >
-                  {filter === 'All' ? '🌟 All Landmarks' : filter}
+                  {filter.label}
                 </button>
               );
             })}
           </div>
 
           {/* 2-Column Curated Grid */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
             {filteredCuratedDestinations.map((dest) => {
               const isSelected = currentDestination?.id === dest.id;
               const nearestStation = METRO_STATIONS[dest.nearestStationId];
@@ -441,42 +430,42 @@ export function DestinationPicker({
                   key={dest.id}
                   type="button"
                   onClick={() => onSelectDestination(dest)}
-                  className={`p-3.5 rounded-2xl border text-left flex flex-col justify-between min-h-[135px] transition-all relative group active:scale-[0.97] cursor-pointer ${
+                  className={`card-interactive p-3 sm:p-3.5 rounded-2xl border text-left flex flex-col justify-between h-[148px] relative group cursor-pointer ${
                     isSelected
                       ? 'bg-[#FAF6F3] border-[#B9552C] ring-2 ring-[#B9552C] shadow-sm'
-                      : 'bg-white hover:bg-[#F8F9F5] border-[#E2E4DC] shadow-xs'
+                      : 'bg-white/95 backdrop-blur-xs hover:bg-[#F8F9F5] border-[#E2E4DC] shadow-xs hover:border-[#143428]/30'
                   }`}
                 >
                   {/* Category Icon & Gate Badge */}
                   <div className="flex items-start justify-between gap-1 w-full">
-                    <div className="w-9 h-9 rounded-xl bg-[#F4F5F0] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <div className="w-8 h-8 rounded-lg bg-[#F4F5F0] flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-[#EAECE4] transition-all duration-200">
                       {getCategoryIcon(dest.category)}
                     </div>
 
-                    <span className="px-2 py-0.5 rounded-md bg-[#B9552C] text-white text-[10px] font-extrabold tracking-wide shrink-0">
+                    <span className="px-2 py-0.5 rounded-full bg-[#B9552C] text-white text-[10px] font-extrabold tracking-wide shrink-0 transition-transform group-hover:scale-105">
                       Gate {dest.bestExitGate}
                     </span>
                   </div>
 
                   {/* Destination Name */}
-                  <div className="my-1.5">
-                    <h3 className="text-sm font-black text-[#17201B] line-clamp-2 leading-snug group-hover:text-[#143428] transition-colors">
+                  <div className="my-auto py-1">
+                    <h3 className="text-xs sm:text-sm font-black text-[#17201B] line-clamp-2 leading-snug group-hover:text-[#143428] transition-colors">
                       {dest.name}
                     </h3>
                   </div>
 
                   {/* Station Tag & Line Indicator */}
-                  <div className="w-full pt-2 border-t border-[#F0F2EB] flex items-center justify-between text-[11px] text-[#6B7267]">
+                  <div className="w-full pt-2 border-t border-[#F0F2EB] flex items-center justify-between text-[10px] sm:text-[11px] text-[#6B7267]">
                     <div className="flex items-center gap-1.5 truncate">
                       <span
-                        className="w-2 h-2 rounded-full shrink-0"
+                        className="w-2 h-2 rounded-full shrink-0 group-hover:scale-125 transition-transform"
                         style={{ backgroundColor: nearestStation?.lineColor || '#0284c7' }}
                       />
                       <span className="truncate font-medium">{nearestStation?.name || 'Metro'}</span>
                     </div>
 
                     {isSelected && (
-                      <Check className="w-3.5 h-3.5 text-[#B9552C] shrink-0 font-bold" strokeWidth={3} />
+                      <Check className="w-3.5 h-3.5 text-[#B9552C] shrink-0 font-bold animate-in zoom-in-50" strokeWidth={3} />
                     )}
                   </div>
                 </button>

@@ -9,7 +9,8 @@ import {
   Clock,
   IndianRupee,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  ExternalLink
 } from 'lucide-react';
 
 export function CityQuickGuide() {
@@ -111,6 +112,19 @@ export function CityQuickGuide() {
                     <li>Select boarding and destination stations, pay via UPI (Google Pay / PhonePe / Paytm).</li>
                     <li>You receive a QR code image instantly. Just tap your phone screen on the QR scanner at the automatic entry gates.</li>
                   </ol>
+
+                  <div className="pt-2">
+                    <a
+                      href="https://wa.me/919650855800?text=Hi"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs shadow-xs transition active:scale-98"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5 fill-white" />
+                      <span>Chat with DMRC WhatsApp Bot (+91 96508 55800)</span>
+                      <ExternalLink className="w-3 h-3 opacity-80" />
+                    </a>
+                  </div>
                 </div>
               </motion.div>
             )}

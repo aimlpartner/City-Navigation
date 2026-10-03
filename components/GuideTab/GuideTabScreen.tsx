@@ -48,24 +48,20 @@ export function GuideTabScreen({
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="space-y-1">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#143428]/10 text-[#143428] text-xs font-bold">
-          <ShieldCheck className="w-3.5 h-3.5" />
-          <span>Transit Companion & Radar</span>
-        </div>
+      <div>
         <h2 className="text-2xl font-black text-[#17201B] tracking-tight font-sans">
           City Navigation Guide
         </h2>
-        <p className="text-sm text-[#53584E]">
+        <p className="text-sm text-[#53584E] mt-0.5">
           Real-time line health, introvert survival checklist & local guidelines.
         </p>
       </div>
 
       {/* Offline App Download Card */}
-      <div className="rounded-3xl bg-linear-to-br from-[#102a20] to-[#143428] text-white p-5 border border-emerald-500/30 shadow-md relative overflow-hidden">
+      <div className="rounded-2xl bg-linear-to-br from-[#102a20] to-[#143428] text-white p-5 border border-emerald-500/30 shadow-md relative overflow-hidden">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-white/10 border border-emerald-400/30 flex items-center justify-center text-[#5ee9b5] shrink-0 shadow-inner">
+            <div className="w-11 h-11 rounded-xl bg-white/10 border border-emerald-400/30 flex items-center justify-center text-[#5ee9b5] shrink-0 shadow-inner">
               <Download className="w-5 h-5" />
             </div>
             <div>
@@ -91,7 +87,7 @@ export function GuideTabScreen({
           <button
             type="button"
             onClick={triggerPwaInstall}
-            className="px-4 py-2 rounded-xl bg-[#5ee9b5] hover:bg-[#4ade80] text-[#0d211a] font-extrabold text-xs shadow-xs active:scale-95 transition flex items-center gap-1.5 cursor-pointer shrink-0"
+            className="btn-tactile px-4 py-2 rounded-full bg-[#5ee9b5] hover:bg-[#4ade80] text-[#0d211a] font-extrabold text-xs shadow-xs cursor-pointer shrink-0 flex items-center gap-1.5"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Install App</span>
@@ -100,7 +96,7 @@ export function GuideTabScreen({
       </div>
 
       {/* Transit Radar Highlight Card */}
-      <div className="rounded-3xl bg-[#143428] text-white p-5 border border-[#1E4837] shadow-md relative overflow-hidden">
+      <div className="rounded-2xl bg-[#143428] text-white p-5 border border-[#1E4837] shadow-md relative overflow-hidden">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-[#5ee9b5]">
@@ -116,7 +112,7 @@ export function GuideTabScreen({
             <button
               type="button"
               onClick={onOpenTransitRadar}
-              className="px-3.5 py-2 rounded-xl bg-[#5ee9b5] text-[#143428] font-black text-xs shadow-sm active:scale-95 transition hover:bg-[#4dd4a1]"
+              className="btn-tactile px-4 py-2 rounded-full bg-[#5ee9b5] text-[#143428] font-black text-xs shadow-sm hover:bg-[#4dd4a1] cursor-pointer"
             >
               Open Radar
             </button>
@@ -145,9 +141,9 @@ export function GuideTabScreen({
       </div>
 
       {/* Introvert's Zero-Asking Checklist */}
-      <div className="rounded-2xl bg-white border border-[#E2E4DC] p-5 shadow-xs space-y-3">
+      <div className="rounded-2xl bg-white/95 backdrop-blur-xs border border-[#E2E4DC] p-5 shadow-xs space-y-3">
         <div className="flex items-center gap-2.5 text-[#17201B]">
-          <div className="w-7 h-7 rounded-lg bg-[#143428]/10 text-[#143428] flex items-center justify-center">
+          <div className="w-7 h-7 rounded-[8px] bg-[#143428]/10 text-[#143428] flex items-center justify-center">
             <Headphones className="w-4 h-4" />
           </div>
           <h3 className="font-extrabold text-base font-sans">
@@ -157,7 +153,7 @@ export function GuideTabScreen({
 
         <div className="space-y-2 text-xs text-[#2C332E]">
           {tips.map((tip, idx) => (
-            <div key={idx} className="flex items-start gap-2.5 bg-[#F8F9F5] p-3 rounded-xl">
+            <div key={idx} className="flex items-start gap-2.5 bg-[#F8F9F5] p-3 rounded-[12px]">
               <BadgeCheck className="w-4 h-4 text-[#143428] shrink-0 mt-0.5" />
               <span className="leading-relaxed">{tip}</span>
             </div>
@@ -167,7 +163,7 @@ export function GuideTabScreen({
 
       {/* Gemini AI Transit Grounding with Google Maps Links */}
       {aiGuide && (
-        <div className="rounded-2xl bg-white border border-[#E2E4DC] p-5 shadow-xs space-y-3">
+        <div className="rounded-2xl bg-white/95 backdrop-blur-xs border border-[#E2E4DC] p-5 shadow-xs space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-[#143428] flex items-center justify-center text-emerald-300 shrink-0">
@@ -183,7 +179,7 @@ export function GuideTabScreen({
                 type="button"
                 onClick={onRequestAiRefresh}
                 disabled={aiGuide.loading}
-                className="text-xs font-bold text-[#143428] hover:underline disabled:opacity-50"
+                className="btn-tactile text-xs font-bold text-[#143428] hover:text-[#B9552C] bg-[#F4F5F0] hover:bg-[#FAF2EE] px-2.5 py-1 rounded-lg transition disabled:opacity-50 cursor-pointer"
               >
                 {aiGuide.loading ? 'Updating...' : 'Refresh'}
               </button>

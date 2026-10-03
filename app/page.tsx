@@ -18,6 +18,9 @@ import { IntrovertGuideCard } from '@/components/IntrovertGuideCard';
 import { CityQuickGuide } from '@/components/CityQuickGuide';
 import { LiveTransitRadarModal } from '@/components/LiveTransitRadarModal';
 import { MobileAppShell } from '@/components/MobileAppShell';
+import { ActiveTicketFloatingPill } from '@/components/ActiveTicketFloatingPill';
+import { triggerPwaInstall } from '@/components/PwaInstallPrompt';
+import dynamic from 'next/dynamic';
 import {
   TrainFront,
   Radar,
@@ -47,7 +50,11 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
-import { triggerPwaInstall } from '@/components/PwaInstallPrompt';
+
+const LivingTransitCanvas = dynamic(
+  () => import('@/components/LivingTransitCanvas').then((mod) => mod.LivingTransitCanvas),
+  { ssr: false }
+);
 
 
 const COMMON_ORIGINS = [
@@ -663,6 +670,8 @@ export default function HomePage() {
 
       {/* Desktop Dashboard Experience (>=1024px) */}
       <div className="hidden lg:block min-h-screen bg-[#F4F5F0] text-[#17201B] antialiased selection:bg-[#143428] selection:text-white pb-20 relative overflow-x-hidden">
+        {/* Moving Water from Metal Shader (Drawn 30 FPS, Paused in Low Power / Reduce Motion) */}
+        <LivingTransitCanvas />
         {/* Top Application Header */}
         <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-[#E2E4DC] shadow-xs">
         <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 lg:px-10 xl:px-12 h-16 flex items-center justify-between">
@@ -692,22 +701,22 @@ export default function HomePage() {
             {/* Download / Install App Button */}
             <button
               onClick={triggerPwaInstall}
-              className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 rounded-xl bg-white hover:bg-[#F8F9F5] text-[#143428] border border-[#D5D8CD] text-xs font-bold transition shadow-xs shrink-0 cursor-pointer active:scale-95"
+              className="btn-tactile flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 rounded-xl bg-white hover:bg-[#F8F9F5] text-[#143428] border border-[#D5D8CD] text-xs font-bold transition shadow-xs shrink-0 cursor-pointer group"
               title="Download & Install App (PWA)"
             >
-              <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#143428]" strokeWidth={2} />
+              <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#143428] group-hover:-translate-y-0.5 transition-transform" strokeWidth={2} />
               <span>Download App</span>
             </button>
 
             <button
               onClick={() => setIsTransitRadarOpen(true)}
-              className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 rounded-xl bg-[#143428] hover:bg-[#1A3E31] text-white text-xs font-bold transition shadow-xs shrink-0"
+              className="btn-tactile flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 rounded-xl bg-[#143428] hover:bg-[#1A3E31] text-white text-xs font-bold transition shadow-xs shrink-0 cursor-pointer group"
             >
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
               </span>
-              <Radar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-300" strokeWidth={1.75} />
+              <Radar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-300 group-hover:rotate-45 transition-transform" strokeWidth={1.75} />
               <span className="hidden xs:inline">Live Transit Radar</span>
               <span className="xs:hidden">Radar</span>
             </button>
@@ -1431,6 +1440,9 @@ export default function HomePage() {
         defaultOrigin={originName}
         defaultDest={selectedDestination ? selectedDestination.name : customDestCoords?.name || 'Ambience Mall, Gurugram'}
       />
+
+      {/* Floating Active Metro Pass Pill */}
+      <ActiveTicketFloatingPill />
     </>
   );
 }

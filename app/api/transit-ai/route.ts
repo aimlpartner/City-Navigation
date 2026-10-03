@@ -3,8 +3,15 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { originName, destName, originLat, originLng, destLat, destLng } = body;
+    const body = await req.json().catch(() => ({}));
+    const { originName, destName, originLat, originLng, destLat, destLng } = body || {};
+
+    if (!originName && !destName) {
+      return NextResponse.json(
+        { error: "Missing origin or destination parameters", guide: null, groundingChunks: [] },
+        { status: 400 }
+      );
+    }
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {

@@ -12,11 +12,20 @@
   --color-copper-light: #FAF2EE;
   --color-border-subtle: #E2E4DC;
   --color-stone-muted: #6B7267;
+
+  /* Refined Tinted Shadows: subtle natural forest/stone ambient tint + crisp specular top highlight */
+  --shadow-2xs: 0 1px 2px 0 rgba(20, 52, 40, 0.04), inset 0 1px 0.5px rgba(255, 255, 255, 0.85);
+  --shadow-xs: 0 1px 3px 0 rgba(20, 52, 40, 0.05), 0 1px 2px -1px rgba(20, 52, 40, 0.03), inset 0 1px 0.5px rgba(255, 255, 255, 0.9);
+  --shadow-sm: 0 2px 6px -1px rgba(20, 52, 40, 0.06), 0 1px 3px -1px rgba(20, 52, 40, 0.04), inset 0 1px 0.8px rgba(255, 255, 255, 0.92);
+  --shadow-md: 0 6px 18px -3px rgba(20, 52, 40, 0.08), 0 2px 6px -2px rgba(20, 52, 40, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.95);
+  --shadow-lg: 0 14px 32px -5px rgba(20, 52, 40, 0.11), 0 4px 12px -3px rgba(20, 52, 40, 0.06), inset 0 1px 1.2px rgba(255, 255, 255, 1);
+  --shadow-xl: 0 22px 48px -8px rgba(20, 52, 40, 0.15), 0 8px 18px -4px rgba(20, 52, 40, 0.08), inset 0 1.5px 1.5px rgba(255, 255, 255, 1);
+  --shadow-2xl: 0 30px 64px -12px rgba(20, 52, 40, 0.20), 0 12px 26px -6px rgba(20, 52, 40, 0.10), inset 0 1.5px 2px rgba(255, 255, 255, 1);
 }
 
 @layer base {
   * {
-    border-color: #E2E4DC;
+    border-color: rgba(20, 52, 40, 0.09);
   }
 
   html, body {
@@ -26,6 +35,63 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     letter-spacing: -0.012em;
+  }
+
+  /* Tactile Touch & Physical Interaction Defaults */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+    transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), 
+                box-shadow 0.16s cubic-bezier(0.16, 1, 0.3, 1), 
+                background-color 0.14s ease, 
+                border-color 0.14s ease, 
+                color 0.14s ease;
+  }
+
+  button:not(:disabled):active,
+  [role="button"]:not([aria-disabled="true"]):active,
+  a[href]:active {
+    transform: scale(0.965) translateY(0.5px);
+    transition: transform 0.08s ease-out;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    button:not(:disabled):hover:not(:active),
+    [role="button"]:not([aria-disabled="true"]):hover:not(:active) {
+      transform: translateY(-0.75px);
+    }
+  }
+
+  /* Smooth Focus Rings */
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+    border-color: #143428 !important;
+    box-shadow: 0 0 0 3px rgba(20, 52, 40, 0.12), var(--shadow-xs);
+    transition: border-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  /* Mathematically calculated corner radii design tokens (R_inner = R_outer - Padding) */
+  :root {
+    --radius-screen: 28px;
+    --radius-card-hero: 28px;
+    --radius-card-primary: 24px;
+    --radius-card-secondary: 20px;
+    --radius-card-compact: 16px;
+    --radius-nested-lg: 14px;
+    --radius-nested-md: 12px;
+    --radius-nested-sm: 8px;
+    --radius-nested-xs: 6px;
+    --radius-capsule: 9999px;
+
+    --sat: env(safe-area-inset-top, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
+    --sar: env(safe-area-inset-right, 0px);
   }
 
   /* Tabular figures for transit times, countdowns, and fares */
@@ -42,14 +108,6 @@
     scrollbar-width: none;
   }
 
-  /* Safe-area insets utilities for iPhone notch / Dynamic Island and Home Bar */
-  :root {
-    --sat: env(safe-area-inset-top, 0px);
-    --sab: env(safe-area-inset-bottom, 0px);
-    --sal: env(safe-area-inset-left, 0px);
-    --sar: env(safe-area-inset-right, 0px);
-  }
-
   .pt-safe {
     padding-top: 16px;
     padding-top: max(env(safe-area-inset-top, 0px), 16px);
@@ -61,13 +119,136 @@
   }
 
   .top-header-safe {
-    padding-top: 16px;
-    padding-top: max(calc(env(safe-area-inset-top, 0px) + 8px), 16px);
+    padding-top: 14px;
+    padding-top: max(calc(env(safe-area-inset-top, 0px) + 6px), 14px);
   }
 
   .bottom-nav-safe {
     padding-bottom: 20px;
     padding-bottom: max(calc(env(safe-area-inset-bottom, 0px) + 8px), 20px);
   }
+
+  /* Living Ambient Natural Neutral Blueprint Grid */
+  .bg-transit-grid {
+    background-image: radial-gradient(rgba(20, 52, 40, 0.06) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Translucent Floating Capsule Glassmorphism */
+  .floating-capsule-glass {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    box-shadow: 
+      0 16px 38px -6px rgba(20, 52, 40, 0.16),
+      0 4px 16px -2px rgba(0, 0, 0, 0.06),
+      inset 0 1px 1.5px rgba(255, 255, 255, 0.95);
+  }
+
+  /* Elevated Surface with Tinted Ambient Shadow and Crisp Specular Lip */
+  .surface-tinted-card {
+    background: #FFFFFF;
+    border: 1px solid rgba(20, 52, 40, 0.08);
+    box-shadow: 
+      0 1px 3px 0 rgba(20, 52, 40, 0.04),
+      0 8px 24px -4px rgba(20, 52, 40, 0.07),
+      inset 0 1px 1px 0 rgba(255, 255, 255, 0.95);
+  }
+
+  .border-tinted-elevated {
+    border: 1px solid rgba(20, 52, 40, 0.08);
+    box-shadow: 
+      0 1px 2px 0 rgba(20, 52, 40, 0.03),
+      inset 0 1px 0.5px 0 rgba(255, 255, 255, 0.85);
+  }
+
+  /* Tactile Interactive Utilities */
+  .btn-tactile {
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.14s ease;
+  }
+  .btn-tactile:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-tactile:active {
+    transform: scale(0.955) translateY(0.5px);
+    transition: transform 0.08s ease-out;
+  }
+
+  .chip-tactile {
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    transition: transform 0.14s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+  }
+  .chip-tactile:active {
+    transform: scale(0.925);
+    transition: transform 0.06s ease-out;
+  }
+
+  .card-interactive {
+    cursor: pointer;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .card-interactive:hover {
+      transform: translateY(-1.5px);
+      box-shadow: var(--shadow-md);
+    }
+  }
+  .card-interactive:active {
+    transform: scale(0.985);
+    transition: transform 0.08s ease-out;
+  }
+
+  .icon-nudge {
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .group:hover .icon-nudge {
+    transform: translateX(2.5px);
+  }
+
+  .icon-bounce {
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .group:hover .icon-bounce {
+    transform: scale(1.14);
+  }
+
+  /* Soft Ambient Pulse Keyframes for Living Background */
+  @keyframes ambientBreath {
+    0%, 100% {
+      transform: scale(1) translate3d(0, 0, 0);
+      opacity: 0.65;
+    }
+    50% {
+      transform: scale(1.1) translate3d(-10px, 12px, 0);
+      opacity: 0.9;
+    }
+  }
+
+  @keyframes ambientBreathReverse {
+    0%, 100% {
+      transform: scale(1) translate3d(0, 0, 0);
+      opacity: 0.55;
+    }
+    50% {
+      transform: scale(1.08) translate3d(12px, -10px, 0);
+      opacity: 0.85;
+    }
+  }
+
+  .animate-pulse-slow {
+    animation: ambientBreath 9s ease-in-out infinite;
+  }
+
+  .animate-pulse-slow-reverse {
+    animation: ambientBreathReverse 11s ease-in-out infinite;
+  }
 }
+
 

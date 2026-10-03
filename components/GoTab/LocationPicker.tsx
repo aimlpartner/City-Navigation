@@ -125,26 +125,22 @@ export function LocationPicker({
   };
 
   return (
-    <div className="space-y-6 pb-6">
+    <div className="space-y-4 pb-6">
       {/* Header with high legibility */}
-      <div className="space-y-1.5">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#143428]/10 text-[#143428] text-xs font-bold tracking-wide">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Step 1 of 2</span>
-        </div>
+      <div>
         <h2 className="text-2xl font-black text-[#17201B] tracking-tight font-sans">
           Where are you starting from?
         </h2>
-        <p className="text-sm text-[#53584E] leading-relaxed">
+        <p className="text-sm text-[#53584E] mt-0.5">
           Tap your current location or choose any station hub below.
         </p>
       </div>
 
       {/* Location Error Notice if GPS encountered an issue */}
       {locationError && (
-        <div className="rounded-2xl border-2 border-amber-300 bg-amber-50/95 p-4 text-[#17201B] space-y-3 shadow-sm animate-in fade-in">
+        <div className="rounded-[24px] border-2 border-amber-300 bg-amber-50/95 p-4 text-[#17201B] space-y-3 shadow-sm animate-in fade-in">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-xl bg-amber-200 text-amber-900 flex items-center justify-center shrink-0 mt-0.5">
+            <div className="w-8 h-8 rounded-[10px] bg-amber-200 text-amber-900 flex items-center justify-center shrink-0 mt-0.5">
               <AlertCircle className="w-4 h-4" />
             </div>
             <div className="flex-1 min-w-0">
@@ -160,7 +156,7 @@ export function LocationPicker({
             type="button"
             onClick={onDetectLocation}
             disabled={isDetectingLocation}
-            className="w-full py-2.5 px-3 rounded-xl bg-[#143428] hover:bg-[#1A3E31] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition cursor-pointer"
+            className="btn-tactile w-full py-2.5 px-3 rounded-[14px] bg-[#143428] hover:bg-[#1A3E31] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs cursor-pointer"
           >
             <LocateFixed className={`w-3.5 h-3.5 ${isDetectingLocation ? 'animate-spin' : ''}`} />
             <span>{isDetectingLocation ? 'Pinpointing GPS...' : 'Retry Pinpoint GPS Detection'}</span>
@@ -170,7 +166,7 @@ export function LocationPicker({
 
       {/* Giant GPS Auto-Detect Button or Verified Detected Card */}
       {isDetected && detectedLocation ? (
-        <div className="rounded-2xl border-2 border-emerald-600 bg-white p-4 sm:p-5 shadow-md space-y-3.5 transition-all">
+        <div className="rounded-[24px] border-2 border-emerald-600 bg-white/95 backdrop-blur-md p-4 sm:p-5 shadow-md space-y-3.5 transition-all">
           <div className="flex items-center justify-between gap-2">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-800 text-[#5ee9b5] text-[11px] font-bold shadow-xs">
               <span className="w-2 h-2 rounded-full bg-[#5ee9b5] animate-pulse" />
@@ -180,7 +176,7 @@ export function LocationPicker({
               type="button"
               onClick={onDetectLocation}
               disabled={isDetectingLocation}
-              className="text-xs font-bold text-[#143428] hover:text-[#B9552C] flex items-center gap-1 transition cursor-pointer"
+              className="btn-tactile text-xs font-bold text-[#143428] hover:text-[#B9552C] flex items-center gap-1 cursor-pointer px-2 py-1 rounded-lg hover:bg-[#F4F5F0]"
             >
               <LocateFixed className={`w-3.5 h-3.5 ${isDetectingLocation ? 'animate-spin' : ''}`} />
               <span>{isDetectingLocation ? 'Re-detecting...' : 'Re-detect'}</span>
@@ -188,7 +184,7 @@ export function LocationPicker({
           </div>
 
           <div className="flex items-start gap-3.5">
-            <div className="w-11 h-11 rounded-xl bg-[#143428] text-[#5ee9b5] flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+            <div className="w-11 h-11 rounded-[12px] bg-[#143428] text-[#5ee9b5] flex items-center justify-center shrink-0 shadow-xs mt-0.5">
               <MapPin className="w-5 h-5" strokeWidth={2.2} />
             </div>
             <div className="min-w-0 flex-1">
@@ -197,7 +193,7 @@ export function LocationPicker({
                   Starting Pinpoint:
                 </span>
                 {detectedLocation.accuracyM !== undefined && (
-                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
                     ±{detectedLocation.accuracyM}m accuracy
                   </span>
                 )}
@@ -221,10 +217,10 @@ export function LocationPicker({
             <button
               type="button"
               onClick={onProceedToDestination}
-              className="w-full py-2.5 px-4 rounded-xl bg-[#143428] hover:bg-[#1A3E31] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs active:scale-98 transition cursor-pointer"
+              className="btn-tactile w-full py-2.5 px-4 rounded-[14px] bg-[#143428] hover:bg-[#1A3E31] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs cursor-pointer group"
             >
               <span>Next: Choose Where to Go</span>
-              <span className="text-[#5ee9b5] font-black">➔</span>
+              <span className="text-[#5ee9b5] font-black group-hover:translate-x-1 transition-transform">➔</span>
             </button>
           )}
         </div>
@@ -233,10 +229,10 @@ export function LocationPicker({
           type="button"
           onClick={onDetectLocation}
           disabled={isDetectingLocation}
-          className="w-full relative overflow-hidden flex items-center justify-between p-5 rounded-2xl bg-gradient-to-r from-[#143428] to-[#1E4837] text-white shadow-md active:scale-[0.99] transition-all border border-[#1E4837] group cursor-pointer"
+          className="btn-tactile w-full relative overflow-hidden flex items-center justify-between p-4 sm:p-5 rounded-[24px] bg-gradient-to-r from-[#143428] to-[#1E4837] text-white shadow-md border border-[#1E4837] group cursor-pointer"
         >
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center shrink-0 shadow-inner">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-[14px] bg-white/15 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform">
               {isDetectingLocation ? (
                 <Loader2 className="w-6 h-6 text-[#5ee9b5] animate-spin" />
               ) : (
@@ -253,7 +249,7 @@ export function LocationPicker({
             </div>
           </div>
 
-          <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/80 shrink-0">
+          <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/80 shrink-0 group-hover:scale-110 transition-transform">
             <MapPin className="w-4 h-4 text-[#5ee9b5]" />
           </div>
         </button>
@@ -278,15 +274,15 @@ export function LocationPicker({
               key={origin.name}
               type="button"
               onClick={() => onSelectOrigin(origin.name, { lat: origin.lat, lng: origin.lng })}
-              className={`w-full min-h-[64px] p-4 rounded-2xl border text-left transition-all flex items-center justify-between gap-3.5 active:scale-[0.98] ${
+              className={`card-interactive w-full min-h-[64px] p-3.5 sm:p-4 rounded-2xl border text-left flex items-center justify-between gap-3.5 group cursor-pointer ${
                 isSelected
                   ? 'bg-white border-[#143428] ring-2 ring-[#143428] shadow-sm'
-                  : 'bg-white hover:bg-[#F8F9F5] border-[#E2E4DC] shadow-xs'
+                  : 'bg-white/90 backdrop-blur-xs hover:bg-white border-[#E2E4DC] hover:border-[#143428]/40 shadow-xs'
               }`}
             >
               <div className="flex items-center gap-3.5 min-w-0">
                 <div
-                  className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
+                  className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${
                     isSelected ? 'bg-[#143428] text-white' : 'bg-[#F4F5F0]'
                   }`}
                 >

@@ -6,6 +6,7 @@ import { BottomTabBar, MobileTab } from './BottomTabBar';
 import { GoTabScreen } from './GoTab/GoTabScreen';
 import { MapTabScreen } from './MapTab/MapTabScreen';
 import { GuideTabScreen } from './GuideTab/GuideTabScreen';
+import { LivingTransitCanvas } from './LivingTransitCanvas';
 import { TrainFront, Radar, Download } from 'lucide-react';
 import { triggerPwaInstall } from './PwaInstallPrompt';
 
@@ -378,11 +379,14 @@ export function MobileAppShell({
 
   return (
     <div className="lg:hidden fixed inset-0 w-full h-full bg-[#F4F5F0] flex flex-col text-[#17201B] overflow-hidden select-none z-30">
+      {/* Moving Water from Metal Shader (Drawn 30 FPS, Paused in Low Power / Reduce Motion) */}
+      <LivingTransitCanvas />
+
       {/* Mobile App Top Header */}
-      <header className="shrink-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#E2E4DC] px-4 shadow-xs top-header-safe pb-2.5">
+      <header className="shrink-0 z-30 bg-white/85 backdrop-blur-xl border-b border-[#E2E4DC] px-4 shadow-xs top-header-safe pb-2.5 relative">
         <div className="max-w-md mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-[#143428] text-white flex items-center justify-center shadow-xs shrink-0">
+            <div className="w-9 h-9 rounded-[14px] bg-[#143428] text-white flex items-center justify-center shadow-xs shrink-0 border border-emerald-400/30">
               <TrainFront className="w-5 h-5 text-[#5ee9b5]" strokeWidth={2.2} />
             </div>
             <div className="min-w-0">
@@ -390,8 +394,15 @@ export function MobileAppShell({
                 <h1 className="font-extrabold text-base tracking-tight text-[#17201B] font-sans leading-none">
                   MetroNav
                 </h1>
-                <span className="px-1.5 py-0.5 rounded bg-[#143428]/10 text-[#143428] text-[10px] font-extrabold uppercase leading-none shrink-0">
+                <span className="px-1.5 py-0.5 rounded-full bg-[#143428]/10 text-[#143428] text-[10px] font-extrabold uppercase leading-none shrink-0">
                   NCR
+                </span>
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-800 text-[9.5px] font-bold shrink-0">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-600" />
+                  </span>
+                  <span>Live</span>
                 </span>
               </div>
               <p className="text-[11px] text-[#6B7267] font-medium mt-0.5 leading-none truncate">
@@ -405,10 +416,10 @@ export function MobileAppShell({
             <button
               type="button"
               onClick={triggerPwaInstall}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#143428] text-white text-xs font-bold shadow-xs active:scale-95 transition hover:bg-[#1A3E31] cursor-pointer shrink-0"
+              className="btn-tactile flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#143428] text-white text-xs font-bold shadow-xs hover:bg-[#1A3E31] cursor-pointer shrink-0 group"
               title="Download & Install MetroNav App"
             >
-              <Download className="w-3.5 h-3.5 text-[#5ee9b5]" />
+              <Download className="w-3.5 h-3.5 text-[#5ee9b5] group-hover:-translate-y-0.5 transition-transform" />
               <span>Install</span>
             </button>
 
@@ -416,9 +427,9 @@ export function MobileAppShell({
               <button
                 type="button"
                 onClick={onOpenTransitRadar}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white hover:bg-[#F8F9F5] border border-[#D5D8CD] text-xs font-bold text-[#143428] shadow-xs active:scale-95 transition cursor-pointer shrink-0"
+                className="btn-tactile flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/90 hover:bg-[#F8F9F5] border border-[#D5D8CD] text-xs font-bold text-[#143428] shadow-xs cursor-pointer shrink-0 group"
               >
-                <Radar className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
+                <Radar className="w-3.5 h-3.5 text-emerald-600 animate-pulse group-hover:rotate-45 transition-transform" />
                 <span>Radar</span>
               </button>
             )}
@@ -430,7 +441,7 @@ export function MobileAppShell({
       <div
         ref={containerRef}
         onMouseDown={handleMouseDown}
-        className="flex-1 min-h-0 relative w-full overflow-hidden"
+        className="flex-1 min-h-0 relative w-full overflow-hidden z-10"
         style={{ touchAction: 'pan-y' }}
       >
         <div
@@ -442,7 +453,7 @@ export function MobileAppShell({
           }}
         >
           {/* Slide 0: Go Tab Screen */}
-          <div className="w-full min-w-full h-full overflow-y-auto overscroll-y-contain px-4 pt-3 pb-10 no-scrollbar">
+          <div className="w-full min-w-full h-full overflow-y-auto overscroll-y-contain px-4 pt-3 pb-28 sm:pb-32 no-scrollbar">
             <div className="max-w-md mx-auto w-full">
               <GoTabScreen
                 originName={originName}
@@ -482,7 +493,7 @@ export function MobileAppShell({
           </div>
 
           {/* Slide 2: Guide Tab Screen */}
-          <div className="w-full min-w-full h-full overflow-y-auto overscroll-y-contain px-4 pt-3 pb-10 no-scrollbar">
+          <div className="w-full min-w-full h-full overflow-y-auto overscroll-y-contain px-4 pt-3 pb-28 sm:pb-32 no-scrollbar">
             <div className="max-w-md mx-auto w-full">
               <GuideTabScreen
                 tripPlan={tripPlan}
@@ -495,7 +506,7 @@ export function MobileAppShell({
         </div>
       </div>
 
-      {/* Bottom Tab Navigation Bar */}
+      {/* Floating Capsule Bottom Navigation Bar */}
       <BottomTabBar
         activeTab={activeTab}
         onTabChange={handleTabChange}

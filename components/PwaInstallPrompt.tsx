@@ -192,7 +192,7 @@ export function PwaInstallPrompt() {
 
       {/* Install Success Toast */}
       {installSuccess && (
-        <div className="fixed top-[calc(max(env(safe-area-inset-top,0px),12px)+8px)] left-1/2 -translate-x-1/2 z-[110] flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#143428] border border-emerald-400/50 text-white text-xs font-bold shadow-2xl animate-in fade-in slide-in-from-top duration-300">
+        <div className="fixed top-[calc(max(env(safe-area-inset-top,0px),12px)+8px)] left-1/2 -translate-x-1/2 z-[110] flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#143428] border border-emerald-400/50 text-white text-xs font-bold shadow-2xl animate-in fade-in slide-in-from-top duration-300">
           <CheckCircle2 className="w-4 h-4 text-[#5ee9b5]" />
           <span>MetroNav added to your Home Screen!</span>
         </div>
@@ -200,9 +200,9 @@ export function PwaInstallPrompt() {
 
       {/* Floating Bottom Install Banner for Mobile/Desktop */}
       {!isInstalled && showBanner && (
-        <div className="fixed bottom-[calc(max(env(safe-area-inset-bottom,0px),12px)+84px)] lg:bottom-6 left-3 right-3 lg:left-auto lg:right-6 max-w-md lg:max-w-sm mx-auto lg:mx-0 z-40 bg-[#143428]/95 backdrop-blur-xl border border-emerald-400/30 rounded-2xl p-3 sm:p-4 text-white shadow-2xl transition-all duration-300">
+        <div className="fixed bottom-[calc(max(env(safe-area-inset-bottom,0px),12px)+84px)] lg:bottom-6 left-3 right-3 lg:left-auto lg:right-6 max-w-md lg:max-w-sm mx-auto lg:mx-0 z-40 bg-[#143428]/95 backdrop-blur-xl border border-emerald-400/30 rounded-[20px] p-3 sm:p-4 text-white shadow-2xl transition-all duration-300">
           <div className="flex items-start gap-2.5 sm:gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#102a20] border border-emerald-400/30 flex items-center justify-center shrink-0 p-1.5 shadow-inner">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-[10px] bg-[#102a20] border border-emerald-400/30 flex items-center justify-center shrink-0 p-1.5 shadow-inner">
               <Image
                 src="/icons/icon.svg"
                 alt="MetroNav App Icon"
@@ -217,11 +217,11 @@ export function PwaInstallPrompt() {
               <div className="flex items-center justify-between">
                 <h4 className="font-extrabold text-xs sm:text-sm text-white tracking-tight flex items-center gap-1.5">
                   <span>Download App</span>
-                  <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-400/20 text-emerald-300">PWA</span>
+                  <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-400/20 text-emerald-300">PWA</span>
                 </h4>
                 <button
                   onClick={dismissBanner}
-                  className="text-emerald-300/60 hover:text-emerald-300 p-1 rounded-lg transition cursor-pointer -mr-1"
+                  className="text-emerald-300/60 hover:text-emerald-300 p-1 rounded-full transition cursor-pointer -mr-1"
                   aria-label="Dismiss banner"
                 >
                   <X className="w-4 h-4" />
@@ -234,14 +234,14 @@ export function PwaInstallPrompt() {
               <div className="flex items-center gap-2 mt-2">
                 <button
                   onClick={handleInstallClick}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#5ee9b5] hover:bg-[#4ade80] text-[#0d211a] text-xs font-bold transition shadow-xs cursor-pointer active:scale-95"
+                  className="btn-tactile flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-[10px] bg-[#5ee9b5] hover:bg-[#4ade80] text-[#0d211a] text-xs font-bold shadow-xs cursor-pointer group"
                 >
-                  <Download className="w-3.5 h-3.5" />
+                  <Download className="w-3.5 h-3.5 group-hover:-translate-y-0.5 transition-transform" />
                   <span>{deferredPrompt ? 'Install App' : 'Get App'}</span>
                 </button>
                 <button
                   onClick={dismissBanner}
-                  className="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white text-xs font-medium transition cursor-pointer active:scale-95"
+                  className="btn-tactile px-2.5 py-1.5 rounded-[10px] bg-white/10 hover:bg-white/15 text-white text-xs font-medium cursor-pointer"
                 >
                   Later
                 </button>
@@ -258,20 +258,20 @@ export function PwaInstallPrompt() {
           onClick={() => setShowUniversalModal(false)}
         >
           <div
-            className="bg-[#143428] border border-emerald-400/30 rounded-3xl p-4 sm:p-6 max-w-lg w-full text-white shadow-2xl relative max-h-[85dvh] sm:max-h-[90vh] flex flex-col"
+            className="bg-[#143428] border border-emerald-400/30 rounded-[28px] p-4 sm:p-6 max-w-lg w-full text-white shadow-2xl relative max-h-[85dvh] sm:max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setShowUniversalModal(false)}
-              className="absolute top-4 right-4 z-10 text-emerald-200/60 hover:text-white p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition cursor-pointer"
+              className="btn-tactile absolute top-4 right-4 z-10 text-emerald-200/60 hover:text-white p-1.5 rounded-full bg-white/10 hover:bg-white/20 cursor-pointer group"
               aria-label="Close modal"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5 group-hover:rotate-90 transition-transform" />
             </button>
 
             {/* App branding */}
             <div className="flex items-center gap-3 sm:gap-3.5 mb-3 sm:mb-4 shrink-0 pr-8">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#102a20] border border-emerald-400/40 p-1.5 sm:p-2 shrink-0 shadow-lg">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-[14px] bg-[#102a20] border border-emerald-400/40 p-1.5 sm:p-2 shrink-0 shadow-lg">
                 <Image
                   src="/icons/icon.svg"
                   alt="MetroNav"
@@ -298,27 +298,27 @@ export function PwaInstallPrompt() {
 
             {/* If direct native install prompt is available right now */}
             {deferredPrompt && (
-              <div className="mb-3 p-3 rounded-2xl bg-emerald-500/15 border border-emerald-400/40 flex items-center justify-between gap-3 shrink-0">
+              <div className="mb-3 p-3 rounded-[14px] bg-emerald-500/15 border border-emerald-400/40 flex items-center justify-between gap-3 shrink-0">
                 <div className="text-xs text-emerald-200">
                   <span className="font-bold text-white block">Ready for 1-Tap Download!</span>
                   Click below to install directly to your device.
                 </div>
                 <button
                   onClick={handleInstallClick}
-                  className="px-4 py-2 rounded-xl bg-[#5ee9b5] text-[#0d211a] font-bold text-xs hover:bg-[#4ade80] transition shrink-0 flex items-center gap-1.5 shadow-md cursor-pointer active:scale-95"
+                  className="btn-tactile px-4 py-2 rounded-[10px] bg-[#5ee9b5] text-[#0d211a] font-bold text-xs hover:bg-[#4ade80] shrink-0 flex items-center gap-1.5 shadow-md cursor-pointer group"
                 >
-                  <Download className="w-3.5 h-3.5" />
+                  <Download className="w-3.5 h-3.5 group-hover:-translate-y-0.5 transition-transform" />
                   <span>Install Now</span>
                 </button>
               </div>
             )}
 
             {/* Device Platform Selector Tabs */}
-            <div className="flex items-center gap-1 sm:gap-1.5 p-1 rounded-2xl bg-[#0e241c] border border-emerald-500/20 mb-3 sm:mb-4 shrink-0">
+            <div className="flex items-center gap-1 sm:gap-1.5 p-1 rounded-[16px] bg-[#0e241c] border border-emerald-500/20 mb-3 sm:mb-4 shrink-0">
               <button
                 type="button"
                 onClick={() => setActivePlatformTab('android')}
-                className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer ${
+                className={`chip-tactile flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 rounded-[12px] text-[11px] sm:text-xs font-bold cursor-pointer ${
                   activePlatformTab === 'android'
                     ? 'bg-[#5ee9b5] text-[#0e241c] shadow-sm'
                     : 'text-emerald-200/70 hover:text-white'
@@ -331,7 +331,7 @@ export function PwaInstallPrompt() {
               <button
                 type="button"
                 onClick={() => setActivePlatformTab('ios')}
-                className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer ${
+                className={`chip-tactile flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 rounded-xl text-[11px] sm:text-xs font-bold cursor-pointer ${
                   activePlatformTab === 'ios'
                     ? 'bg-[#5ee9b5] text-[#0e241c] shadow-sm'
                     : 'text-emerald-200/70 hover:text-white'
@@ -344,7 +344,7 @@ export function PwaInstallPrompt() {
               <button
                 type="button"
                 onClick={() => setActivePlatformTab('desktop')}
-                className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer ${
+                className={`chip-tactile flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 rounded-xl text-[11px] sm:text-xs font-bold cursor-pointer ${
                   activePlatformTab === 'desktop'
                     ? 'bg-[#5ee9b5] text-[#0e241c] shadow-sm'
                     : 'text-emerald-200/70 hover:text-white'
@@ -357,7 +357,7 @@ export function PwaInstallPrompt() {
 
             {/* Platform Instructions (Scrollable Middle Area) */}
             <div className="flex-1 overflow-y-auto overscroll-contain pr-1 space-y-3">
-              <div className="space-y-2.5 bg-[#0e241c] rounded-2xl p-3.5 sm:p-4 border border-emerald-500/20 text-xs text-emerald-100">
+              <div className="space-y-2.5 bg-[#0e241c] rounded-[14px] p-3.5 sm:p-4 border border-emerald-500/20 text-xs text-emerald-100">
                 {activePlatformTab === 'android' && (
                   <>
                     <div className="flex items-start gap-2.5 sm:gap-3">
@@ -448,11 +448,11 @@ export function PwaInstallPrompt() {
 
               {/* Offline & Instant Load Perks */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10.5px] sm:text-[11px] text-emerald-200/90 shrink-0">
-                <div className="p-2 sm:p-2.5 rounded-xl bg-white/5 flex items-center gap-2">
+                <div className="p-2 sm:p-2.5 rounded-[10px] bg-white/5 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-[#5ee9b5] shrink-0" />
                   <span>Zero app store downloads or logins required</span>
                 </div>
-                <div className="p-2 sm:p-2.5 rounded-xl bg-white/5 flex items-center gap-2">
+                <div className="p-2 sm:p-2.5 rounded-[10px] bg-white/5 flex items-center gap-2">
                   <WifiOff className="w-4 h-4 text-[#5ee9b5] shrink-0" />
                   <span>Works underground without cellular signal</span>
                 </div>
@@ -462,7 +462,7 @@ export function PwaInstallPrompt() {
             {/* Bottom Close Button */}
             <button
               onClick={() => setShowUniversalModal(false)}
-              className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs transition cursor-pointer shrink-0 mt-2 active:scale-98"
+              className="w-full py-2.5 rounded-[14px] bg-white/10 hover:bg-white/15 text-white font-bold text-xs transition cursor-pointer shrink-0 mt-2 active:scale-98"
             >
               Close
             </button>

@@ -6,7 +6,7 @@ import { LocationPicker } from './LocationPicker';
 import { DestinationPicker } from './DestinationPicker';
 import { RouteResult } from './RouteResult';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, Navigation, Route, Check } from 'lucide-react';
+import { MapPin, Navigation, Route, Check, ChevronRight } from 'lucide-react';
 
 interface GoTabScreenProps {
   originName: string;
@@ -95,38 +95,38 @@ export function GoTabScreen({
   return (
     <div className="w-full max-w-lg mx-auto">
       {/* Visual Step Wizard Indicator Header */}
-      <div className="mb-4 bg-white rounded-2xl p-2 sm:p-2.5 border border-[#E2E4DC] shadow-xs flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">
+      <div className="mb-4 bg-white/90 backdrop-blur-md rounded-2xl p-1.5 border border-[#E2E4DC] shadow-xs flex items-center justify-between gap-1">
         {/* Step 1: Start */}
         <button
           type="button"
           onClick={() => setCurrentStep('origin')}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl transition text-xs font-bold whitespace-nowrap shrink-0 ${
+          className={`chip-tactile flex-1 flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl text-xs font-bold transition cursor-pointer ${
             currentStep === 'origin'
               ? 'bg-[#143428] text-white shadow-xs'
               : 'text-[#53584E] hover:bg-[#F4F5F0]'
           }`}
         >
           <MapPin className="w-3.5 h-3.5 shrink-0" />
-          <span>1. Start</span>
+          <span className="truncate">1. Start</span>
         </button>
 
-        <span className="text-[#D5D8CD] font-bold shrink-0">➔</span>
+        <ChevronRight className="w-3.5 h-3.5 text-[#CBD0C5] shrink-0" />
 
         {/* Step 2: Destination */}
         <button
           type="button"
           onClick={() => setCurrentStep('destination')}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl transition text-xs font-bold whitespace-nowrap shrink-0 ${
+          className={`chip-tactile flex-1 flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl text-xs font-bold transition cursor-pointer ${
             currentStep === 'destination'
               ? 'bg-[#143428] text-white shadow-xs'
               : 'text-[#53584E] hover:bg-[#F4F5F0]'
           }`}
         >
           <Navigation className="w-3.5 h-3.5 shrink-0" />
-          <span>2. Where to</span>
+          <span className="truncate">2. Where to</span>
         </button>
 
-        <span className="text-[#D5D8CD] font-bold shrink-0">➔</span>
+        <ChevronRight className="w-3.5 h-3.5 text-[#CBD0C5] shrink-0" />
 
         {/* Step 3: Route */}
         <button
@@ -135,16 +135,16 @@ export function GoTabScreen({
             if (tripPlan) setCurrentStep('route');
           }}
           disabled={!tripPlan}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl transition text-xs font-bold whitespace-nowrap shrink-0 ${
+          className={`chip-tactile flex-1 flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl text-xs font-bold transition ${
             currentStep === 'route'
-              ? 'bg-[#143428] text-white shadow-xs'
+              ? 'bg-[#143428] text-white shadow-xs cursor-pointer'
               : tripPlan
-              ? 'text-[#53584E] hover:bg-[#F4F5F0]'
-              : 'text-[#CBD0C5] cursor-not-allowed'
+              ? 'text-[#53584E] hover:bg-[#F4F5F0] cursor-pointer'
+              : 'text-[#CBD0C5] cursor-not-allowed opacity-50'
           }`}
         >
           <Route className="w-3.5 h-3.5 shrink-0" />
-          <span>3. Route</span>
+          <span className="truncate">3. Route</span>
         </button>
       </div>
 
