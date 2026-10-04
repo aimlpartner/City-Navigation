@@ -279,14 +279,14 @@ export function DestinationPicker({
                     key={place.id || `${place.name}-${place.lat}`}
                     type="button"
                     onClick={() => onSelectDestination(place)}
-                    className={`card-interactive w-full p-3.5 rounded-[20px] border text-left flex items-center justify-between gap-3 group cursor-pointer ${
+                    className={`card-interactive w-full p-3.5 rounded-2xl border text-left flex items-center justify-between gap-3 group cursor-pointer ${
                       isSelected
                         ? 'bg-[#FAF6F3] border-[#B9552C] ring-2 ring-[#B9552C] shadow-sm'
                         : 'bg-white/95 backdrop-blur-xs hover:bg-[#F8F9F5] border-[#E2E4DC] hover:border-[#143428]/40 shadow-xs'
                     }`}
                   >
                     <div className="flex items-start gap-3 min-w-0 flex-1">
-                      <div className="w-9 h-9 rounded-[10px] bg-[#F4F5F0] group-hover:bg-[#EAECE4] group-hover:scale-105 flex items-center justify-center shrink-0 border border-[#E2E4DC] transition-all duration-200 mt-0.5">
+                      <div className="w-9 h-9 rounded-xl bg-[#F4F5F0] group-hover:bg-[#EAECE4] group-hover:scale-105 flex items-center justify-center shrink-0 border border-[#E2E4DC] transition-all duration-200 mt-0.5">
                         {getPlaceIcon(place)}
                       </div>
 
@@ -438,7 +438,7 @@ export function DestinationPicker({
                 >
                   {/* Category Icon & Gate Badge */}
                   <div className="flex items-start justify-between gap-1 w-full">
-                    <div className="w-8 h-8 rounded-lg bg-[#F4F5F0] flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-[#EAECE4] transition-all duration-200">
+                    <div className="w-8 h-8 rounded-xl bg-[#F4F5F0] flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-[#EAECE4] transition-all duration-200">
                       {getCategoryIcon(dest.category)}
                     </div>
 

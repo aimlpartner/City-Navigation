@@ -35,17 +35,17 @@ export function ActiveTicketFloatingPill() {
 
   return (
     <>
-      <div className="fixed bottom-[78px] sm:bottom-6 left-1/2 -translate-x-1/2 z-40 w-full max-w-sm px-3 pointer-events-none">
+      <div className="fixed bottom-[84px] sm:bottom-6 left-1/2 -translate-x-1/2 z-40 w-full max-w-sm px-3 pointer-events-none">
         <motion.div
           initial={{ y: 30, opacity: 0, scale: 0.95 }}
           animate={{ y: 0, opacity: 1, scale: 1 }}
           exit={{ y: 30, opacity: 0, scale: 0.95 }}
-          className="pointer-events-auto bg-[#143428]/95 text-white p-2.5 sm:p-3 rounded-[20px] shadow-2xl border border-emerald-400/40 flex items-center justify-between gap-2.5 backdrop-blur-xl cursor-pointer hover:bg-[#1A3E31] transition active:scale-98"
+          className="pointer-events-auto bg-[#143428]/95 text-white p-2.5 sm:p-3 rounded-2xl shadow-2xl border border-emerald-400/40 flex items-center justify-between gap-2.5 backdrop-blur-xl cursor-pointer hover:bg-[#1A3E31] transition active:scale-98"
           onClick={() => setIsOpenModal(true)}
         >
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="relative">
-              <div className="w-8 h-8 rounded-[10px] bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-400/40">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-400/40">
                 <QrCode className="w-4 h-4 text-emerald-300" />
               </div>
               <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">

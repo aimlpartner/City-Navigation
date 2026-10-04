@@ -21,7 +21,7 @@ export function CityQuickGuide() {
   };
 
   return (
-    <div className="rounded-[24px] bg-white border border-[#E2E4DC] p-6 sm:p-7 shadow-xs space-y-4">
+    <div className="rounded-2xl bg-white border border-[#E2E4DC] p-6 sm:p-7 shadow-xs space-y-4">
       <div className="flex items-center gap-2.5">
         <div className="w-8 h-8 rounded-xl bg-[#143428]/10 text-[#143428] flex items-center justify-center">
           <CircleHelp className="w-4 h-4" strokeWidth={2} />

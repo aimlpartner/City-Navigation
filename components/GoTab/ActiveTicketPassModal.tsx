@@ -108,7 +108,7 @@ export function ActiveTicketPassModal({
             {/* Dynamic Security Pulse Banner */}
             <div className="flex items-center justify-between pb-3 border-b border-emerald-400/20">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-[10px] bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-400/30">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-400/30">
                   <TrainFront className="w-4 h-4 text-emerald-300" />
                 </div>
                 <div>
@@ -220,7 +220,7 @@ export function ActiveTicketPassModal({
 
             {/* Crucial Deboard Exit Gate */}
             {ticket.exitGate && (
-              <div className="w-full mt-4 p-3 rounded-[14px] bg-[#FAF2EE] border border-[#E8C2B3] text-left flex items-start gap-2.5">
+              <div className="w-full mt-4 p-3 rounded-xl bg-[#FAF2EE] border border-[#E8C2B3] text-left flex items-start gap-2.5">
                 <DoorOpen className="w-4 h-4 text-[#B9552C] shrink-0 mt-0.5" />
                 <div className="text-xs">
                   <div className="font-extrabold text-[#B9552C]">
@@ -235,7 +235,7 @@ export function ActiveTicketPassModal({
 
             {/* Rider & Pricing Stats */}
             <div className="w-full mt-3 grid grid-cols-2 gap-2 text-left text-xs">
-              <div className="p-2.5 rounded-[12px] bg-[#F8F9F5] border border-[#E2E4DC]">
+              <div className="p-2.5 rounded-xl bg-[#F8F9F5] border border-[#E2E4DC]">
                 <span className="text-[10px] text-[#6B7267] block uppercase font-bold">Riders</span>
                 <span className="font-bold text-[#17201B] flex items-center gap-1">
                   <Users className="w-3.5 h-3.5 text-[#143428]" />
@@ -243,7 +243,7 @@ export function ActiveTicketPassModal({
                 </span>
               </div>
 
-              <div className="p-2.5 rounded-[12px] bg-[#F8F9F5] border border-[#E2E4DC]">
+              <div className="p-2.5 rounded-xl bg-[#F8F9F5] border border-[#E2E4DC]">
                 <span className="text-[10px] text-[#6B7267] block uppercase font-bold">Fare Paid</span>
                 <span className="font-bold text-[#143428] font-mono text-sm">
                   ₹{ticket.totalFare} <span className="text-[10px] text-emerald-700 font-normal">(-10% QR)</span>
@@ -263,7 +263,7 @@ export function ActiveTicketPassModal({
             <button
               type="button"
               onClick={handleShare}
-              className="p-2.5 rounded-[12px] bg-white hover:bg-gray-100 border border-[#E2E4DC] text-[#17201B] text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+              className="btn-tactile p-2.5 rounded-xl bg-white hover:bg-gray-100 border border-[#E2E4DC] text-[#17201B] text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
               title="Share Pass"
             >
               <Share2 className="w-3.5 h-3.5 text-[#53584E]" />
@@ -275,7 +275,7 @@ export function ActiveTicketPassModal({
                 href={getDmrcWhatsAppUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2.5 rounded-[12px] bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center gap-1.5 transition"
+                className="btn-tactile p-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center gap-1.5 transition"
               >
                 <span>DMRC WhatsApp</span>
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -285,7 +285,7 @@ export function ActiveTicketPassModal({
             <button
               type="button"
               onClick={handleCompleteJourney}
-              className="flex-1 px-4 py-2.5 rounded-[12px] bg-[#143428] hover:bg-[#1A3E31] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
+              className="btn-tactile flex-1 px-4 py-2.5 rounded-xl bg-[#143428] hover:bg-[#1A3E31] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
             >
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
               <span>Trip Completed</span>

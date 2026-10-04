@@ -143,7 +143,7 @@ export function GuideTabScreen({
       {/* Introvert's Zero-Asking Checklist */}
       <div className="rounded-2xl bg-white/95 backdrop-blur-xs border border-[#E2E4DC] p-5 shadow-xs space-y-3">
         <div className="flex items-center gap-2.5 text-[#17201B]">
-          <div className="w-7 h-7 rounded-[8px] bg-[#143428]/10 text-[#143428] flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg bg-[#143428]/10 text-[#143428] flex items-center justify-center">
             <Headphones className="w-4 h-4" />
           </div>
           <h3 className="font-extrabold text-base font-sans">
@@ -153,7 +153,7 @@ export function GuideTabScreen({
 
         <div className="space-y-2 text-xs text-[#2C332E]">
           {tips.map((tip, idx) => (
-            <div key={idx} className="flex items-start gap-2.5 bg-[#F8F9F5] p-3 rounded-[12px]">
+            <div key={idx} className="flex items-start gap-2.5 bg-[#F8F9F5] p-3 rounded-xl border border-[#E2E4DC]/60 card-interactive">
               <BadgeCheck className="w-4 h-4 text-[#143428] shrink-0 mt-0.5" />
               <span className="leading-relaxed">{tip}</span>
             </div>
@@ -209,7 +209,7 @@ export function GuideTabScreen({
                         href={link.uri}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#FAF2EE] text-[#B9552C] border border-[#E8C2B3] text-xs font-medium"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#FAF2EE] text-[#B9552C] border border-[#E8C2B3] text-xs font-medium chip-tactile"
                       >
                         <MapPinned className="w-3 h-3" />
                         <span>{link.title}</span>

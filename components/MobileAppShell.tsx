@@ -386,7 +386,7 @@ export function MobileAppShell({
       <header className="shrink-0 z-30 bg-white/85 backdrop-blur-xl border-b border-[#E2E4DC] px-4 shadow-xs top-header-safe pb-2.5 relative">
         <div className="max-w-md mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-[14px] bg-[#143428] text-white flex items-center justify-center shadow-xs shrink-0 border border-emerald-400/30">
+            <div className="w-9 h-9 rounded-xl bg-[#143428] text-white flex items-center justify-center shadow-xs shrink-0 border border-emerald-400/30">
               <TrainFront className="w-5 h-5 text-[#5ee9b5]" strokeWidth={2.2} />
             </div>
             <div className="min-w-0">

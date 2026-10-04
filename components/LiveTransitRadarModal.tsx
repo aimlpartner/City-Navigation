@@ -144,7 +144,7 @@ export function LiveTransitRadarModal({
             {/* Modal Header in British Racing Green */}
         <div className="p-4 sm:p-6 bg-[#143428] text-white flex items-center justify-between border-b border-[#1E4837] gap-3">
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="w-10 h-10 rounded-[12px] bg-white/10 text-white flex items-center justify-center font-bold border border-white/15 shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-white/10 text-white flex items-center justify-center font-bold border border-white/15 shrink-0">
               <Radar className="w-5 h-5 text-emerald-300 shrink-0" strokeWidth={1.75} />
             </div>
             <div className="min-w-0 flex-1">
@@ -167,7 +167,7 @@ export function LiveTransitRadarModal({
             <button
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white transition flex items-center gap-1.5 text-xs font-medium shrink-0 cursor-pointer"
+              className="btn-tactile px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white transition flex items-center gap-1.5 text-xs font-medium shrink-0 cursor-pointer"
               title="Refresh live data"
             >
               <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} strokeWidth={2} />
@@ -176,7 +176,7 @@ export function LiveTransitRadarModal({
             <button
               onClick={onClose}
               aria-label="Close Live Transit Radar"
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-emerald-100 hover:text-white transition border border-white/15 shrink-0 cursor-pointer"
+              className="btn-tactile p-2 rounded-full bg-white/10 hover:bg-white/20 text-emerald-100 hover:text-white transition border border-white/15 shrink-0 cursor-pointer"
             >
               <X className="w-5 h-5" strokeWidth={2} />
             </button>
@@ -187,7 +187,7 @@ export function LiveTransitRadarModal({
         <div className="flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 border-b border-[#E2E4DC] bg-[#F8F9F5] overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('lines')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
+            className={`chip-tactile px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
               activeTab === 'lines'
                 ? 'bg-[#143428] text-white shadow-xs'
                 : 'text-[#53584E] hover:bg-[#EAECE4]'
@@ -199,7 +199,7 @@ export function LiveTransitRadarModal({
 
           <button
             onClick={() => setActiveTab('buses')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
+            className={`chip-tactile px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
               activeTab === 'buses'
                 ? 'bg-[#143428] text-white shadow-xs'
                 : 'text-[#53584E] hover:bg-[#EAECE4]'
@@ -211,7 +211,7 @@ export function LiveTransitRadarModal({
 
           <button
             onClick={() => setActiveTab('alerts')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
+            className={`chip-tactile px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
               activeTab === 'alerts'
                 ? 'bg-[#143428] text-white shadow-xs'
                 : 'text-[#53584E] hover:bg-[#EAECE4]'
@@ -225,10 +225,10 @@ export function LiveTransitRadarModal({
         {/* Modal Scrollable Body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 bg-[#F4F5F0]">
           {/* AI Live Transit Query Banner */}
-          <div className="rounded-[20px] bg-white border border-[#E2E4DC] p-4 shadow-xs">
+          <div className="rounded-2xl bg-white border border-[#E2E4DC] p-4 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-[10px] bg-[#143428]/10 text-[#143428] flex items-center justify-center font-bold shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-[#143428]/10 text-[#143428] flex items-center justify-center font-bold shrink-0">
                   <Sparkle className="w-4 h-4 shrink-0" strokeWidth={2} />
                 </div>
                 <div>
@@ -244,14 +244,14 @@ export function LiveTransitRadarModal({
               <button
                 onClick={fetchLiveAiAdvisory}
                 disabled={isLoadingAiSummary}
-                className="px-3.5 py-1.5 rounded-full bg-[#143428] text-white text-xs font-bold hover:bg-[#1A3E31] transition disabled:opacity-50 shrink-0 shadow-xs cursor-pointer"
+                className="btn-tactile px-3.5 py-1.5 rounded-full bg-[#143428] text-white text-xs font-bold hover:bg-[#1A3E31] transition disabled:opacity-50 shrink-0 shadow-xs cursor-pointer"
               >
                 {isLoadingAiSummary ? 'Analyzing...' : 'Run Transit Check'}
               </button>
             </div>
 
             {aiTransitSummary && (
-              <div className="mt-3 pt-3 border-t border-[#E2E4DC] text-xs text-[#2C332E] leading-relaxed bg-[#F8F9F5] p-3.5 rounded-[12px] border border-[#E2E4DC]">
+              <div className="mt-3 pt-3 border-t border-[#E2E4DC] text-xs text-[#2C332E] leading-relaxed bg-[#F8F9F5] p-3.5 rounded-xl border border-[#E2E4DC]">
                 {aiTransitSummary}
               </div>
             )}
@@ -271,7 +271,7 @@ export function LiveTransitRadarModal({
                 {linesList.map(line => (
                   <div
                     key={line.id}
-                    className="p-4 rounded-[18px] bg-white border border-[#E2E4DC] shadow-xs space-y-3 transition hover:border-[#143428]/40"
+                    className="p-4 rounded-2xl bg-white border border-[#E2E4DC] shadow-xs space-y-3 transition hover:border-[#143428]/40"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2.5">
@@ -293,7 +293,7 @@ export function LiveTransitRadarModal({
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 bg-[#F8F9F5] border border-[#E2E4DC] p-2.5 rounded-[12px] text-center text-xs">
+                    <div className="grid grid-cols-3 gap-2 bg-[#F8F9F5] border border-[#E2E4DC] p-2.5 rounded-xl text-center text-xs">
                       <div>
                         <div className="text-[10px] text-[#6B7267] uppercase font-bold">Headway</div>
                         <div className="font-bold text-[#17201B] mt-0.5">
@@ -344,7 +344,7 @@ export function LiveTransitRadarModal({
                   value={busSearch}
                   onChange={e => setBusSearch(e.target.value)}
                   placeholder="Search bus route number (e.g. 116, 111, 134, 543A), stop, or destination..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-[14px] bg-white border border-[#E2E4DC] text-xs text-[#17201B] font-medium focus:ring-2 focus:ring-[#143428] focus:outline-none transition shadow-xs"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-[#E2E4DC] text-xs text-[#17201B] font-medium focus:ring-2 focus:ring-[#143428] focus:outline-none transition shadow-xs"
                 />
               </div>
 
@@ -352,11 +352,11 @@ export function LiveTransitRadarModal({
                 {filteredBuses.map(bus => (
                   <div
                     key={bus.busId}
-                    className="p-4 rounded-[18px] bg-white border border-[#E2E4DC] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    className="p-4 rounded-2xl bg-white border border-[#E2E4DC] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                   >
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-1 rounded-[8px] bg-[#143428] text-white text-xs font-bold font-mono tracking-wide">
+                        <span className="px-2.5 py-1 rounded-lg bg-[#143428] text-white text-xs font-bold font-mono tracking-wide">
                           {bus.routeNumber}
                         </span>
                         <span className="text-xs font-medium text-[#6B7267]">
@@ -414,12 +414,12 @@ export function LiveTransitRadarModal({
               {ACTIVE_TRANSIT_ALERTS.map(alert => (
                 <div
                   key={alert.id}
-                  className="p-4 rounded-[18px] border border-[#E2E4DC] bg-white transition shadow-xs"
+                  className="p-4 rounded-2xl border border-[#E2E4DC] bg-white transition shadow-xs"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2.5">
                       <span
-                        className={`w-8 h-8 rounded-[10px] flex items-center justify-center font-bold text-xs ${
+                        className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs ${
                           alert.severity === 'warning'
                             ? 'bg-amber-100 text-amber-900 border border-amber-300'
                             : alert.severity === 'critical'
@@ -441,7 +441,7 @@ export function LiveTransitRadarModal({
                       {alert.affectedLines.map((line, idx) => (
                         <span
                           key={idx}
-                          className="px-2.5 py-0.5 rounded-[8px] bg-[#F4F5F0] border border-[#E2E4DC] text-[#17201B] text-[10px] font-bold"
+                          className="px-2.5 py-0.5 rounded-lg bg-[#F4F5F0] border border-[#E2E4DC] text-[#17201B] text-[10px] font-bold"
                         >
                           {line}
                         </span>

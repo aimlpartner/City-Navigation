@@ -137,7 +137,7 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
 
           <button
             onClick={handleCopySummary}
-            className="flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-xs text-white transition shrink-0 font-medium shadow-xs cursor-pointer active:scale-95"
+            className="btn-tactile flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-xs text-white transition shrink-0 font-medium shadow-xs cursor-pointer"
             title="Copy route steps to notes"
           >
             {copiedText ? (
@@ -270,7 +270,7 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
               key={num}
               type="button"
               onClick={() => onPassengerCountChange?.(num)}
-              className={`px-3 py-1.5 rounded-full text-xs font-black transition active:scale-95 cursor-pointer ${
+              className={`chip-tactile px-3 py-1.5 rounded-full text-xs font-black cursor-pointer ${
                 (passengerCount || plan.fareBreakdown?.passengerCount || 1) === num
                   ? 'bg-[#143428] text-white shadow-xs'
                   : 'text-[#53584E] hover:text-[#17201B]'
@@ -306,7 +306,7 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
       <div className="rounded-[24px] bg-white border border-[#E2E4DC] p-5 sm:p-7 space-y-4 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E2E4DC]">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="flex items-center justify-center px-3 py-1 rounded-[8px] bg-[#143428] text-white font-mono font-extrabold text-xs shadow-xs shrink-0 tracking-wider">
+            <div className="flex items-center justify-center px-3 py-1 rounded-lg bg-[#143428] text-white font-mono font-extrabold text-xs shadow-xs shrink-0 tracking-wider">
               STAGE 01
             </div>
             <div className="min-w-0">
@@ -341,49 +341,49 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
             <button
               type="button"
               onClick={() => onFirstMileModeChange?.('cab')}
-              className={`p-2.5 rounded-[12px] border text-left transition active:scale-95 cursor-pointer ${
+              className={`chip-tactile h-[68px] flex flex-col justify-between p-2.5 rounded-xl border text-left cursor-pointer ${
                 (firstMileMode || plan.fareBreakdown?.firstMileMode) === 'cab'
                   ? 'bg-[#143428] text-white border-[#143428] shadow-xs'
-                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40'
+                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40 hover:bg-white'
               }`}
             >
               <div className="flex items-center justify-between text-xs font-extrabold">
-                <span>🚕 Cab</span>
+                <span className="flex items-center gap-1">🚕 Cab</span>
                 <span>₹{plan.fareBreakdown?.firstMileOptions?.cab || 150}</span>
               </div>
-              <div className="text-[10px] text-emerald-200/80 mt-0.5">Uber Go / Ola</div>
+              <div className="text-[10px] text-emerald-200/80 mt-0.5 truncate">Uber Go / Ola</div>
             </button>
 
             <button
               type="button"
               onClick={() => onFirstMileModeChange?.('auto')}
-              className={`p-2.5 rounded-[12px] border text-left transition active:scale-95 cursor-pointer ${
+              className={`chip-tactile h-[68px] flex flex-col justify-between p-2.5 rounded-xl border text-left cursor-pointer ${
                 (firstMileMode || plan.fareBreakdown?.firstMileMode) === 'auto'
                   ? 'bg-[#143428] text-white border-[#143428] shadow-xs'
-                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40'
+                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40 hover:bg-white'
               }`}
             >
               <div className="flex items-center justify-between text-xs font-extrabold">
-                <span>🛺 Auto</span>
+                <span className="flex items-center gap-1">🛺 Auto</span>
                 <span>₹{plan.fareBreakdown?.firstMileOptions?.auto || 95}</span>
               </div>
-              <div className="text-[10px] text-emerald-200/80 mt-0.5">Uber Auto / Rapido</div>
+              <div className="text-[10px] text-emerald-200/80 mt-0.5 truncate">Uber Auto / Rapido</div>
             </button>
 
             <button
               type="button"
               onClick={() => onFirstMileModeChange?.('walk')}
-              className={`p-2.5 rounded-xl border text-left transition active:scale-95 ${
+              className={`chip-tactile h-[68px] flex flex-col justify-between p-2.5 rounded-xl border text-left cursor-pointer ${
                 (firstMileMode || plan.fareBreakdown?.firstMileMode) === 'walk'
                   ? 'bg-[#143428] text-white border-[#143428] shadow-xs'
-                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40'
+                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40 hover:bg-white'
               }`}
             >
               <div className="flex items-center justify-between text-xs font-extrabold">
-                <span>🚶 Walk</span>
+                <span className="flex items-center gap-1">🚶 Walk</span>
                 <span>Free</span>
               </div>
-              <div className="text-[10px] text-emerald-200/80 mt-0.5">~{Math.round(plan.firstMile.distanceKm * 12)}m walk</div>
+              <div className="text-[10px] text-emerald-200/80 mt-0.5 truncate">~{Math.round(plan.firstMile.distanceKm * 12)}m walk</div>
             </button>
           </div>
         </div>
@@ -398,7 +398,7 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
               }
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-black text-white text-xs font-bold hover:bg-neutral-800 transition active:scale-95 shadow-xs"
+              className="btn-tactile inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-black text-white text-xs font-bold hover:bg-neutral-800 transition shadow-xs"
             >
               <ExternalLink className="w-3.5 h-3.5 text-emerald-400" />
               <span>Book on Uber</span>
@@ -407,7 +407,7 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
             <button
               type="button"
               onClick={openRapidoApp}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400 text-amber-950 text-xs font-black hover:bg-amber-300 transition active:scale-95 shadow-xs cursor-pointer"
+              className="btn-tactile inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400 text-amber-950 text-xs font-black hover:bg-amber-300 transition shadow-xs cursor-pointer"
             >
               <ExternalLink className="w-3.5 h-3.5 text-amber-900" />
               <span>Book on Rapido</span>
@@ -487,7 +487,7 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
           {activeTicket && activeTicket.status === 'active' ? (
             <div
               onClick={() => setIsActivePassModalOpen(true)}
-              className="p-3 rounded-xl bg-[#143428] text-white flex items-center justify-between gap-2 cursor-pointer hover:bg-[#1A3E31] transition shadow-xs active:scale-98"
+              className="card-interactive p-3 rounded-xl bg-[#143428] text-white flex items-center justify-between gap-2 cursor-pointer hover:bg-[#1A3E31] transition shadow-xs"
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="relative">
@@ -514,7 +514,7 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
               <button
                 type="button"
                 onClick={() => setIsTicketModalOpen(true)}
-                className="flex items-center justify-center gap-2 p-2.5 rounded-xl bg-[#143428] hover:bg-[#1A3E31] text-white text-xs font-black shadow-xs transition active:scale-98 cursor-pointer"
+                className="btn-tactile flex items-center justify-center gap-2 p-2.5 rounded-xl bg-[#143428] hover:bg-[#1A3E31] text-white text-xs font-black shadow-xs transition cursor-pointer"
               >
                 <Ticket className="w-4 h-4 text-emerald-300" />
                 <span>Book Metro QR Ticket</span>
@@ -524,7 +524,7 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
                 href={getDmrcWhatsAppUrl(plan.originStation.name, plan.destinationStation.name)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-black shadow-xs transition active:scale-98"
+                className="btn-tactile flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-black shadow-xs transition"
               >
                 <MessageSquare className="w-3.5 h-3.5 fill-white" />
                 <span>DMRC WhatsApp Bot</span>
@@ -687,49 +687,49 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
             <button
               type="button"
               onClick={() => onLastMileModeChange?.('cab')}
-              className={`p-2.5 rounded-xl border text-left transition active:scale-95 ${
+              className={`chip-tactile h-[68px] flex flex-col justify-between p-2.5 rounded-xl border text-left cursor-pointer ${
                 (lastMileMode || plan.fareBreakdown?.lastMileMode) === 'cab'
                   ? 'bg-[#143428] text-white border-[#143428] shadow-xs'
-                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40'
+                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40 hover:bg-white'
               }`}
             >
               <div className="flex items-center justify-between text-xs font-extrabold">
-                <span>🚕 Cab</span>
+                <span className="flex items-center gap-1">🚕 Cab</span>
                 <span>₹{plan.fareBreakdown?.lastMileOptions?.cab || 150}</span>
               </div>
-              <div className="text-[10px] text-emerald-200/80 mt-0.5">Uber Go / Ola</div>
+              <div className="text-[10px] text-emerald-200/80 mt-0.5 truncate">Uber Go / Ola</div>
             </button>
 
             <button
               type="button"
               onClick={() => onLastMileModeChange?.('auto')}
-              className={`p-2.5 rounded-xl border text-left transition active:scale-95 ${
+              className={`chip-tactile h-[68px] flex flex-col justify-between p-2.5 rounded-xl border text-left cursor-pointer ${
                 (lastMileMode || plan.fareBreakdown?.lastMileMode) === 'auto'
                   ? 'bg-[#143428] text-white border-[#143428] shadow-xs'
-                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40'
+                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40 hover:bg-white'
               }`}
             >
               <div className="flex items-center justify-between text-xs font-extrabold">
-                <span>🛺 Auto</span>
+                <span className="flex items-center gap-1">🛺 Auto</span>
                 <span>₹{plan.fareBreakdown?.lastMileOptions?.auto || 95}</span>
               </div>
-              <div className="text-[10px] text-emerald-200/80 mt-0.5">Uber Auto / Rapido</div>
+              <div className="text-[10px] text-emerald-200/80 mt-0.5 truncate">Uber Auto / Rapido</div>
             </button>
 
             <button
               type="button"
               onClick={() => onLastMileModeChange?.('walk')}
-              className={`p-2.5 rounded-xl border text-left transition active:scale-95 ${
+              className={`chip-tactile h-[68px] flex flex-col justify-between p-2.5 rounded-xl border text-left cursor-pointer ${
                 (lastMileMode || plan.fareBreakdown?.lastMileMode) === 'walk'
                   ? 'bg-[#143428] text-white border-[#143428] shadow-xs'
-                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40'
+                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40 hover:bg-white'
               }`}
             >
               <div className="flex items-center justify-between text-xs font-extrabold">
-                <span>🚶 Walk</span>
+                <span className="flex items-center gap-1">🚶 Walk</span>
                 <span>Free</span>
               </div>
-              <div className="text-[10px] text-emerald-200/80 mt-0.5">~{Math.round(plan.lastMile.distanceKm * 12)}m walk</div>
+              <div className="text-[10px] text-emerald-200/80 mt-0.5 truncate">~{Math.round(plan.lastMile.distanceKm * 12)}m walk</div>
             </button>
           </div>
         </div>
@@ -744,7 +744,7 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
               }
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-black text-white text-xs font-bold hover:bg-neutral-800 transition active:scale-95 shadow-xs"
+              className="btn-tactile inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-black text-white text-xs font-bold hover:bg-neutral-800 transition shadow-xs"
             >
               <ExternalLink className="w-3.5 h-3.5 text-emerald-400" />
               <span>Book Ride from Station on Uber</span>
@@ -753,7 +753,7 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
             <button
               type="button"
               onClick={openRapidoApp}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400 text-amber-950 text-xs font-black hover:bg-amber-300 transition active:scale-95 shadow-xs cursor-pointer"
+              className="btn-tactile inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400 text-amber-950 text-xs font-black hover:bg-amber-300 transition shadow-xs cursor-pointer"
             >
               <ExternalLink className="w-3.5 h-3.5 text-amber-900" />
               <span>Book on Rapido</span>
@@ -809,7 +809,7 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
               onClick={() => {
                 navigator.clipboard.writeText('भैया, मीटर से चलेंगे?');
               }}
-              className="p-3.5 rounded-xl bg-[#F8F9F5] hover:bg-[#EAECE4] text-left transition"
+              className="card-interactive p-3.5 rounded-xl bg-[#F8F9F5] hover:bg-[#EAECE4] border border-[#E2E4DC] text-left transition cursor-pointer"
             >
               <div className="text-[#17201B] font-semibold text-xs">&quot;Bhaiya, meter se chalenge?&quot;</div>
               <div className="text-[11px] text-[#6B7267] mt-0.5">Brother, will you go by meter?</div>
@@ -818,7 +818,7 @@ ${plan.metroLeg.requiresTransfer ? `   Change at ${plan.metroLeg.transferStation
               onClick={() => {
                 navigator.clipboard.writeText(`भैया, ${plan.destination.name.split(',')[0]} ड्रॉप पॉइंट पे उतार देना।`);
               }}
-              className="p-3.5 rounded-xl bg-[#F8F9F5] hover:bg-[#EAECE4] text-left transition"
+              className="card-interactive p-3.5 rounded-xl bg-[#F8F9F5] hover:bg-[#EAECE4] border border-[#E2E4DC] text-left transition cursor-pointer"
             >
               <div className="text-[#17201B] font-semibold text-xs truncate">&quot;{plan.destination.name.split(',')[0]} drop point&quot;</div>
               <div className="text-[11px] text-[#6B7267] mt-0.5">Please drop at entrance</div>

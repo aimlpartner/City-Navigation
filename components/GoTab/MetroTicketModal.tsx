@@ -159,7 +159,7 @@ export function MetroTicketModal({
 
             <div className="flex items-center justify-between relative z-10">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-[12px] bg-white/10 flex items-center justify-center border border-white/20">
+                <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
                   <TrainFront className="w-5 h-5 text-emerald-300" />
                 </div>
                 <div>
@@ -292,7 +292,7 @@ export function MetroTicketModal({
                 <button
                   type="button"
                   onClick={() => setSelectedUpiApp('generic')}
-                  className={`p-3 rounded-[14px] border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer ${
+                  className={`chip-tactile p-3 rounded-xl border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer ${
                     selectedUpiApp === 'generic'
                       ? 'border-[#143428] bg-[#F4F6F2] shadow-xs'
                       : 'border-[#E2E4DC] bg-white hover:border-[#143428]/40'
@@ -316,7 +316,7 @@ export function MetroTicketModal({
                 <button
                   type="button"
                   onClick={() => setSelectedUpiApp('gpay')}
-                  className={`p-3 rounded-[14px] border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer ${
+                  className={`chip-tactile p-3 rounded-xl border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer ${
                     selectedUpiApp === 'gpay'
                       ? 'border-[#143428] bg-[#F4F6F2] shadow-xs'
                       : 'border-[#E2E4DC] bg-white hover:border-[#143428]/40'
@@ -340,7 +340,7 @@ export function MetroTicketModal({
                 <button
                   type="button"
                   onClick={() => setSelectedUpiApp('phonepe')}
-                  className={`p-3 rounded-[14px] border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer ${
+                  className={`chip-tactile p-3 rounded-xl border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer ${
                     selectedUpiApp === 'phonepe'
                       ? 'border-[#143428] bg-[#F4F6F2] shadow-xs'
                       : 'border-[#E2E4DC] bg-white hover:border-[#143428]/40'
@@ -364,7 +364,7 @@ export function MetroTicketModal({
                 <button
                   type="button"
                   onClick={() => setSelectedUpiApp('paytm')}
-                  className={`p-3 rounded-[14px] border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer ${
+                  className={`chip-tactile p-3 rounded-xl border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer ${
                     selectedUpiApp === 'paytm'
                       ? 'border-[#143428] bg-[#F4F6F2] shadow-xs'
                       : 'border-[#E2E4DC] bg-white hover:border-[#143428]/40'
@@ -424,7 +424,7 @@ export function MetroTicketModal({
               type="button"
               onClick={handleDirectInAppBooking}
               disabled={isProcessing}
-              className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-[#143428] hover:bg-[#1A3E31] active:scale-98 disabled:opacity-75 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition cursor-pointer"
+              className="btn-tactile w-full sm:w-auto px-7 py-3.5 rounded-full bg-[#143428] hover:bg-[#1A3E31] disabled:opacity-75 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition cursor-pointer"
             >
               {isProcessing ? (
                 <>

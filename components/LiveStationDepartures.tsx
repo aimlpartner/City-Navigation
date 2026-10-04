@@ -83,7 +83,7 @@ export function LiveStationDepartures({
       {/* PIDS Header (Passenger Information Display System Style) */}
       <div className="p-3.5 sm:p-5 bg-white border-b border-[#E2E4DC] flex items-center justify-between gap-2.5">
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-[12px] bg-[#143428] text-white flex items-center justify-center shrink-0 shadow-xs">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#143428] text-white flex items-center justify-center shrink-0 shadow-xs">
             <TrainFront className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-300" strokeWidth={1.75} />
           </div>
           <div className="min-w-0 flex-1">
@@ -108,7 +108,7 @@ export function LiveStationDepartures({
             onClick={handleManualRefresh}
             disabled={isRefreshing}
             aria-label="Refresh live schedule"
-            className="p-1.5 sm:p-2 rounded-full bg-[#F4F5F0] hover:bg-[#E2E4DC] hover:rotate-45 active:rotate-180 active:scale-90 text-[#17201B] transition-all duration-300 disabled:opacity-50 border border-[#E2E4DC] shrink-0 cursor-pointer shadow-2xs"
+            className="btn-tactile p-1.5 sm:p-2 rounded-full bg-[#F4F5F0] hover:bg-[#E2E4DC] hover:rotate-45 active:rotate-180 text-[#17201B] transition-all duration-300 disabled:opacity-50 border border-[#E2E4DC] shrink-0 cursor-pointer shadow-2xs"
             title="Refresh schedule"
           >
             <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} strokeWidth={2} />
@@ -120,7 +120,7 @@ export function LiveStationDepartures({
       <div className="grid grid-cols-2 bg-[#F8F9F5] border-b border-[#E2E4DC] p-1.5 sm:p-2 gap-2">
         <button
           onClick={() => setActivePlatform(1)}
-          className={`py-2 px-3 rounded-[16px] text-xs font-bold transition-all duration-150 flex items-center justify-center gap-2 chip-tactile ${
+          className={`py-2 px-3 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-2 chip-tactile ${
             activePlatform === 1
               ? 'bg-[#143428] text-white shadow-xs'
               : 'text-[#53584E] hover:text-[#17201B] hover:bg-white/80'
@@ -143,7 +143,7 @@ export function LiveStationDepartures({
 
         <button
           onClick={() => setActivePlatform(2)}
-          className={`py-2 px-3 rounded-[16px] text-xs font-bold transition-all duration-150 flex items-center justify-center gap-2 chip-tactile ${
+          className={`py-2 px-3 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-2 chip-tactile ${
             activePlatform === 2
               ? 'bg-[#143428] text-white shadow-xs'
               : 'text-[#53584E] hover:text-[#17201B] hover:bg-white/80'
@@ -176,7 +176,7 @@ export function LiveStationDepartures({
           {currentArrivals.map((train, idx) => (
             <div
               key={train.id}
-              className={`p-4 rounded-[16px] transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.985] cursor-pointer ${
+              className={`card-interactive p-4 rounded-xl transition-all cursor-pointer ${
                 idx === 0
                   ? 'bg-[#F8F9F5] hover:bg-[#F2F5EC] border border-[#143428]/20 shadow-xs'
                   : 'bg-[#FAFAF7] hover:bg-[#F4F5EE] text-[#53584E] border border-transparent hover:border-[#E2E4DC]'
@@ -186,7 +186,7 @@ export function LiveStationDepartures({
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className={`w-8 h-8 rounded-[8px] flex items-center justify-center text-xs font-bold shrink-0 ${
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
                       idx === 0 ? 'bg-[#143428] text-white' : 'bg-[#EAECE4] text-[#53584E]'
                     }`}
                   >
@@ -268,7 +268,7 @@ export function LiveStationDepartures({
             {connectingBuses.slice(0, 2).map(bus => (
               <div
                 key={bus.busId}
-                className="p-3.5 rounded-[16px] bg-white text-xs flex items-center justify-between gap-3 shadow-2xs"
+                className="card-interactive p-3.5 rounded-xl bg-white text-xs flex items-center justify-between gap-3 shadow-2xs border border-[#E2E4DC]"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">

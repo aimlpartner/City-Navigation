@@ -138,9 +138,9 @@ export function LocationPicker({
 
       {/* Location Error Notice if GPS encountered an issue */}
       {locationError && (
-        <div className="rounded-[24px] border-2 border-amber-300 bg-amber-50/95 p-4 text-[#17201B] space-y-3 shadow-sm animate-in fade-in">
+        <div className="rounded-2xl border-2 border-amber-300 bg-amber-50/95 p-4 text-[#17201B] space-y-3 shadow-sm animate-in fade-in">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-[10px] bg-amber-200 text-amber-900 flex items-center justify-center shrink-0 mt-0.5">
+            <div className="w-8 h-8 rounded-xl bg-amber-200 text-amber-900 flex items-center justify-center shrink-0 mt-0.5">
               <AlertCircle className="w-4 h-4" />
             </div>
             <div className="flex-1 min-w-0">
@@ -156,7 +156,7 @@ export function LocationPicker({
             type="button"
             onClick={onDetectLocation}
             disabled={isDetectingLocation}
-            className="btn-tactile w-full py-2.5 px-3 rounded-[14px] bg-[#143428] hover:bg-[#1A3E31] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+            className="btn-tactile w-full py-2.5 px-3 rounded-xl bg-[#143428] hover:bg-[#1A3E31] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs cursor-pointer"
           >
             <LocateFixed className={`w-3.5 h-3.5 ${isDetectingLocation ? 'animate-spin' : ''}`} />
             <span>{isDetectingLocation ? 'Pinpointing GPS...' : 'Retry Pinpoint GPS Detection'}</span>
@@ -166,7 +166,7 @@ export function LocationPicker({
 
       {/* Giant GPS Auto-Detect Button or Verified Detected Card */}
       {isDetected && detectedLocation ? (
-        <div className="rounded-[24px] border-2 border-emerald-600 bg-white/95 backdrop-blur-md p-4 sm:p-5 shadow-md space-y-3.5 transition-all">
+        <div className="rounded-2xl border-2 border-emerald-600 bg-white/95 backdrop-blur-md p-4 sm:p-5 shadow-md space-y-3.5 transition-all">
           <div className="flex items-center justify-between gap-2">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-800 text-[#5ee9b5] text-[11px] font-bold shadow-xs">
               <span className="w-2 h-2 rounded-full bg-[#5ee9b5] animate-pulse" />
@@ -184,7 +184,7 @@ export function LocationPicker({
           </div>
 
           <div className="flex items-start gap-3.5">
-            <div className="w-11 h-11 rounded-[12px] bg-[#143428] text-[#5ee9b5] flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+            <div className="w-11 h-11 rounded-xl bg-[#143428] text-[#5ee9b5] flex items-center justify-center shrink-0 shadow-xs mt-0.5">
               <MapPin className="w-5 h-5" strokeWidth={2.2} />
             </div>
             <div className="min-w-0 flex-1">
@@ -217,7 +217,7 @@ export function LocationPicker({
             <button
               type="button"
               onClick={onProceedToDestination}
-              className="btn-tactile w-full py-2.5 px-4 rounded-[14px] bg-[#143428] hover:bg-[#1A3E31] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs cursor-pointer group"
+              className="btn-tactile w-full py-2.5 px-4 rounded-xl bg-[#143428] hover:bg-[#1A3E31] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs cursor-pointer group"
             >
               <span>Next: Choose Where to Go</span>
               <span className="text-[#5ee9b5] font-black group-hover:translate-x-1 transition-transform">➔</span>
@@ -229,10 +229,10 @@ export function LocationPicker({
           type="button"
           onClick={onDetectLocation}
           disabled={isDetectingLocation}
-          className="btn-tactile w-full relative overflow-hidden flex items-center justify-between p-4 sm:p-5 rounded-[24px] bg-gradient-to-r from-[#143428] to-[#1E4837] text-white shadow-md border border-[#1E4837] group cursor-pointer"
+          className="btn-tactile w-full relative overflow-hidden flex items-center justify-between p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#143428] to-[#1E4837] text-white shadow-md border border-[#1E4837] group cursor-pointer"
         >
           <div className="flex items-center gap-4">
-            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-[14px] bg-white/15 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-white/15 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform">
               {isDetectingLocation ? (
                 <Loader2 className="w-6 h-6 text-[#5ee9b5] animate-spin" />
               ) : (

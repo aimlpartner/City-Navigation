@@ -92,12 +92,12 @@ export function MapTabScreen({
 
       {/* If no active trip, show helpful overlay */}
       {!tripPlan && (
-        <div className="absolute top-4 left-4 right-4 z-10 bg-white/90 backdrop-blur-xl p-4 rounded-[20px] border border-white/70 shadow-lg text-center">
+        <div className="absolute top-4 left-4 right-4 z-10 bg-white/90 backdrop-blur-xl p-4 rounded-2xl border border-white/70 shadow-lg text-center">
           <p className="text-xs font-bold text-[#17201B]">No destination selected yet</p>
           <button
             type="button"
             onClick={onSwitchToGoTab}
-            className="mt-2 px-4 py-1.5 rounded-full bg-[#143428] text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 transition"
+            className="btn-tactile mt-2 px-4 py-1.5 rounded-full bg-[#143428] text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
           >
             <Navigation2 className="w-3.5 h-3.5 text-[#5ee9b5]" />
             <span>Pick Destination in Go Tab</span>
