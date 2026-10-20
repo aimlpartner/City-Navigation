@@ -382,9 +382,12 @@ export function MobileAppShell({
       {/* Moving Water from Metal Shader (Drawn 30 FPS, Paused in Low Power / Reduce Motion) */}
       <LivingTransitCanvas />
 
-      {/* Mobile App Top Header */}
-      <header className="shrink-0 z-30 bg-white/85 backdrop-blur-xl border-b border-[#E2E4DC] px-4 shadow-xs top-header-safe pb-2.5 relative">
-        <div className="max-w-md mx-auto flex items-center justify-between gap-2">
+      {/* Mobile App Top Header with Apple iOS Liquid Glass Specular Reflection */}
+      <header className="shrink-0 z-30 ios-liquid-glass border-b border-white/60 px-4 shadow-[0_12px_32px_-6px_rgba(20,52,40,0.08)] top-header-safe pb-2.5 relative">
+        {/* Apple Specular Top Rim */}
+        <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none" />
+
+        <div className="max-w-md mx-auto flex items-center justify-between gap-2 relative z-10">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-9 h-9 rounded-xl bg-[#143428] text-white flex items-center justify-center shadow-xs shrink-0 border border-emerald-400/30">
               <TrainFront className="w-5 h-5 text-[#5ee9b5]" strokeWidth={2.2} />
@@ -416,7 +419,7 @@ export function MobileAppShell({
             <button
               type="button"
               onClick={triggerPwaInstall}
-              className="btn-tactile flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#143428] text-white text-xs font-bold shadow-xs hover:bg-[#1A3E31] cursor-pointer shrink-0 group"
+              className="ios-liquid-pill flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r from-[#143428] to-[#1A3E31] text-white text-xs font-bold shadow-xs cursor-pointer shrink-0 group border border-white/20"
               title="Download & Install MetroNav App"
             >
               <Download className="w-3.5 h-3.5 text-[#5ee9b5] group-hover:-translate-y-0.5 transition-transform" />
@@ -427,7 +430,7 @@ export function MobileAppShell({
               <button
                 type="button"
                 onClick={onOpenTransitRadar}
-                className="btn-tactile flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/90 hover:bg-[#F8F9F5] border border-[#D5D8CD] text-xs font-bold text-[#143428] shadow-xs cursor-pointer shrink-0 group"
+                className="ios-liquid-pill flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-[#143428] cursor-pointer shrink-0 group"
               >
                 <Radar className="w-3.5 h-3.5 text-emerald-600 animate-pulse group-hover:rotate-45 transition-transform" />
                 <span>Radar</span>

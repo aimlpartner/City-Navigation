@@ -79,9 +79,9 @@ export function LiveStationDepartures({
     activePlatform === 1 ? schedule.arrivalsPlatform1 : schedule.arrivalsPlatform2;
 
   return (
-    <div className="rounded-[24px] bg-white text-[#17201B] border border-[#E2E4DC] shadow-xs overflow-hidden">
+    <div className="ios-liquid-glass rounded-[28px] text-[#17201B] shadow-lg overflow-hidden">
       {/* PIDS Header (Passenger Information Display System Style) */}
-      <div className="p-3.5 sm:p-5 bg-white border-b border-[#E2E4DC] flex items-center justify-between gap-2.5">
+      <div className="p-3.5 sm:p-5 bg-white/40 backdrop-blur-md border-b border-[#E2E4DC]/80 flex items-center justify-between gap-2.5">
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#143428] text-white flex items-center justify-center shrink-0 shadow-xs">
             <TrainFront className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-300" strokeWidth={1.75} />
@@ -98,7 +98,7 @@ export function LiveStationDepartures({
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <span className="px-2.5 py-1 rounded-full bg-[#F4F5F0] border border-[#E2E4DC] text-[11px] sm:text-xs text-[#143428] font-mono whitespace-nowrap font-bold">
+          <span className="px-2.5 py-1 rounded-full bg-white/60 border border-[#E2E4DC] text-[11px] sm:text-xs text-[#143428] font-mono whitespace-nowrap font-bold">
             {schedule.headwayText}
           </span>
           <span className="text-[11px] text-[#8E9487] font-mono hidden sm:inline">
@@ -108,7 +108,7 @@ export function LiveStationDepartures({
             onClick={handleManualRefresh}
             disabled={isRefreshing}
             aria-label="Refresh live schedule"
-            className="btn-tactile p-1.5 sm:p-2 rounded-full bg-[#F4F5F0] hover:bg-[#E2E4DC] hover:rotate-45 active:rotate-180 text-[#17201B] transition-all duration-300 disabled:opacity-50 border border-[#E2E4DC] shrink-0 cursor-pointer shadow-2xs"
+            className="btn-tactile p-1.5 sm:p-2 rounded-full bg-white/60 hover:bg-white hover:rotate-45 active:rotate-180 text-[#17201B] transition-all duration-300 disabled:opacity-50 border border-[#E2E4DC] shrink-0 cursor-pointer shadow-2xs"
             title="Refresh schedule"
           >
             <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} strokeWidth={2} />
@@ -117,7 +117,7 @@ export function LiveStationDepartures({
       </div>
 
       {/* Platform Switcher */}
-      <div className="grid grid-cols-2 bg-[#F8F9F5] border-b border-[#E2E4DC] p-1.5 sm:p-2 gap-2">
+      <div className="grid grid-cols-2 bg-white/30 backdrop-blur-sm border-b border-[#E2E4DC]/80 p-1.5 sm:p-2 gap-2">
         <button
           onClick={() => setActivePlatform(1)}
           className={`py-2 px-3 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-2 chip-tactile ${

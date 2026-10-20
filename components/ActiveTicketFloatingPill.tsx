@@ -40,9 +40,11 @@ export function ActiveTicketFloatingPill() {
           initial={{ y: 30, opacity: 0, scale: 0.95 }}
           animate={{ y: 0, opacity: 1, scale: 1 }}
           exit={{ y: 30, opacity: 0, scale: 0.95 }}
-          className="pointer-events-auto bg-[#143428]/95 text-white p-2.5 sm:p-3 rounded-2xl shadow-2xl border border-emerald-400/40 flex items-center justify-between gap-2.5 backdrop-blur-xl cursor-pointer hover:bg-[#1A3E31] transition active:scale-98"
+          className="pointer-events-auto ios-liquid-glass-dark text-white p-2.5 sm:p-3 rounded-2xl shadow-2xl border border-white/20 flex items-center justify-between gap-2.5 cursor-pointer hover:brightness-105 transition active:scale-98 relative overflow-hidden"
           onClick={() => setIsOpenModal(true)}
         >
+          {/* Specular Apple Glass Top Rim */}
+          <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none" />
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="relative">
               <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-400/40">

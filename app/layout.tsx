@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent',
     title: 'MetroNav',
   },
   formatDetection: {
@@ -62,11 +62,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={plusJakartaSans.className}>
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="MetroNav" />
+        <meta name="apple-touch-fullscreen" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#F4F5F0" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
-      <body className="bg-[#F4F5F0] text-[#17201B] antialiased" suppressHydrationWarning>
+      <body className="bg-[#F4F5F0] text-[#17201B] antialiased overscroll-none" suppressHydrationWarning>
         <PwaInstallPrompt />
         {children}
       </body>

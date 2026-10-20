@@ -128,95 +128,100 @@ export function LiveTransitRadarModal({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
           onClick={onClose}
-          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-2.5 sm:p-6 pb-[max(env(safe-area-inset-bottom,0px),12px)] sm:pb-6 bg-black/60 backdrop-blur-xs"
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-2.5 sm:p-6 pb-[max(env(safe-area-inset-bottom,0px),12px)] sm:pb-6 bg-black/60 backdrop-blur-md"
         >
           <motion.div
             key="transit-radar-card"
-            initial={{ opacity: 0, scale: 0.95, y: 14 }}
+            initial={{ opacity: 0, scale: 0.95, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 8 }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            exit={{ opacity: 0, scale: 0.96, y: 10 }}
+            transition={{ duration: 0.24, ease: [0.32, 0.72, 0, 1] }}
             onClick={e => e.stopPropagation()}
-            className="relative w-full max-w-4xl bg-white rounded-[28px] shadow-2xl border border-[#E2E4DC] flex flex-col max-h-[88dvh] sm:max-h-[90vh] overflow-hidden"
+            className="ios-liquid-glass relative w-full max-w-4xl rounded-[32px] shadow-2xl flex flex-col max-h-[88dvh] sm:max-h-[90vh] overflow-hidden"
             role="dialog"
             aria-modal="true"
           >
-            {/* Modal Header in British Racing Green */}
-        <div className="p-4 sm:p-6 bg-[#143428] text-white flex items-center justify-between border-b border-[#1E4837] gap-3">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="w-10 h-10 rounded-xl bg-white/10 text-white flex items-center justify-center font-bold border border-white/15 shrink-0">
-              <Radar className="w-5 h-5 text-emerald-300 shrink-0" strokeWidth={1.75} />
+            {/* iOS Grabber for Mobile */}
+            <div className="pt-2 pb-1 flex justify-center sm:hidden">
+              <div className="ios-grabber" />
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
-                <h3 className="text-base sm:text-lg font-bold tracking-tight text-white font-sans truncate">
-                  Delhi & Gurugram Transit Radar
-                </h3>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/10 text-emerald-200 text-[10px] font-mono font-medium border border-white/15 whitespace-nowrap shrink-0">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
-                  <span>{currentTimeStr} IST</span>
-                </span>
+
+            {/* Modal Header in iOS Liquid Dark Glass */}
+            <div className="ios-liquid-glass-dark p-4 sm:p-6 text-white flex items-center justify-between border-b border-white/10 gap-3">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="w-10 h-10 rounded-xl bg-white/10 text-white flex items-center justify-center font-bold border border-white/15 shrink-0">
+                  <Radar className="w-5 h-5 text-emerald-300 shrink-0" strokeWidth={1.75} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+                    <h3 className="text-base sm:text-lg font-bold tracking-tight text-white font-sans truncate">
+                      Delhi & Gurugram Transit Radar
+                    </h3>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/10 text-emerald-200 text-[10px] font-mono font-medium border border-white/15 whitespace-nowrap shrink-0">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
+                      <span>{currentTimeStr} IST</span>
+                    </span>
+                  </div>
+                  <p className="text-xs text-emerald-100/80 mt-0.5 truncate">
+                    Real-time multi-modal status: DMRC, Rapid Metro & Gurugaman buses
+                  </p>
+                </div>
               </div>
-              <p className="text-xs text-emerald-100/80 mt-0.5 truncate">
-                Real-time multi-modal status: DMRC, Rapid Metro & Gurugaman buses
-              </p>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                  className="btn-tactile px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white transition flex items-center gap-1.5 text-xs font-medium shrink-0 cursor-pointer"
+                  title="Refresh live data"
+                >
+                  <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} strokeWidth={2} />
+                  <span className="hidden sm:inline">Refresh</span>
+                </button>
+                <button
+                  onClick={onClose}
+                  aria-label="Close Live Transit Radar"
+                  className="btn-tactile p-2 rounded-full bg-white/10 hover:bg-white/20 text-emerald-100 hover:text-white transition border border-white/15 shrink-0 cursor-pointer"
+                >
+                  <X className="w-5 h-5" strokeWidth={2} />
+                </button>
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className="btn-tactile px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white transition flex items-center gap-1.5 text-xs font-medium shrink-0 cursor-pointer"
-              title="Refresh live data"
-            >
-              <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} strokeWidth={2} />
-              <span className="hidden sm:inline">Refresh</span>
-            </button>
-            <button
-              onClick={onClose}
-              aria-label="Close Live Transit Radar"
-              className="btn-tactile p-2 rounded-full bg-white/10 hover:bg-white/20 text-emerald-100 hover:text-white transition border border-white/15 shrink-0 cursor-pointer"
-            >
-              <X className="w-5 h-5" strokeWidth={2} />
-            </button>
-          </div>
-        </div>
+            {/* Mode / Tabs Switcher */}
+            <div className="flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 border-b border-[#E2E4DC]/80 bg-white/40 backdrop-blur-md overflow-x-auto no-scrollbar">
+              <button
+                onClick={() => setActiveTab('lines')}
+                className={`ios-liquid-pill px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
+                  activeTab === 'lines'
+                    ? '!bg-[#143428] !text-white !border-[#143428] shadow-sm'
+                    : 'text-[#53584E]'
+                }`}
+              >
+                <TrainFront className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
+                <span>Metro Lines ({linesList.length})</span>
+              </button>
 
-        {/* Mode / Tabs Switcher */}
-        <div className="flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 border-b border-[#E2E4DC] bg-[#F8F9F5] overflow-x-auto no-scrollbar">
-          <button
-            onClick={() => setActiveTab('lines')}
-            className={`chip-tactile px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
-              activeTab === 'lines'
-                ? 'bg-[#143428] text-white shadow-xs'
-                : 'text-[#53584E] hover:bg-[#EAECE4]'
-            }`}
-          >
-            <TrainFront className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
-            <span>Metro Lines ({linesList.length})</span>
-          </button>
+              <button
+                onClick={() => setActiveTab('buses')}
+                className={`ios-liquid-pill px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
+                  activeTab === 'buses'
+                    ? '!bg-[#143428] !text-white !border-[#143428] shadow-sm'
+                    : 'text-[#53584E]'
+                }`}
+              >
+                <BusFront className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
+                <span>Feeder Buses ({LIVE_BUS_ROUTES.length})</span>
+              </button>
 
-          <button
-            onClick={() => setActiveTab('buses')}
-            className={`chip-tactile px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
-              activeTab === 'buses'
-                ? 'bg-[#143428] text-white shadow-xs'
-                : 'text-[#53584E] hover:bg-[#EAECE4]'
-            }`}
-          >
-            <BusFront className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
-            <span>Feeder Buses ({LIVE_BUS_ROUTES.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('alerts')}
-            className={`chip-tactile px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
-              activeTab === 'alerts'
-                ? 'bg-[#143428] text-white shadow-xs'
-                : 'text-[#53584E] hover:bg-[#EAECE4]'
-            }`}
-          >
+              <button
+                onClick={() => setActiveTab('alerts')}
+                className={`ios-liquid-pill px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
+                  activeTab === 'alerts'
+                    ? '!bg-[#143428] !text-white !border-[#143428] shadow-sm'
+                    : 'text-[#53584E]'
+                }`}
+              >
             <AlertTriangle className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
             <span>Service Advisories ({ACTIVE_TRANSIT_ALERTS.length})</span>
           </button>

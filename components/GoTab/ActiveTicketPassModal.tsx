@@ -86,7 +86,7 @@ export function ActiveTicketPassModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-md overflow-y-auto">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -96,17 +96,22 @@ export function ActiveTicketPassModal({
         />
 
         <motion.div
-          initial={{ scale: 0.94, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.94, opacity: 0 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="relative w-full max-w-sm sm:max-w-md bg-white rounded-[28px] shadow-2xl overflow-hidden z-10 flex flex-col my-auto border border-[#E2E4DC]"
+          initial={{ scale: 0.94, opacity: 0, y: 16 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.94, opacity: 0, y: 16 }}
+          transition={{ type: 'spring', damping: 28, stiffness: 360 }}
+          className="ios-liquid-glass relative w-full max-w-sm sm:max-w-md rounded-[32px] shadow-2xl overflow-hidden z-10 flex flex-col my-auto"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Top Transit Pass Header */}
-          <div className="bg-[#143428] text-white p-4 sm:p-5 relative overflow-hidden">
+          {/* iOS Grabber for Mobile */}
+          <div className="pt-2 pb-1 flex justify-center sm:hidden">
+            <div className="ios-grabber" />
+          </div>
+
+          {/* Top Transit Pass Header with iOS Liquid Dark Glass */}
+          <div className="ios-liquid-glass-dark text-white p-4 sm:p-5 relative overflow-hidden">
             {/* Dynamic Security Pulse Banner */}
-            <div className="flex items-center justify-between pb-3 border-b border-emerald-400/20">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center border border-emerald-400/30">
                   <TrainFront className="w-4 h-4 text-emerald-300" />

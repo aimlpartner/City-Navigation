@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useTransition } from 'react';
+import React, { useState, useEffect, useMemo, useTransition, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   FAMOUS_DESTINATIONS,
@@ -48,7 +48,11 @@ import {
   Download,
   Check,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Hospital,
+  GraduationCap,
+  Store,
+  Loader2
 } from 'lucide-react';
 
 const LivingTransitCanvas = dynamic(
@@ -100,13 +104,23 @@ export default function HomePage() {
     lng: number;
   } | null>(null);
 
-  // Search autocomplete results
+  // Search autocomplete results for Destination
   const [placesResults, setPlacesResults] = useState<
     { id: string; name: string; formattedAddress: string; category?: string; lat?: number; lng?: number }[]
   >([]);
   const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isTransitRadarOpen, setIsTransitRadarOpen] = useState(false);
+
+  // Search autocomplete results for Departure Location (Origin)
+  const [originSearchQuery, setOriginSearchQuery] = useState(originName);
+  const [originPlacesResults, setOriginPlacesResults] = useState<any[]>([]);
+  const [isSearchingOrigin, setIsSearchingOrigin] = useState(false);
+  const [isOriginFocused, setIsOriginFocused] = useState(false);
+
+  // Refs for robust click-outside detection (replacing intrusive backdrops)
+  const originContainerRef = useRef<HTMLDivElement>(null);
+  const destContainerRef = useRef<HTMLDivElement>(null);
 
   // Popular Places Filter & Explorer Modal State
   const [activeRegionFilter, setActiveRegionFilter] = useState<'All' | 'Gurgaon' | 'Delhi' | 'Transit'>('All');
@@ -365,25 +379,31 @@ export default function HomePage() {
     };
   }, [tripPlan]);
 
-  // Two-tier Pinpoint Browser Geolocation with Zero Fake Fallbacks
-  const handleDetectLocation = async () => {
+  // Persistent, Zero-Friction Browser Geolocation with Silent Auto-Pickup
+  const handleDetectLocation = async (options?: { silent?: boolean }) => {
+    const isSilent = options?.silent ?? false;
+
     if (!navigator.geolocation) {
-      setLocationError('Geolocation is not supported by your browser.');
-      setLocationToast({
-        message: 'GPS Not Supported',
-        subtext: 'Your device or browser does not support geolocation detection.'
-      });
-      setTimeout(() => setLocationToast(null), 6000);
+      if (!isSilent) {
+        setLocationError('Geolocation is not supported by your browser.');
+        setLocationToast({
+          message: 'GPS Not Supported',
+          subtext: 'Your device or browser does not support geolocation detection.'
+        });
+        setTimeout(() => setLocationToast(null), 6000);
+      }
       return;
     }
 
-    setIsDetectingLocation(true);
-    setLocationError(null);
+    if (!isSilent) {
+      setIsDetectingLocation(true);
+      setLocationError(null);
+    }
 
     // Helper: Acquire coordinates with High Accuracy first, falling back to Network positioning
     const acquirePosition = (): Promise<{ lat: number; lng: number; accuracyM: number }> => {
       return new Promise((resolve, reject) => {
-        // Attempt 1: High Accuracy GPS (Hardware/Satellite lock)
+        // High Accuracy GPS (Hardware/Satellite lock)
         navigator.geolocation.getCurrentPosition(
           pos => {
             resolve({
@@ -401,7 +421,7 @@ export default function HomePage() {
 
             console.warn('High accuracy GPS timed out or unavailable, attempting standard network/Wi-Fi fix...', highAccErr);
 
-            // Attempt 2: Standard Network/Wi-Fi Geolocation (Cell tower / Wi-Fi triangulation)
+            // Standard Network/Wi-Fi Geolocation (Cell tower / Wi-Fi triangulation)
             navigator.geolocation.getCurrentPosition(
               netPos => {
                 resolve({
@@ -423,15 +443,15 @@ export default function HomePage() {
               },
               {
                 enableHighAccuracy: false,
-                timeout: 10000,
-                maximumAge: 0
+                timeout: isSilent ? 6000 : 10000,
+                maximumAge: isSilent ? 300000 : 60000
               }
             );
           },
           {
             enableHighAccuracy: true,
-            timeout: 12000,
-            maximumAge: 0
+            timeout: isSilent ? 8000 : 12000,
+            maximumAge: isSilent ? 300000 : 30000
           }
         );
       });
@@ -481,58 +501,236 @@ export default function HomePage() {
       setLocationError(null);
       setIsDetectingLocation(false);
 
-      // Show prominent toast notification confirming exact pinpoint location
-      setLocationToast({
-        message: resolvedName,
-        subtext: `Nearest Metro: ${nearestStationName} (~${distance} km away) • GPS Accuracy: ±${accuracyM}m`
-      });
-      setTimeout(() => setLocationToast(null), 6000);
+      // Persist in localStorage so subsequent page visits remember your exact location immediately
+      try {
+        localStorage.setItem('metronav_user_location', JSON.stringify(detectedInfo));
+        localStorage.setItem('metronav_location_permission', 'granted');
+      } catch {}
+
+      // Show prominent toast notification confirming exact pinpoint location if manually triggered
+      if (!isSilent) {
+        setLocationToast({
+          message: resolvedName,
+          subtext: `Nearest Metro: ${nearestStationName} (~${distance} km away) • GPS Accuracy: ±${accuracyM}m`
+        });
+        setTimeout(() => setLocationToast(null), 6000);
+      }
     } catch (err: any) {
       setIsDetectingLocation(false);
-      let userFriendlyTitle = 'Unable to pinpoint your GPS location';
-      let subtext = 'Please check your connection or choose a starting point below.';
 
       if (err.message === 'PERMISSION_DENIED') {
-        userFriendlyTitle = 'Location Access Denied';
-        subtext = 'Please enable location permission in your browser address bar so we can detect your exact spot.';
-      } else if (err.message === 'POSITION_UNAVAILABLE') {
-        userFriendlyTitle = 'GPS Signal Unavailable';
-        subtext = 'Your device cannot lock your coordinates. Please check your GPS/Wi-Fi toggle and retry.';
-      } else if (err.message === 'TIMEOUT') {
-        userFriendlyTitle = 'GPS Request Timed Out';
-        subtext = 'Could not acquire coordinates in time. Please check your signal and tap to retry.';
+        try {
+          localStorage.setItem('metronav_location_permission', 'denied');
+        } catch {}
       }
 
-      setLocationError(subtext);
-      setLocationToast({
-        message: userFriendlyTitle,
-        subtext: subtext
-      });
-      setTimeout(() => setLocationToast(null), 7000);
+      if (!isSilent) {
+        let userFriendlyTitle = 'Unable to pinpoint your GPS location';
+        let subtext = 'Please check your connection or choose a starting point below.';
+
+        if (err.message === 'PERMISSION_DENIED') {
+          userFriendlyTitle = 'Location Access Denied';
+          subtext = 'Please enable location permission in your browser address bar so we can detect your exact spot.';
+        } else if (err.message === 'POSITION_UNAVAILABLE') {
+          userFriendlyTitle = 'GPS Signal Unavailable';
+          subtext = 'Your device cannot lock your coordinates. Please check your GPS/Wi-Fi toggle and retry.';
+        } else if (err.message === 'TIMEOUT') {
+          userFriendlyTitle = 'GPS Request Timed Out';
+          subtext = 'Could not acquire coordinates in time. Please check your signal and tap to retry.';
+        }
+
+        setLocationError(subtext);
+        setLocationToast({
+          message: userFriendlyTitle,
+          subtext: subtext
+        });
+        setTimeout(() => setLocationToast(null), 7000);
+      }
     }
   };
 
+  // Persistent Auto-Pickup: Always load user location on startup and refresh silently if permission granted
+  useEffect(() => {
+    // 1. Immediately restore saved location from localStorage (0ms instant display)
+    try {
+      const saved = localStorage.getItem('metronav_user_location');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.name && parsed.coords?.lat && parsed.coords?.lng) {
+          setOriginName(parsed.name);
+          setOriginCoords(parsed.coords);
+          setDetectedLocation(parsed);
+        }
+      }
+    } catch {}
+
+    // 2. Query browser permission status and silently refresh location
+    const initLocation = async () => {
+      if (typeof window === 'undefined' || !navigator.geolocation) return;
+
+      if (navigator.permissions && navigator.permissions.query) {
+        try {
+          const perm = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
+
+          // Keep in sync if permission changes
+          perm.onchange = () => {
+            if (perm.state === 'granted') {
+              handleDetectLocation({ silent: true });
+            }
+          };
+
+          if (perm.state === 'granted') {
+            // Permission already granted! Silently refresh in background with zero prompts
+            handleDetectLocation({ silent: true });
+            return;
+          }
+
+          if (perm.state === 'prompt') {
+            const previouslyDenied = localStorage.getItem('metronav_location_permission') === 'denied';
+            if (!previouslyDenied) {
+              // Ask once for permission on first visit
+              handleDetectLocation({ silent: false });
+            }
+            return;
+          }
+
+          // If 'denied', do not prompt or show error toasts automatically
+          return;
+        } catch {
+          // Fall through to fallback below
+        }
+      }
+
+      // Fallback for browsers without permissions.query
+      const savedPerm = localStorage.getItem('metronav_location_permission');
+      if (savedPerm === 'granted') {
+        handleDetectLocation({ silent: true });
+      } else if (savedPerm !== 'denied') {
+        handleDetectLocation({ silent: false });
+      }
+    };
+
+    initLocation();
+  }, []);
+
   // Handle destination live search query
   useEffect(() => {
-    if (searchQuery.trim().length < 2) {
+    const q = searchQuery.trim();
+    if (!isSearchFocused || q.length < 2) {
+      if (q.length < 2) setPlacesResults([]);
       return;
     }
 
     const timer = setTimeout(async () => {
       setIsSearchingPlaces(true);
       try {
-        const res = await fetch(`/api/places?q=${encodeURIComponent(searchQuery)}`);
-        const data = await res.json();
-        setPlacesResults(data.places || []);
+        const res = await fetch(`/api/places?q=${encodeURIComponent(q)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setPlacesResults(data.places || []);
+        }
       } catch (err) {
         console.error(err);
       } finally {
         setIsSearchingPlaces(false);
       }
-    }, 300);
+    }, 240);
 
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, isSearchFocused]);
+
+  // Handle origin live search query
+  useEffect(() => {
+    const q = originSearchQuery.trim();
+    if (!isOriginFocused || q.length < 2) {
+      if (q.length < 2) setOriginPlacesResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearchingOrigin(true);
+      try {
+        const res = await fetch(`/api/places?q=${encodeURIComponent(q)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setOriginPlacesResults(data.places || []);
+        }
+      } catch (err) {
+        console.warn('Origin search error:', err);
+      } finally {
+        setIsSearchingOrigin(false);
+      }
+    }, 240);
+
+    return () => clearTimeout(timer);
+  }, [originSearchQuery, isOriginFocused]);
+
+  // Synchronize originSearchQuery when originName changes via GPS or preset pills
+  useEffect(() => {
+    setOriginSearchQuery(originName);
+  }, [originName]);
+
+  // Clean outside-click handler for both Origin and Destination dropdowns
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (originContainerRef.current && !originContainerRef.current.contains(e.target as Node)) {
+        setIsOriginFocused(false);
+      }
+      if (destContainerRef.current && !destContainerRef.current.contains(e.target as Node)) {
+        setIsSearchFocused(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
+  // Category Icon helper for dropdown items
+  const renderPlaceCategoryIcon = (place: any) => {
+    const text = `${place.name} ${place.category || ''} ${place.formattedAddress || ''}`.toLowerCase();
+    if (text.includes('hospital') || text.includes('clinic') || text.includes('medanta') || text.includes('fortis') || text.includes('apollo') || text.includes('max ')) {
+      return <Hospital className="w-4 h-4 text-red-600" />;
+    }
+    if (text.includes('college') || text.includes('university') || text.includes('campus') || text.includes('institute')) {
+      return <GraduationCap className="w-4 h-4 text-indigo-600" />;
+    }
+    if (text.includes('mall') || text.includes('shopping') || text.includes('plaza') || text.includes('promenade') || text.includes('citywalk')) {
+      return <ShoppingBag className="w-4 h-4 text-[#B9552C]" />;
+    }
+    if (text.includes('metro') || text.includes('station') || text.includes('railway')) {
+      return <TrainFront className="w-4 h-4 text-[#143428]" />;
+    }
+    if (text.includes('restaurant') || text.includes('cafe') || text.includes('food') || text.includes('dhaba') || text.includes('kitchen')) {
+      return <Utensils className="w-4 h-4 text-[#B9552C]" />;
+    }
+    if (text.includes('cyber') || text.includes('tech') || text.includes('tower') || text.includes('horizon') || text.includes('building') || text.includes('complex')) {
+      return <Building2 className="w-4 h-4 text-[#143428]" />;
+    }
+    return <MapPinned className="w-4 h-4 text-[#143428]" strokeWidth={1.75} />;
+  };
+
+  // Select an origin place from dropdown (Google Places or Curated)
+  const handleSelectOriginSearchResult = (place: any) => {
+    const chosenName = place.name;
+    setOriginName(chosenName);
+    setOriginSearchQuery(chosenName);
+    if (place.lat && place.lng) {
+      setOriginCoords({ lat: place.lat, lng: place.lng });
+      try {
+        localStorage.setItem(
+          'metronav_user_location',
+          JSON.stringify({
+            name: chosenName,
+            coords: { lat: place.lat, lng: place.lng },
+            nearestStation: place.nearestStation?.name,
+            distanceKm: place.nearestStation?.distanceKm
+          })
+        );
+      } catch {}
+    }
+    setOriginPlacesResults([]);
+    setIsOriginFocused(false);
+    setLocationError(null);
+  };
 
   // Select a famous landmark
   const handleSelectFamousDest = (dest: FamousDestination) => {
@@ -565,7 +763,7 @@ export default function HomePage() {
     if (place.lat && place.lng) {
       setSelectedDestination(null);
       setCustomDestCoords({
-        name: place.areaHint ? `${place.name} (${place.areaHint})` : place.name,
+        name: place.name,
         lat: place.lat,
         lng: place.lng
       });
@@ -649,10 +847,19 @@ export default function HomePage() {
         deepLinks={liveTripEstimate.deepLinks}
         aiGuide={aiGuide}
         isDetectingLocation={isDetectingLocation}
-        onDetectLocation={handleDetectLocation}
+        onDetectLocation={() => handleDetectLocation({ silent: false })}
         onSelectOrigin={(name, coords) => {
           setOriginName(name);
           setOriginCoords(coords);
+          try {
+            localStorage.setItem(
+              'metronav_user_location',
+              JSON.stringify({
+                name,
+                coords
+              })
+            );
+          } catch {}
         }}
         onSelectDestination={handleSelectAnyDestination}
         onOpenTransitRadar={() => setIsTransitRadarOpen(true)}
@@ -672,132 +879,293 @@ export default function HomePage() {
       <div className="hidden lg:block min-h-screen bg-[#F4F5F0] text-[#17201B] antialiased selection:bg-[#143428] selection:text-white pb-20 relative overflow-x-hidden">
         {/* Moving Water from Metal Shader (Drawn 30 FPS, Paused in Low Power / Reduce Motion) */}
         <LivingTransitCanvas />
-        {/* Top Application Header */}
-        <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-[#E2E4DC] shadow-xs">
-        <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 lg:px-10 xl:px-12 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#143428] border border-emerald-400/30 text-white flex items-center justify-center shadow-xs shrink-0">
-              <TrainFront className="w-5 h-5 text-[#5ee9b5]" strokeWidth={1.85} />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-lg sm:text-xl tracking-tight text-[#17201B] font-sans leading-none shrink-0">
-                  MetroNav
-                </span>
-                <span className="hidden sm:inline-flex whitespace-nowrap px-2.5 py-0.5 rounded-full bg-[#143428]/10 border border-[#143428]/20 text-[#143428] text-[10px] font-bold tracking-wide uppercase shrink-0 leading-tight">
+        {/* Top Application Header with Apple iOS Liquid Glass Specular Reflection */}
+        <header className="sticky top-0 z-40 ios-liquid-glass border-b border-white/70 shadow-[0_8px_32px_-4px_rgba(20,52,40,0.08)] relative">
+          {/* Apple Specular Top Rim */}
+          <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent pointer-events-none" />
+
+          <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 lg:px-10 xl:px-12 h-16 flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#143428] border border-emerald-400/30 text-white flex items-center justify-center shadow-xs shrink-0">
+                <TrainFront className="w-5 h-5 text-[#5ee9b5]" strokeWidth={1.85} />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-extrabold text-lg sm:text-xl tracking-tight text-[#17201B] font-sans leading-none shrink-0">
+                    MetroNav
+                  </span>
+                  <span className="hidden sm:inline-flex whitespace-nowrap px-2.5 py-0.5 rounded-full bg-[#143428]/10 border border-[#143428]/20 text-[#143428] text-[10px] font-bold tracking-wide uppercase shrink-0 leading-tight">
+                    Delhi & Gurugram
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#6B7267] font-medium hidden sm:block truncate mt-0.5">
+                  Quiet, confident transit navigation • exact station exit gates & feeder buses
+                </p>
+                <p className="text-[10px] text-[#6B7267] font-bold uppercase tracking-wider sm:hidden leading-none mt-1 truncate">
                   Delhi & Gurugram
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2">
+              {/* Download / Install App Button */}
+              <button
+                onClick={triggerPwaInstall}
+                className="ios-liquid-pill flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-[#143428] text-xs font-bold transition shadow-xs shrink-0 cursor-pointer group border border-white/60"
+                title="Download & Install App (PWA)"
+              >
+                <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#143428] group-hover:-translate-y-0.5 transition-transform" strokeWidth={2} />
+                <span>Download App</span>
+              </button>
+
+              <button
+                onClick={() => setIsTransitRadarOpen(true)}
+                className="ios-liquid-pill flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-[#143428] to-[#1A3E31] text-white text-xs font-bold transition shadow-xs shrink-0 cursor-pointer group border border-white/20"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
                 </span>
+                <Radar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-300 group-hover:rotate-45 transition-transform" strokeWidth={1.75} />
+                <span className="hidden xs:inline">Live Transit Radar</span>
+                <span className="xs:hidden">Radar</span>
+              </button>
+
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl ios-liquid-pill text-[#17201B] text-xs font-semibold">
+                <Headphones className="w-3.5 h-3.5 text-[#143428]" strokeWidth={1.75} />
+                <span>Quiet Protocol</span>
+                <BadgeCheck className="w-3.5 h-3.5 text-[#143428]" strokeWidth={2} />
               </div>
-              <p className="text-[11px] text-[#6B7267] font-medium hidden sm:block truncate mt-0.5">
-                Quiet, confident transit navigation • exact station exit gates & feeder buses
-              </p>
-              <p className="text-[10px] text-[#6B7267] font-bold uppercase tracking-wider sm:hidden leading-none mt-1 truncate">
-                Delhi & Gurugram
-              </p>
             </div>
           </div>
+        </header>
 
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2">
-            {/* Download / Install App Button */}
-            <button
-              onClick={triggerPwaInstall}
-              className="btn-tactile flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 rounded-xl bg-white hover:bg-[#F8F9F5] text-[#143428] border border-[#D5D8CD] text-xs font-bold transition shadow-xs shrink-0 cursor-pointer group"
-              title="Download & Install App (PWA)"
-            >
-              <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#143428] group-hover:-translate-y-0.5 transition-transform" strokeWidth={2} />
-              <span>Download App</span>
-            </button>
-
-            <button
-              onClick={() => setIsTransitRadarOpen(true)}
-              className="btn-tactile flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 rounded-xl bg-[#143428] hover:bg-[#1A3E31] text-white text-xs font-bold transition shadow-xs shrink-0 cursor-pointer group"
-            >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+        {/* Main Content Hub - Expanded Wide Canvas */}
+        <main className="w-full max-w-[1720px] mx-auto px-3.5 sm:px-6 lg:px-10 xl:px-12 pt-4 sm:pt-6 relative z-10">
+          {/* Network Status Banner */}
+          <div className="mb-4 sm:mb-6 rounded-xl sm:rounded-2xl ios-liquid-glass border border-white/80 px-3 py-2 sm:px-4 sm:py-2.5 flex items-center justify-between gap-3 text-xs shadow-sm text-[#53584E] relative overflow-hidden">
+            <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none" />
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 whitespace-nowrap min-w-0 flex-1">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#143428]/10 text-[#143428] text-[10px] sm:text-[11px] font-bold border border-[#143428]/20 shrink-0 whitespace-nowrap">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#143428]"></span>
+                Live Normal
               </span>
-              <Radar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-300 group-hover:rotate-45 transition-transform" strokeWidth={1.75} />
-              <span className="hidden xs:inline">Live Transit Radar</span>
-              <span className="xs:hidden">Radar</span>
-            </button>
-
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#F8F9F5] text-[#17201B] text-xs font-semibold border border-[#E2E4DC]">
-              <Headphones className="w-3.5 h-3.5 text-[#143428]" strokeWidth={1.75} />
-              <span>Quiet Protocol</span>
-              <BadgeCheck className="w-3.5 h-3.5 text-[#143428]" strokeWidth={2} />
+              <span className="flex items-center gap-1.5 text-[11px] shrink-0 font-medium text-[#17201B]">
+                <span className="w-2 h-2 rounded-full bg-yellow-500 shrink-0"></span>
+                <span>Yellow Line (~3m)</span>
+              </span>
+              <span className="text-[#8E9487] shrink-0">•</span>
+              <span className="flex items-center gap-1.5 text-[11px] shrink-0 font-medium text-[#17201B]">
+                <span className="w-2 h-2 rounded-full bg-sky-500 shrink-0"></span>
+                <span>Rapid Metro (~4m)</span>
+              </span>
+              <span className="text-[#8E9487] shrink-0">•</span>
+              <span className="flex items-center gap-1.5 text-[11px] shrink-0 font-medium text-[#17201B]">
+                <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0"></span>
+                <span>Blue Line (~3m)</span>
+              </span>
+              <span className="text-[#8E9487] hidden md:inline shrink-0">•</span>
+              <span className="text-[#6B7267] hidden md:inline text-[11px] shrink-0">
+                Sikanderpur skywalk air-conditioned
+              </span>
             </div>
+            <button
+              type="button"
+              onClick={() => setIsTransitRadarOpen(true)}
+              className="ios-liquid-pill inline-flex items-center gap-1 px-3 py-1 rounded-lg text-[11px] font-bold text-[#143428] hover:text-[#B9552C] shrink-0 transition whitespace-nowrap"
+            >
+              <span>All 7 Lines</span>
+              <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={1.75} />
+            </button>
           </div>
-        </div>
-      </header>
 
-      {/* Main Content Hub - Expanded Wide Canvas */}
-      <main className="w-full max-w-[1720px] mx-auto px-3.5 sm:px-6 lg:px-10 xl:px-12 pt-4 sm:pt-6 relative z-10">
-        {/* Network Status Banner */}
-        <div className="mb-4 sm:mb-6 rounded-xl sm:rounded-2xl bg-white border border-[#E2E4DC] px-3 py-2 sm:px-4 sm:py-2.5 flex items-center justify-between gap-3 text-xs shadow-xs text-[#53584E]">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 whitespace-nowrap min-w-0 flex-1">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#143428]/10 text-[#143428] text-[10px] sm:text-[11px] font-bold border border-[#143428]/20 shrink-0 whitespace-nowrap">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#143428]"></span>
-              Live Normal
-            </span>
-            <span className="flex items-center gap-1.5 text-[11px] shrink-0 font-medium text-[#17201B]">
-              <span className="w-2 h-2 rounded-full bg-yellow-500 shrink-0"></span>
-              <span>Yellow Line (~3m)</span>
-            </span>
-            <span className="text-[#8E9487] shrink-0">•</span>
-            <span className="flex items-center gap-1.5 text-[11px] shrink-0 font-medium text-[#17201B]">
-              <span className="w-2 h-2 rounded-full bg-sky-500 shrink-0"></span>
-              <span>Rapid Metro (~4m)</span>
-            </span>
-            <span className="text-[#8E9487] shrink-0">•</span>
-            <span className="flex items-center gap-1.5 text-[11px] shrink-0 font-medium text-[#17201B]">
-              <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0"></span>
-              <span>Blue Line (~3m)</span>
-            </span>
-            <span className="text-[#8E9487] hidden md:inline shrink-0">•</span>
-            <span className="text-[#6B7267] hidden md:inline text-[11px] shrink-0">
-              Sikanderpur skywalk air-conditioned
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsTransitRadarOpen(true)}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#F8F9F5] hover:bg-[#EAECE4] border border-[#E2E4DC] text-[11px] font-bold text-[#143428] hover:text-[#B9552C] shrink-0 transition whitespace-nowrap"
-          >
-            <span>All 7 Lines</span>
-            <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={1.75} />
-          </button>
-        </div>
+          {/* Navigation Query Bar (Origin & Destination Selection) */}
+          <section className="ios-liquid-glass rounded-2xl sm:rounded-[28px] p-4 sm:p-6 xl:p-8 border border-white/85 shadow-[0_20px_50px_-8px_rgba(20,52,40,0.12)] mb-5 sm:mb-8 relative z-30">
+            {/* Apple Specular Top Rim */}
+            <div className="absolute inset-x-6 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent pointer-events-none" />
 
-        {/* Navigation Query Bar (Origin & Destination Selection) */}
-        <section className="bg-white rounded-2xl sm:rounded-[24px] p-4 sm:p-6 xl:p-8 border border-[#E2E4DC] shadow-xs mb-5 sm:mb-8 relative z-30">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 xl:gap-8">
-            {/* Origin Location Selector */}
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold uppercase tracking-wider text-[#17201B] flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-md bg-[#143428]/10 text-[#143428] flex items-center justify-center">
-                    <CircleDot className="w-3.5 h-3.5" strokeWidth={2} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 xl:gap-8 relative z-10">
+              {/* Origin Location Selector with Live Google Places Autocomplete */}
+              <div className="space-y-2.5 relative z-40" ref={originContainerRef}>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold uppercase tracking-wider text-[#17201B] flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-md bg-[#143428]/10 text-[#143428] flex items-center justify-center">
+                      <CircleDot className="w-3.5 h-3.5" strokeWidth={2} />
+                    </div>
+                    <span>Departure Location</span>
+                  </label>
+                  <button
+                    onClick={() => handleDetectLocation({ silent: false })}
+                    disabled={isDetectingLocation}
+                    className="ios-liquid-pill text-xs font-bold text-[#143428] hover:text-[#B9552C] flex items-center gap-1.5 transition px-2.5 py-1 rounded-lg cursor-pointer"
+                  >
+                    <LocateFixed className={`w-3.5 h-3.5 ${isDetectingLocation ? 'animate-spin' : ''}`} strokeWidth={1.75} />
+                    <span>{isDetectingLocation ? 'Detecting...' : 'Use GPS'}</span>
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8E9487]">
+                    <CircleDot className="w-4 h-4 text-[#143428]" strokeWidth={2} />
                   </div>
-                  <span>Departure Location</span>
-                </label>
-                <button
-                  onClick={handleDetectLocation}
-                  disabled={isDetectingLocation}
-                  className="text-xs font-bold text-[#143428] hover:text-[#B9552C] flex items-center gap-1.5 transition px-2.5 py-1 rounded-lg bg-[#F8F9F5] border border-[#E2E4DC]"
-                >
-                  <LocateFixed className={`w-3.5 h-3.5 ${isDetectingLocation ? 'animate-spin' : ''}`} strokeWidth={1.75} />
-                  <span>{isDetectingLocation ? 'Detecting...' : 'Use GPS'}</span>
-                </button>
-              </div>
+                  <input
+                    type="text"
+                    value={originSearchQuery}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setOriginSearchQuery(val);
+                      if (!isOriginFocused) setIsOriginFocused(true);
+                      if (val.trim().length < 2) {
+                        setOriginPlacesResults([]);
+                      }
+                    }}
+                    onFocus={() => setIsOriginFocused(true)}
+                    placeholder="Type any starting place, mall, sector, hospital..."
+                    className="w-full pl-10 pr-16 py-3.5 rounded-xl ios-liquid-input text-sm text-[#17201B] font-medium placeholder:text-[#8E9487] shadow-xs"
+                  />
 
-              <div className="relative">
-                <input
-                  type="text"
-                  value={originName}
-                  onChange={e => setOriginName(e.target.value)}
-                  placeholder="e.g. DLF Cyber City, Sector 29, or colony"
-                  className="w-full px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl bg-[#F8F9F5] border border-[#E2E4DC] text-sm text-[#17201B] font-medium placeholder:text-[#8E9487] focus:bg-white focus:border-[#143428] focus:ring-2 focus:ring-[#143428]/15 focus:outline-none transition shadow-xs"
-                />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center gap-1.5">
+                    {isSearchingOrigin && (
+                      <div className="w-4 h-4 rounded-full border-2 border-[#143428] border-t-transparent animate-spin"></div>
+                    )}
+                    {originSearchQuery.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOriginSearchQuery('');
+                          setOriginPlacesResults([]);
+                          setIsOriginFocused(true);
+                        }}
+                        className="p-1 rounded-md text-[#8E9487] hover:text-[#17201B] hover:bg-[#EAECE4] transition cursor-pointer"
+                        title="Clear origin"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Live Origin Autocomplete Dropdown */}
+                  <AnimatePresence>
+                    {isOriginFocused && (
+                      <motion.div
+                        key="origin-dropdown-card"
+                        initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                        transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                        className="absolute top-full left-0 right-0 mt-2 ios-liquid-glass-thin rounded-2xl shadow-2xl border border-white/90 p-2 z-50 max-h-96 overflow-y-auto ring-1 ring-[#143428]/10"
+                      >
+                      <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#E2E4DC] mb-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7267] flex items-center gap-1.5">
+                          {originSearchQuery.trim().length >= 2 ? (
+                            <>
+                              <Compass className="w-3 h-3 text-[#143428]" />
+                              <span>Starting Point Suggestions ({originPlacesResults.length} found)</span>
+                            </>
+                          ) : (
+                            <span>Popular Starting Hubs (Delhi-NCR)</span>
+                          )}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setIsOriginFocused(false)}
+                          className="text-[10px] text-[#6B7267] hover:text-[#17201B] font-semibold cursor-pointer"
+                        >
+                          Close
+                        </button>
+                      </div>
+
+                      {originSearchQuery.trim().length >= 2 ? (
+                        <div className="divide-y divide-[#E2E4DC]/70">
+                          {originPlacesResults.map((p: any) => (
+                            <button
+                              key={p.id}
+                              onClick={() => handleSelectOriginSearchResult(p)}
+                              className="w-full text-left p-2.5 rounded-xl hover:bg-[#F8F9F5] text-xs flex items-center justify-between transition group cursor-pointer"
+                            >
+                              <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                                <div className="mt-0.5 w-6 h-6 rounded-md bg-[#F4F5F0] group-hover:bg-[#EAECE4] flex items-center justify-center shrink-0 border border-[#E2E4DC]">
+                                  {renderPlaceCategoryIcon(p)}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-bold text-[#17201B] text-xs">{p.name}</span>
+                                    <span className="px-1.5 py-0.2 rounded text-[10px] font-bold uppercase tracking-wider bg-[#F4F5F0] text-[#143428] border border-[#D5D8CD]">
+                                      {p.city}
+                                    </span>
+                                    {p.areaHint && (
+                                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#F4F5F0] text-[#53584E] border border-[#E2E4DC] font-medium">
+                                        {p.areaHint}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-[11px] text-[#6B7267] truncate mt-0.5">
+                                    {p.formattedAddress}
+                                  </div>
+                                  {p.nearestStation && (
+                                    <div className="text-[10px] text-[#6B7267] flex items-center gap-2 mt-1 flex-wrap">
+                                      <span className="flex items-center gap-1">
+                                        <span
+                                          className="w-2 h-2 rounded-full inline-block"
+                                          style={{ backgroundColor: p.nearestStation.lineColor }}
+                                        />
+                                        <span className="text-[#17201B] font-medium">
+                                          Near {p.nearestStation.name}
+                                        </span>
+                                        <span className="text-[#6B7267]">({p.nearestStation.line} Line)</span>
+                                        <span className="text-[#6B7267]">• ~{p.nearestStation.distanceKm} km</span>
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <ChevronRight className="w-3.5 h-3.5 text-[#8E9487] group-hover:text-[#143428] shrink-0 ml-2 transition" />
+                            </button>
+                          ))}
+                          {originPlacesResults.length === 0 && !isSearchingOrigin && (
+                            <div className="py-6 text-center text-xs text-[#6B7267] space-y-1">
+                              <p>No direct matches found for &quot;{originSearchQuery}&quot;</p>
+                              <p className="text-[11px] text-[#8E9487]">
+                                Try typing any mall, colony, sector, or hospital across Delhi-NCR
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          {COMMON_ORIGINS.map((orig, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                setOriginName(orig.name);
+                                setOriginSearchQuery(orig.name);
+                                setOriginCoords({ lat: orig.lat, lng: orig.lng });
+                                try {
+                                  localStorage.setItem(
+                                    'metronav_user_location',
+                                    JSON.stringify({
+                                      name: orig.name,
+                                      coords: { lat: orig.lat, lng: orig.lng }
+                                    })
+                                  );
+                                } catch {}
+                                setIsOriginFocused(false);
+                                setLocationError(null);
+                              }}
+                              className="w-full text-left px-3 py-2 rounded-xl hover:bg-[#F8F9F5] text-xs flex items-center justify-between transition cursor-pointer"
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <CircleDot className="w-3.5 h-3.5 text-[#143428] shrink-0" strokeWidth={2} />
+                                <span className="font-bold text-[#17201B]">{orig.name}</span>
+                              </div>
+                              <ChevronRight className="w-3 h-3 text-[#8E9487]" />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {locationError && (
@@ -809,7 +1177,7 @@ export default function HomePage() {
                   </div>
                   <button
                     type="button"
-                    onClick={handleDetectLocation}
+                    onClick={() => handleDetectLocation({ silent: false })}
                     disabled={isDetectingLocation}
                     className="text-xs font-bold text-[#143428] hover:text-[#B9552C] underline shrink-0 cursor-pointer"
                   >
@@ -839,7 +1207,7 @@ export default function HomePage() {
                   </div>
                   <button
                     type="button"
-                    onClick={handleDetectLocation}
+                    onClick={() => handleDetectLocation({ silent: false })}
                     disabled={isDetectingLocation}
                     className="text-[11px] font-bold text-[#143428] hover:text-[#B9552C] underline shrink-0 cursor-pointer"
                   >
@@ -857,8 +1225,17 @@ export default function HomePage() {
                     onClick={() => {
                       setOriginName(loc.name);
                       setOriginCoords({ lat: loc.lat, lng: loc.lng });
+                      try {
+                        localStorage.setItem(
+                          'metronav_user_location',
+                          JSON.stringify({
+                            name: loc.name,
+                            coords: { lat: loc.lat, lng: loc.lng }
+                          })
+                        );
+                      } catch {}
                     }}
-                    className={`text-[11px] px-3 py-1 rounded-lg border transition font-medium shrink-0 whitespace-nowrap ${
+                    className={`text-[11px] px-3 py-1 rounded-lg border transition font-medium shrink-0 whitespace-nowrap cursor-pointer ${
                       originName === loc.name
                         ? 'bg-[#143428] text-white font-bold border-[#143428] shadow-xs'
                         : 'bg-[#F8F9F5] text-[#53584E] border-[#E2E4DC] hover:border-[#8E9487] hover:text-[#17201B]'
@@ -870,8 +1247,8 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Destination Search & Pick */}
-            <div className="space-y-2.5 relative z-40">
+            {/* Destination Search & Pick with Google Places Dropdown */}
+            <div className="space-y-2.5 relative z-40" ref={destContainerRef}>
               <label className="text-xs font-bold uppercase tracking-wider text-[#17201B] flex items-center gap-2">
                 <div className="w-5 h-5 rounded-md bg-[#FAF2EE] text-[#B9552C] flex items-center justify-center">
                   <Milestone className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -895,8 +1272,8 @@ export default function HomePage() {
                     }
                   }}
                   onFocus={() => setIsSearchFocused(true)}
-                  placeholder="Type any place (e.g. Ambience Mall, DLF, Cyber Hub, Pacific, Vegas)..."
-                  className="w-full pl-10 pr-16 py-3.5 rounded-xl bg-[#F8F9F5] border border-[#E2E4DC] text-sm text-[#17201B] font-medium placeholder:text-[#8E9487] focus:bg-white focus:border-[#143428] focus:ring-2 focus:ring-[#143428]/15 focus:outline-none transition shadow-xs"
+                  placeholder="Type any mall (Pacific, Vegas, Citywalk), sector, hospital..."
+                  className="w-full pl-10 pr-16 py-3.5 rounded-xl ios-liquid-input text-sm text-[#17201B] font-medium placeholder:text-[#8E9487] shadow-xs"
                 />
 
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center gap-1.5">
@@ -911,7 +1288,7 @@ export default function HomePage() {
                         setPlacesResults([]);
                         setIsSearchFocused(true);
                       }}
-                      className="p-1 rounded-md text-[#8E9487] hover:text-[#17201B] hover:bg-[#EAECE4] transition"
+                      className="p-1 rounded-md text-[#8E9487] hover:text-[#17201B] hover:bg-[#EAECE4] transition cursor-pointer"
                       title="Clear search"
                     >
                       <X className="w-3.5 h-3.5" />
@@ -922,161 +1299,135 @@ export default function HomePage() {
                 {/* Autocomplete Dropdown anchored directly below the input */}
                 <AnimatePresence>
                   {isSearchFocused && (
-                    <>
-                      {/* Backdrop to close dropdown on click outside */}
-                      <motion.div
-                        key="search-dropdown-backdrop"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.15 }}
-                        className="fixed inset-0 z-40"
-                        onClick={() => setIsSearchFocused(false)}
-                      />
+                    <motion.div
+                      key="search-dropdown-card"
+                      initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                      transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                      className="absolute top-full left-0 right-0 mt-2 ios-liquid-glass-thin rounded-2xl shadow-2xl border border-white/90 p-2 z-50 max-h-96 overflow-y-auto ring-1 ring-[#143428]/10"
+                    >
+                      <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#E2E4DC] mb-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7267] flex items-center gap-1.5">
+                          {searchQuery.trim().length >= 2 ? (
+                            <>
+                              <Compass className="w-3 h-3 text-[#143428]" />
+                              <span>Live Google Maps Results ({placesResults.length} found)</span>
+                            </>
+                          ) : (
+                            <span>Popular Curated Destinations (Delhi & Gurgaon)</span>
+                          )}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setIsSearchFocused(false)}
+                          className="text-[10px] text-[#6B7267] hover:text-[#17201B] font-semibold cursor-pointer"
+                        >
+                          Close
+                        </button>
+                      </div>
 
-                      <motion.div
-                        key="search-dropdown-card"
-                        initial={{ opacity: 0, y: -8, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -6, scale: 0.98 }}
-                        transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                        className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-[#E2E4DC] p-2 z-50 max-h-96 overflow-y-auto ring-1 ring-[#143428]/10"
-                      >
-                        <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#E2E4DC] mb-1">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7267] flex items-center gap-1.5">
-                            {searchQuery.trim().length >= 2 ? (
-                              <>
-                                <Compass className="w-3 h-3 text-[#143428]" />
-                                <span>Smart Live Suggestions ({placesResults.length} found)</span>
-                              </>
-                            ) : (
-                              <span>Popular Curated Destinations (Delhi & Gurgaon)</span>
-                            )}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => setIsSearchFocused(false)}
-                            className="text-[10px] text-[#6B7267] hover:text-[#17201B] font-semibold"
-                          >
-                            Close
-                          </button>
-                        </div>
-
-                        {/* When user has typed 2+ characters: Smart Google Places + Curated results */}
-                        {searchQuery.trim().length >= 2 ? (
-                          <div className="divide-y divide-[#E2E4DC]/70">
-                            {placesResults.map((p: any) => (
-                              <button
-                                key={p.id}
-                                onClick={() => handleSelectSearchResult(p)}
-                                className="w-full text-left p-2.5 rounded-xl hover:bg-[#F8F9F5] text-xs flex items-center justify-between transition group"
-                              >
-                                <div className="flex items-start gap-2.5 min-w-0 flex-1">
-                                  <div className="mt-0.5 w-6 h-6 rounded-md bg-[#F4F5F0] group-hover:bg-[#EAECE4] flex items-center justify-center shrink-0 border border-[#E2E4DC]">
-                                    {p.isCurated ? (
-                                      <Landmark className="w-3.5 h-3.5 text-[#143428]" strokeWidth={1.75} />
-                                    ) : (
-                                      <MapPinned className="w-3.5 h-3.5 text-[#B9552C]" strokeWidth={1.75} />
+                      {/* When user has typed 2+ characters: Smart Google Places + Curated results */}
+                      {searchQuery.trim().length >= 2 ? (
+                        <div className="divide-y divide-[#E2E4DC]/70">
+                          {placesResults.map((p: any) => (
+                            <button
+                              key={p.id}
+                              onClick={() => handleSelectSearchResult(p)}
+                              className="w-full text-left p-2.5 rounded-xl hover:bg-[#F8F9F5] text-xs flex items-center justify-between transition group cursor-pointer"
+                            >
+                              <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                                <div className="mt-0.5 w-6 h-6 rounded-md bg-[#F4F5F0] group-hover:bg-[#EAECE4] flex items-center justify-center shrink-0 border border-[#E2E4DC]">
+                                  {renderPlaceCategoryIcon(p)}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-bold text-[#17201B] text-xs">{p.name}</span>
+                                    <span
+                                      className={`px-1.5 py-0.2 rounded text-[10px] font-bold uppercase tracking-wider ${
+                                        p.city === 'Gurgaon'
+                                          ? 'bg-[#FAF2EE] text-[#B9552C] border border-[#E8C2B3]'
+                                          : p.city === 'Noida'
+                                          ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                                          : 'bg-[#F4F5F0] text-[#143428] border border-[#D5D8CD]'
+                                      }`}
+                                    >
+                                      {p.city}
+                                    </span>
+                                    {p.areaHint && (
+                                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#F4F5F0] text-[#53584E] border border-[#E2E4DC] font-medium">
+                                        {p.areaHint}
+                                      </span>
                                     )}
                                   </div>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <span className="font-bold text-[#17201B] text-xs">{p.name}</span>
-                                      <span
-                                        className={`px-1.5 py-0.2 rounded text-[10px] font-bold uppercase tracking-wider ${
-                                          p.city === 'Gurgaon'
-                                            ? 'bg-[#FAF2EE] text-[#B9552C] border border-[#E8C2B3]'
-                                            : p.city === 'Noida'
-                                            ? 'bg-purple-100 text-purple-700 border border-purple-200'
-                                            : 'bg-[#F4F5F0] text-[#143428] border border-[#D5D8CD]'
-                                        }`}
-                                      >
-                                        {p.city}
+
+                                  <div className="text-[11px] text-[#6B7267] truncate mt-0.5">
+                                    {p.formattedAddress}
+                                  </div>
+
+                                  {p.nearestStation && (
+                                    <div className="text-[10px] text-[#6B7267] flex items-center gap-2 mt-1 flex-wrap">
+                                      <span className="flex items-center gap-1">
+                                        <span
+                                          className="w-2 h-2 rounded-full inline-block"
+                                          style={{ backgroundColor: p.nearestStation.lineColor }}
+                                        />
+                                        <span className="text-[#17201B] font-medium">
+                                          Nearest: {p.nearestStation.name}
+                                        </span>
+                                        <span className="text-[#6B7267]">({p.nearestStation.line} Line)</span>
+                                        <span className="text-[#6B7267]">• ~{p.nearestStation.distanceKm} km away</span>
                                       </span>
-                                      {p.areaHint && (
-                                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#F4F5F0] text-[#53584E] border border-[#E2E4DC] font-medium">
-                                          {p.areaHint}
+                                      {p.bestExitGate && (
+                                        <span className="text-[#143428] font-bold">
+                                          • Best Exit: Gate {p.bestExitGate}
                                         </span>
                                       )}
                                     </div>
-
-                                    <div className="text-[11px] text-[#6B7267] truncate mt-0.5">
-                                      {p.formattedAddress}
-                                    </div>
-
-                                    {p.nearestStation && (
-                                      <div className="text-[10px] text-[#6B7267] flex items-center gap-2 mt-1 flex-wrap">
-                                        <span className="flex items-center gap-1">
-                                          <span
-                                            className="w-2 h-2 rounded-full inline-block"
-                                            style={{ backgroundColor: p.nearestStation.lineColor }}
-                                          />
-                                          <span className="text-[#17201B] font-medium">
-                                            Nearest: {p.nearestStation.name}
-                                          </span>
-                                          <span className="text-[#6B7267]">({p.nearestStation.line} Line)</span>
-                                          <span className="text-[#6B7267]">• {p.nearestStation.distanceKm} km away</span>
-                                        </span>
-                                        {p.bestExitGate && (
-                                          <span className="text-[#143428] font-bold">
-                                            • Best Exit: Gate {p.bestExitGate}
-                                          </span>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
+                                  )}
                                 </div>
-                                <ChevronRight className="w-3.5 h-3.5 text-[#8E9487] group-hover:text-[#143428] shrink-0 ml-2 transition" />
-                              </button>
-                            ))}
-
-                            {placesResults.length === 0 && !isSearchingPlaces && (
-                              <div className="py-6 text-center text-xs text-[#6B7267] space-y-1">
-                                <p>No direct matches found for &quot;{searchQuery}&quot;</p>
-                                <p className="text-[11px] text-[#8E9487]">
-                                  Try searching by landmark, sector, or metro station (e.g. Ambience Mall, Cyber Hub, Khan Market)
-                                </p>
                               </div>
-                            )}
-                          </div>
-                        ) : (
-                          /* When user hasn't typed yet: Curated Hotspots */
-                          <div className="space-y-1">
-                            {FAMOUS_DESTINATIONS.slice(0, 8).map(d => (
-                              <button
-                                key={d.id}
-                                onClick={() => handleSelectFamousDest(d)}
-                                className="w-full text-left px-3 py-2 rounded-xl hover:bg-[#F8F9F5] text-xs flex items-center justify-between transition"
-                              >
-                                <div className="flex items-center gap-2.5">
-                                  <Landmark className="w-3.5 h-3.5 text-[#143428] shrink-0" strokeWidth={1.75} />
-                                  <div>
-                                    <div className="font-bold text-[#17201B] flex items-center gap-1.5">
-                                      <span>{d.name}</span>
-                                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#FAF2EE] text-[#B9552C] font-semibold border border-[#E8C2B3]">
-                                        {d.category}
-                                      </span>
-                                    </div>
-                                    <div className="text-[11px] text-[#6B7267]">
-                                      Nearest: {METRO_STATIONS[d.nearestStationId]?.name} • Exit Gate {d.bestExitGate}
-                                    </div>
+                              <ChevronRight className="w-3.5 h-3.5 text-[#8E9487] group-hover:text-[#143428] shrink-0 ml-2 transition" />
+                            </button>
+                          ))}
+
+                          {placesResults.length === 0 && !isSearchingPlaces && (
+                            <div className="py-6 text-center text-xs text-[#6B7267] space-y-1">
+                              <p>No direct matches found for &quot;{searchQuery}&quot;</p>
+                              <p className="text-[11px] text-[#8E9487]">
+                                Try searching by landmark, sector, or metro station across Delhi-NCR
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          {FAMOUS_DESTINATIONS.slice(0, 10).map(d => (
+                            <button
+                              key={d.id}
+                              onClick={() => handleSelectFamousDest(d)}
+                              className="w-full text-left px-3 py-2 rounded-xl hover:bg-[#F8F9F5] text-xs flex items-center justify-between transition cursor-pointer"
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <ShoppingBag className="w-3.5 h-3.5 text-[#B9552C] shrink-0" strokeWidth={1.75} />
+                                <div>
+                                  <div className="font-bold text-[#17201B] flex items-center gap-1.5">
+                                    <span>{d.name}</span>
+                                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#FAF2EE] text-[#B9552C] font-semibold border border-[#E8C2B3]">
+                                      {d.category}
+                                    </span>
+                                  </div>
+                                  <div className="text-[11px] text-[#6B7267]">
+                                    Nearest Metro: {METRO_STATIONS[d.nearestStationId]?.name || 'Metro'} (~{d.distanceFromStationKm} km)
                                   </div>
                                 </div>
-                                <span
-                                  className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                                    d.city === 'Gurgaon'
-                                      ? 'bg-[#FAF2EE] text-[#B9552C] border border-[#E8C2B3]'
-                                      : 'bg-[#F4F5F0] text-[#143428] border border-[#D5D8CD]'
-                                  }`}
-                                >
-                                  {d.city}
-                                </span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </motion.div>
-                    </>
+                              </div>
+                              <ChevronRight className="w-3 h-3 text-[#8E9487]" />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </motion.div>
                   )}
                 </AnimatePresence>
               </div>
@@ -1090,9 +1441,9 @@ export default function HomePage() {
                       <button
                         key={reg}
                         onClick={() => setActiveRegionFilter(reg)}
-                        className={`text-[10px] px-2.5 py-0.5 rounded-full transition font-semibold ${
+                        className={`text-[10px] px-3 py-1 rounded-full transition font-semibold ios-liquid-pill ${
                           activeRegionFilter === reg
-                            ? 'bg-[#143428] text-white'
+                            ? 'bg-[#143428] text-white font-bold border-[#143428]'
                             : 'text-[#6B7267] hover:text-[#17201B]'
                         }`}
                       >
@@ -1104,7 +1455,7 @@ export default function HomePage() {
                   <button
                     type="button"
                     onClick={() => setIsAllPlacesModalOpen(true)}
-                    className="text-[11px] text-[#143428] hover:text-[#B9552C] font-bold flex items-center gap-1 transition"
+                    className="ios-liquid-pill text-[11px] text-[#143428] hover:text-[#B9552C] font-bold flex items-center gap-1 transition px-2.5 py-1 rounded-lg"
                   >
                     <span>View All 39 Places</span>
                     <ArrowRight className="w-3 h-3" />
@@ -1132,10 +1483,10 @@ export default function HomePage() {
                         <button
                           key={dest.id}
                           onClick={() => handleSelectFamousDest(dest)}
-                          className={`text-[11px] px-2.5 py-1 rounded-lg border transition font-medium flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
+                          className={`text-[11px] px-2.5 py-1 rounded-lg border transition font-medium flex items-center gap-1.5 shrink-0 whitespace-nowrap ios-liquid-pill ${
                             isSelected
-                              ? 'bg-[#B9552C] text-white font-bold border-[#B9552C] shadow-xs'
-                              : 'bg-[#F8F9F5] text-[#53584E] border-[#E2E4DC] hover:border-[#B9552C]/40 hover:text-[#17201B]'
+                              ? 'bg-gradient-to-r from-[#B9552C] to-[#A84B25] text-white font-bold border-white/30 shadow-xs'
+                              : 'bg-white/80 text-[#53584E] border-[#E2E4DC] hover:border-[#B9552C]/40 hover:text-[#17201B]'
                           }`}
                         >
                           <span>{label}</span>

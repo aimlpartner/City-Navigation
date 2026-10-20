@@ -150,7 +150,10 @@ export function BottomTabBar({ activeTab, onTabChange, hasActiveRoute = false }:
       aria-label="Mobile navigation"
       className="fixed inset-x-0 bottom-3 sm:bottom-4 z-40 flex justify-center pointer-events-none px-4 pb-[env(safe-area-inset-bottom,0px)] lg:hidden"
     >
-      <div className="pointer-events-auto floating-capsule-glass rounded-full p-1.5 flex items-center gap-1 shadow-2xl relative">
+      <div className="pointer-events-auto ios-liquid-dock rounded-full p-1.5 flex items-center gap-1 relative border border-white/85 shadow-[0_20px_50px_-8px_rgba(20,52,40,0.22)] ring-1 ring-black/5">
+        {/* Apple Liquid Glass Specular Edge Highlight */}
+        <div className="absolute inset-x-4 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent pointer-events-none rounded-full" />
+
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
 
@@ -160,21 +163,21 @@ export function BottomTabBar({ activeTab, onTabChange, hasActiveRoute = false }:
               onClick={() => onTabChange(tab.id)}
               aria-selected={isActive}
               role="tab"
-              whileTap={{ scale: 0.90 }}
-              whileHover={{ scale: 1.04 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 28 }}
-              className={`relative z-10 flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-full cursor-pointer select-none ${
+              whileTap={{ scale: 0.91 }}
+              whileHover={{ scale: 1.03 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              className={`relative z-10 flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-full cursor-pointer select-none transition-colors duration-150 ${
                 isActive
                   ? 'text-white'
                   : 'text-[#53584E] hover:text-[#17201B]'
               }`}
             >
-              {/* Motion Spring Animated Pill Background */}
+              {/* Motion Spring Animated Pill Background with Liquid Bevel */}
               {isActive && (
                 <motion.div
                   layoutId="floating-capsule-indicator"
-                  className="absolute inset-0 rounded-full bg-[#143428] shadow-[0_2px_10px_rgba(20,52,40,0.35)]"
-                  transition={{ type: 'spring', stiffness: 440, damping: 34 }}
+                  className="absolute inset-0 rounded-full bg-gradient-to-r from-[#143428] via-[#163B2E] to-[#1A3E31] shadow-[0_4px_14px_rgba(20,52,40,0.42),inset_0_1px_1px_rgba(255,255,255,0.32)] border border-white/20"
+                  transition={{ type: 'spring', stiffness: 460, damping: 32 }}
                 />
               )}
 

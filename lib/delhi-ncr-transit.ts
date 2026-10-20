@@ -1,11 +1,11 @@
 export interface MetroStation {
   id: string;
   name: string;
-  line: 'Yellow' | 'Rapid Metro' | 'Blue' | 'Magenta' | 'Violet' | 'Airport Express' | 'Pink';
+  line: 'Yellow' | 'Rapid Metro' | 'Blue' | 'Magenta' | 'Violet' | 'Airport Express' | 'Pink' | 'Red' | 'Green';
   lineColor: string;
   lat: number;
   lng: number;
-  interchangeWith?: ('Yellow' | 'Rapid Metro' | 'Blue' | 'Magenta' | 'Violet' | 'Airport Express' | 'Pink')[];
+  interchangeWith?: ('Yellow' | 'Rapid Metro' | 'Blue' | 'Magenta' | 'Violet' | 'Airport Express' | 'Pink' | 'Red' | 'Green')[];
   exitGates: { gateNumber: number; leadsTo: string; tip?: string }[];
 }
 
@@ -490,6 +490,116 @@ export const METRO_STATIONS: Record<string, MetroStation> = {
       { gateNumber: 1, leadsTo: 'Noida Sector 37 / Bus Bay' },
       { gateNumber: 2, leadsTo: 'DLF Mall of India Shuttle / Autos' }
     ]
+  },
+  'noida-sector-18': {
+    id: 'noida-sector-18',
+    name: 'Noida Sector 18',
+    line: 'Blue',
+    lineColor: '#2563eb',
+    lat: 28.5708,
+    lng: 77.3261,
+    exitGates: [
+      { gateNumber: 1, leadsTo: 'Atta Market Shopping Street' },
+      { gateNumber: 2, leadsTo: 'DLF Mall of India & Radisson Blu', tip: 'Follow Gate 2 footbridge, 5-min walk to DLF Mall of India main entry' }
+    ]
+  },
+  'tagore-garden': {
+    id: 'tagore-garden',
+    name: 'Tagore Garden',
+    line: 'Blue',
+    lineColor: '#2563eb',
+    lat: 28.6437,
+    lng: 77.1128,
+    exitGates: [
+      { gateNumber: 1, leadsTo: 'Pacific Mall & Subhash Nagar Flyover', tip: 'Direct covered sidewalk 250m to Pacific Mall main porch' },
+      { gateNumber: 2, leadsTo: 'Tagore Garden Residential Blocks' }
+    ]
+  },
+  'netaji-subhash-place': {
+    id: 'netaji-subhash-place',
+    name: 'Netaji Subhash Place (NSP)',
+    line: 'Red',
+    lineColor: '#ef4444',
+    lat: 28.6953,
+    lng: 77.1528,
+    interchangeWith: ['Pink'],
+    exitGates: [
+      { gateNumber: 1, leadsTo: 'Pacific Mall NSP Pitampura & D-Mall', tip: 'Gate 1 exits directly onto the Pacific Mall NSP plaza' },
+      { gateNumber: 2, leadsTo: 'Max Hospital Pitampura & Towers' }
+    ]
+  },
+  'jasola-apollo': {
+    id: 'jasola-apollo',
+    name: 'Jasola Apollo',
+    line: 'Violet',
+    lineColor: '#7c3aed',
+    lat: 28.5381,
+    lng: 77.2838,
+    exitGates: [
+      { gateNumber: 1, leadsTo: 'Indraprastha Apollo Hospital' },
+      { gateNumber: 2, leadsTo: 'Pacific Mall Jasola & Jasola Living District', tip: 'Direct elevated walkway to Pacific Mall Jasola' }
+    ]
+  },
+  'dwarka-sector-14': {
+    id: 'dwarka-sector-14',
+    name: 'Dwarka Sector 14',
+    line: 'Blue',
+    lineColor: '#2563eb',
+    lat: 28.6022,
+    lng: 77.0256,
+    exitGates: [
+      { gateNumber: 1, leadsTo: 'GGSIPU University Campus' },
+      { gateNumber: 2, leadsTo: 'Vegas Mall Dwarka', tip: 'Gate 2 exits 300m from Vegas Mall main courtyard' }
+    ]
+  },
+  'dwarka-sector-21': {
+    id: 'dwarka-sector-21',
+    name: 'Dwarka Sector 21',
+    line: 'Blue',
+    lineColor: '#2563eb',
+    lat: 28.5522,
+    lng: 77.0583,
+    interchangeWith: ['Airport Express'],
+    exitGates: [
+      { gateNumber: 1, leadsTo: 'Pacific D21 Mall Concourse', tip: 'Pacific D21 Mall is built directly above the metro station concourse' },
+      { gateNumber: 2, leadsTo: 'Bijwasan Railway Station road' }
+    ]
+  },
+  'sarai': {
+    id: 'sarai',
+    name: 'Sarai (Faridabad)',
+    line: 'Violet',
+    lineColor: '#7c3aed',
+    lat: 28.4756,
+    lng: 77.3069,
+    exitGates: [
+      { gateNumber: 1, leadsTo: 'Mathura Road NH-19' },
+      { gateNumber: 2, leadsTo: 'Crown Interiorz Mall Faridabad', tip: '400m walk or quick e-rickshaw to Crown Interiorz' }
+    ]
+  },
+  'vaishali': {
+    id: 'vaishali',
+    name: 'Vaishali (Ghaziabad)',
+    line: 'Blue',
+    lineColor: '#2563eb',
+    lat: 28.6499,
+    lng: 77.3398,
+    exitGates: [
+      { gateNumber: 1, leadsTo: 'Mahagun Metro Mall & Shipra Mall feeder', tip: 'Autos and e-rickshaws to Shipra Mall Indirapuram queue at Gate 1' },
+      { gateNumber: 2, leadsTo: 'Max Hospital Vaishali' }
+    ]
+  },
+  'noida-electronic-city': {
+    id: 'noida-electronic-city',
+    name: 'Noida Electronic City',
+    line: 'Blue',
+    lineColor: '#2563eb',
+    lat: 28.6277,
+    lng: 77.3732,
+    exitGates: [
+      { gateNumber: 1, leadsTo: 'Gaur City Mall / Greater Noida West feeder autos', tip: 'Direct autos to Gaur City Mall run continuously from Gate 1' },
+      { gateNumber: 2, leadsTo: 'Sector 62 IT Parks' }
+    ]
   }
 };
 
@@ -531,6 +641,291 @@ export const FAMOUS_DESTINATIONS: FamousDestination[] = [
       'If coming from Yellow Line (Delhi/Huda City Centre), switch to Rapid Metro at Sikanderpur via the elevated footbridge.',
       'Book a Rapido or Uber Auto directly from Gate 2 so the driver already has your destination and fare fixed — zero talking needed!',
       'Mall entry is on the ground floor next to Leela Hotel driveway.'
+    ]
+  },
+  {
+    id: 'pacific-mall-tagore-garden',
+    name: 'Pacific Mall, Tagore Garden',
+    city: 'Delhi',
+    category: 'Mall',
+    lat: 28.6424,
+    lng: 77.1064,
+    nearestStationId: 'tagore-garden',
+    distanceFromStationKm: 0.3,
+    bestExitGate: 1,
+    lastMileOptions: [
+      {
+        mode: 'walk',
+        durationMin: 4,
+        estimatedCostInr: 0,
+        description: 'Walk out of Gate 1 onto Najafgarh Road sidewalk. Pacific Mall grand glass facade is directly 250m ahead.'
+      },
+      {
+        mode: 'e-rickshaw',
+        durationMin: 2,
+        estimatedCostInr: 10,
+        description: 'Battery e-rickshaws wait outside Gate 1 for ₹10 straight to the porch.'
+      }
+    ],
+    introvertTips: [
+      'Tagore Garden (Blue Line) Gate 1 is the cleanest and fastest exit.',
+      'One of West Delhi\'s premier shopping and dining destinations with Zara, PVR Superplex, and Salt Food Court.',
+      'Direct pedestrian covered walkway makes walking completely safe and effortless.'
+    ]
+  },
+  {
+    id: 'pacific-mall-nsp',
+    name: 'Pacific Mall NSP, Pitampura',
+    city: 'Delhi',
+    category: 'Mall',
+    lat: 28.6946,
+    lng: 77.1542,
+    nearestStationId: 'netaji-subhash-place',
+    distanceFromStationKm: 0.2,
+    bestExitGate: 1,
+    lastMileOptions: [
+      {
+        mode: 'walk',
+        durationMin: 2,
+        estimatedCostInr: 0,
+        description: 'Gate 1 exits directly onto the open plaza connecting Pacific Mall NSP atrium.'
+      }
+    ],
+    introvertTips: [
+      'Netaji Subhash Place (Red/Pink interchange) Gate 1 is directly at the mall plaza.',
+      'Features a bustling multi-level food floor, Cinepolis, and direct metro connectivity without needing cabs.'
+    ]
+  },
+  {
+    id: 'pacific-mall-jasola',
+    name: 'Pacific Mall, Jasola',
+    city: 'Delhi',
+    category: 'Mall',
+    lat: 28.5377,
+    lng: 77.2830,
+    nearestStationId: 'jasola-apollo',
+    distanceFromStationKm: 0.1,
+    bestExitGate: 2,
+    lastMileOptions: [
+      {
+        mode: 'walk',
+        durationMin: 1,
+        estimatedCostInr: 0,
+        description: 'Direct elevated pedestrian skybridge connects Jasola Apollo metro directly into the mall.'
+      }
+    ],
+    introvertTips: [
+      'Jasola Apollo station on Violet Line connects directly via dedicated overhead walkway.',
+      'Zero street traffic crossing required — step right from train into the mall concourse.'
+    ]
+  },
+  {
+    id: 'pacific-d21-mall',
+    name: 'Pacific D21 Mall, Dwarka',
+    city: 'Delhi',
+    category: 'Mall',
+    lat: 28.5524,
+    lng: 77.0579,
+    nearestStationId: 'dwarka-sector-21',
+    distanceFromStationKm: 0.1,
+    bestExitGate: 1,
+    lastMileOptions: [
+      {
+        mode: 'walk',
+        durationMin: 1,
+        estimatedCostInr: 0,
+        description: 'Built directly atop Dwarka Sector 21 Metro Interchange. Escalators lead straight into the mall!'
+      }
+    ],
+    introvertTips: [
+      'Dwarka Sector 21 is the terminal for both Blue Line and Airport Express Line.',
+      'No road journey needed at all; just ride the internal mall elevators from metro concourse.'
+    ]
+  },
+  {
+    id: 'vegas-mall-dwarka',
+    name: 'Vegas Mall, Dwarka Sector 14',
+    city: 'Delhi',
+    category: 'Mall',
+    lat: 28.6012,
+    lng: 77.0297,
+    nearestStationId: 'dwarka-sector-14',
+    distanceFromStationKm: 0.3,
+    bestExitGate: 2,
+    lastMileOptions: [
+      {
+        mode: 'walk',
+        durationMin: 4,
+        estimatedCostInr: 0,
+        description: 'Exit Gate 2, follow the paved footpath 300m directly into Vegas Mall North Courtyard.'
+      },
+      {
+        mode: 'e-rickshaw',
+        durationMin: 2,
+        estimatedCostInr: 10,
+        description: 'Abundant e-rickshaws waiting at Gate 2 for ₹10.'
+      }
+    ],
+    introvertTips: [
+      'Dwarka Sector 14 station (Blue Line) Gate 2 is the exact exit.',
+      'Dwarka\'s largest mall with Delhi\'s biggest Superplex (IMAX 4DX), high street fashion, and huge indoor family zone.'
+    ]
+  },
+  {
+    id: 'select-citywalk-saket',
+    name: 'Select CITYWALK & DLF Avenue, Saket',
+    city: 'Delhi',
+    category: 'Mall',
+    lat: 28.5284,
+    lng: 77.2183,
+    nearestStationId: 'saket',
+    distanceFromStationKm: 1.2,
+    bestExitGate: 2,
+    lastMileOptions: [
+      {
+        mode: 'auto',
+        durationMin: 5,
+        estimatedCostInr: 40,
+        description: 'Fixed-fare auto stand operates directly outside Saket Gate 2 (₹40 to Select CITYWALK entrance).'
+      },
+      {
+        mode: 'e-rickshaw',
+        durationMin: 6,
+        estimatedCostInr: 20,
+        description: 'Shared battery e-rickshaws frequently ply the Saket District Centre route.'
+      }
+    ],
+    introvertTips: [
+      'Saket Metro (Yellow Line) Gate 2 connects directly from Gurgaon or Central Delhi.',
+      'Select CITYWALK, DLF Avenue, and MGF Metropolitan Saket are all interconnected via outdoor garden plazas.',
+      'Pre-book Rapido or Uber Auto from Gate 2 for contactless boarding.'
+    ]
+  },
+  {
+    id: 'dlf-mall-of-india',
+    name: 'DLF Mall of India, Noida Sector 18',
+    city: 'Noida',
+    category: 'Mall',
+    lat: 28.5671,
+    lng: 77.3211,
+    nearestStationId: 'noida-sector-18',
+    distanceFromStationKm: 0.5,
+    bestExitGate: 2,
+    lastMileOptions: [
+      {
+        mode: 'walk',
+        durationMin: 6,
+        estimatedCostInr: 0,
+        description: 'Exit Gate 2, cross via footbridge directly into DLF Mall of India Gateway Plaza.'
+      },
+      {
+        mode: 'e-rickshaw',
+        durationMin: 2,
+        estimatedCostInr: 15,
+        description: 'E-rickshaws wait outside Gate 2.'
+      }
+    ],
+    introvertTips: [
+      'Take Noida Sector 18 station (Blue Line), Exit Gate 2. Or switch from Magenta Line at Botanical Garden.',
+      'India\'s largest destination mall with 7 distinct shopping and entertainment zones over 2 million sq ft.'
+    ]
+  },
+  {
+    id: 'airia-mall-gurgaon',
+    name: 'Airia Mall, Sohna Road (Sector 68)',
+    city: 'Gurgaon',
+    category: 'Mall',
+    lat: 28.3832,
+    lng: 77.0529,
+    nearestStationId: 'sector-55-56',
+    distanceFromStationKm: 4.5,
+    bestExitGate: 2,
+    lastMileOptions: [
+      {
+        mode: 'auto',
+        durationMin: 12,
+        estimatedCostInr: 80,
+        description: 'Auto via Golf Course Extension / Sohna elevated corridor straight to Airia Mall entry.'
+      },
+      {
+        mode: 'cab',
+        durationMin: 10,
+        estimatedCostInr: 110,
+        description: 'Uber/Ola cab to Airia Mall drop-off porch.'
+      }
+    ],
+    introvertTips: [
+      'Connect via Rapid Metro Sector 55-56 or Millennium City Centre (Yellow Line).',
+      'Modern open-concept mall on Sohna Road with Cinepolis, lifestyle brands, and lively outdoor amphitheatre.'
+    ]
+  },
+  {
+    id: 'crown-interiorz-faridabad',
+    name: 'Crown Interiorz Mall, Faridabad',
+    city: 'Delhi',
+    category: 'Mall',
+    lat: 28.4696,
+    lng: 77.3071,
+    nearestStationId: 'sarai',
+    distanceFromStationKm: 0.4,
+    bestExitGate: 2,
+    lastMileOptions: [
+      {
+        mode: 'walk',
+        durationMin: 5,
+        estimatedCostInr: 0,
+        description: 'Exit Sarai Gate 2, walk along Mathura Road sidewalk straight to Crown Interiorz main gate.'
+      }
+    ],
+    introvertTips: [
+      'Sarai Metro station on Violet Line is just 400m away.',
+      'Faridabad\'s prime entertainment hub with INOX, McDonald\'s, and home decor superstores.'
+    ]
+  },
+  {
+    id: 'shipra-mall-indirapuram',
+    name: 'Shipra Mall, Indirapuram (Ghaziabad)',
+    city: 'Delhi',
+    category: 'Mall',
+    lat: 28.6341,
+    lng: 77.3706,
+    nearestStationId: 'vaishali',
+    distanceFromStationKm: 3.2,
+    bestExitGate: 1,
+    lastMileOptions: [
+      {
+        mode: 'auto',
+        durationMin: 9,
+        estimatedCostInr: 60,
+        description: 'Auto from Vaishali Gate 1 via CISF Road directly to Shipra Mall roman courtyard.'
+      }
+    ],
+    introvertTips: [
+      'Vaishali (Blue Line) Gate 1 is the primary transit link.',
+      'Iconic Roman-inspired architecture with multiplex and expansive retail floors.'
+    ]
+  },
+  {
+    id: 'gaur-city-mall',
+    name: 'Gaur City Mall, Greater Noida West',
+    city: 'Noida',
+    category: 'Mall',
+    lat: 28.6108,
+    lng: 77.4338,
+    nearestStationId: 'noida-electronic-city',
+    distanceFromStationKm: 4.8,
+    bestExitGate: 1,
+    lastMileOptions: [
+      {
+        mode: 'auto',
+        durationMin: 14,
+        estimatedCostInr: 80,
+        description: 'Auto from Noida Electronic City Gate 1 across Char Murti Chowk into Gaur City Mall.'
+      }
+    ],
+    introvertTips: [
+      'Noida Electronic City (Blue Line) Gate 1 has dedicated autos heading to Gaur City.',
+      'The central commercial hub of Greater Noida West with PVR, lifestyle anchors, and sprawling dining.'
     ]
   },
   {

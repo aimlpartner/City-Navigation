@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   FamousDestination,
   FAMOUS_DESTINATIONS,
@@ -60,10 +61,11 @@ interface DestinationPickerProps {
 }
 
 const QUICK_SEARCH_CHIPS = [
+  { label: '🛍️ Famous Malls', query: 'Mall' },
   { label: '🏥 Hospitals', query: 'Hospital' },
   { label: '🛍️ Local Markets', query: 'Market' },
   { label: '🎓 Universities', query: 'College University' },
-  { label: '🏢 Tech Parks & Societies', query: 'Tech Park' },
+  { label: '🏢 Tech Parks', query: 'Tech Park' },
   { label: '☕ Cafes & Dining', query: 'Cafe' },
 ];
 
@@ -80,9 +82,11 @@ export function DestinationPicker({
   // Real-time Google Places state
   const [placesResults, setPlacesResults] = useState<any[]>([]);
   const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  // Debounced live search querying Google Places API (New) via /api/places
+  // Debounced live search querying Google Places API via /api/places
   useEffect(() => {
     const q = searchQuery.trim();
     if (q.length < 2) {
@@ -109,10 +113,21 @@ export function DestinationPicker({
       } finally {
         setIsSearchingPlaces(false);
       }
-    }, 280);
+    }, 240);
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Click outside listener for dropdown
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setIsSearchFocused(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Filter curated destinations based on filter pill
   const filteredCuratedDestinations = useMemo(() => {
@@ -195,36 +210,107 @@ export function DestinationPicker({
         </p>
       </div>
 
-      {/* Live Google Places Powered Search Bar */}
-      <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          <Search className="w-5 h-5 text-[#8E9487]" />
+      {/* Live Google Places Powered Search Bar with Dropdown */}
+      <div className="relative z-40" ref={searchContainerRef}>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="w-5 h-5 text-[#8E9487]" />
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              if (!isSearchFocused) setIsSearchFocused(true);
+            }}
+            onFocus={() => setIsSearchFocused(true)}
+            placeholder="Search landmark, sector, mall, hospital..."
+            className="ios-liquid-input w-full pl-11 pr-11 py-3.5 rounded-2xl text-[#17201B] placeholder-[#8E9487] text-base font-medium shadow-xs outline-none"
+          />
+          <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center gap-1.5">
+            {isSearchingPlaces && (
+              <Loader2 className="w-5 h-5 text-[#143428] animate-spin" />
+            )}
+            {searchQuery && !isSearchingPlaces && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setPlacesResults([]);
+                  setIsSearchFocused(false);
+                }}
+                className="btn-tactile p-1.5 rounded-full text-[#8E9487] hover:text-[#17201B] hover:bg-[#F4F5F0] transition cursor-pointer active:rotate-90"
+                aria-label="Clear search"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search landmark, sector, mall, hospital..."
-          className="w-full pl-11 pr-11 py-3.5 rounded-2xl bg-white/95 backdrop-blur-md border-2 border-[#D5D8CD] focus:border-[#143428] focus:ring-2 focus:ring-[#143428]/20 text-[#17201B] placeholder-[#8E9487] text-base font-medium shadow-xs outline-none transition duration-200"
-        />
-        <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center gap-1.5">
-          {isSearchingPlaces && (
-            <Loader2 className="w-5 h-5 text-[#143428] animate-spin" />
-          )}
-          {searchQuery && !isSearchingPlaces && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearchQuery('');
-                setPlacesResults([]);
-              }}
-              className="btn-tactile p-1.5 rounded-full text-[#8E9487] hover:text-[#17201B] hover:bg-[#F4F5F0] transition cursor-pointer active:rotate-90"
-              aria-label="Clear search"
+
+        {/* Floating Google Places Autocomplete Dropdown with iOS Liquid Glass */}
+        <AnimatePresence>
+          {isSearchFocused && placesResults.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -6, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -4, scale: 0.98 }}
+              transition={{ duration: 0.16 }}
+              className="ios-liquid-glass-thin absolute top-full left-0 right-0 mt-2 rounded-2xl shadow-2xl p-2 z-50 max-h-80 overflow-y-auto ring-1 ring-[#143428]/10"
             >
-              <X className="w-4 h-4" />
-            </button>
+              <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#E2E4DC]/80 mb-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7267] flex items-center gap-1.5">
+                  <Compass className="w-3 h-3 text-[#143428]" />
+                  <span>Google Maps Suggestions ({placesResults.length} found)</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsSearchFocused(false)}
+                  className="text-[10px] text-[#6B7267] hover:text-[#17201B] font-semibold cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+              <div className="divide-y divide-[#E2E4DC]/70">
+                {placesResults.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      onSelectDestination(p);
+                      setIsSearchFocused(false);
+                    }}
+                    className="w-full text-left p-2.5 rounded-xl hover:bg-[#F8F9F5] text-xs flex items-center justify-between transition group cursor-pointer"
+                  >
+                    <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                      <div className="mt-0.5 w-6 h-6 rounded-md bg-[#F4F5F0] flex items-center justify-center shrink-0 border border-[#E2E4DC]">
+                        {getPlaceIcon(p)}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-bold text-[#17201B] text-xs">{p.name}</span>
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider bg-[#F4F5F0] text-[#143428] border border-[#D5D8CD]">
+                            {p.city}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-[#6B7267] truncate mt-0.5">
+                          {p.formattedAddress}
+                        </div>
+                        {p.nearestStation && (
+                          <div className="text-[10px] text-[#53584E] mt-1 flex items-center gap-1.5 font-medium">
+                            <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor: p.nearestStation.lineColor || '#0284c7' }} />
+                            <span>Near <strong>{p.nearestStation.name}</strong> ({p.nearestStation.line} Line)</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-[#8E9487] group-hover:text-[#143428] shrink-0 ml-1.5" />
+                  </button>
+                ))}
+              </div>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </div>
 
       {/* When Search is Active (User typed >= 2 characters) */}
@@ -384,7 +470,7 @@ export function DestinationPicker({
                   key={chip.label}
                   type="button"
                   onClick={() => setSearchQuery(chip.query)}
-                  className="chip-tactile px-3.5 py-1.5 rounded-full bg-white/90 hover:bg-[#F4F5F0] border border-[#E2E4DC] text-xs font-semibold text-[#17201B] whitespace-nowrap shrink-0 transition shadow-xs cursor-pointer hover:border-[#143428]/30"
+                  className="ios-liquid-pill px-3.5 py-1.5 rounded-full text-xs font-semibold text-[#17201B] whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   {chip.label}
                 </button>
@@ -407,10 +493,10 @@ export function DestinationPicker({
                   key={filter.key}
                   type="button"
                   onClick={() => setActiveFilter(filter.key)}
-                  className={`chip-tactile px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
+                  className={`ios-liquid-pill px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-[#143428] text-white shadow-xs'
-                      : 'bg-white/90 text-[#53584E] border border-[#E2E4DC] hover:bg-[#F8F9F5] hover:border-[#143428]/30'
+                      ? '!bg-[#143428] !text-white !border-[#143428] shadow-sm'
+                      : 'text-[#53584E]'
                   }`}
                 >
                   {filter.label}
@@ -430,10 +516,10 @@ export function DestinationPicker({
                   key={dest.id}
                   type="button"
                   onClick={() => onSelectDestination(dest)}
-                  className={`card-interactive p-3 sm:p-3.5 rounded-2xl border text-left flex flex-col justify-between h-[148px] relative group cursor-pointer ${
+                  className={`card-interactive p-3 sm:p-3.5 rounded-2xl text-left flex flex-col justify-between h-[148px] relative group cursor-pointer ${
                     isSelected
-                      ? 'bg-[#FAF6F3] border-[#B9552C] ring-2 ring-[#B9552C] shadow-sm'
-                      : 'bg-white/95 backdrop-blur-xs hover:bg-[#F8F9F5] border-[#E2E4DC] shadow-xs hover:border-[#143428]/30'
+                      ? 'bg-[#FAF6F3]/95 border-2 border-[#B9552C] ring-2 ring-[#B9552C]/30 shadow-md'
+                      : 'ios-liquid-glass hover:border-[#143428]/40 shadow-xs'
                   }`}
                 >
                   {/* Category Icon & Gate Badge */}
