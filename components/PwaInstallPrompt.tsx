@@ -123,6 +123,10 @@ export function PwaInstallPrompt() {
           if (outcome === 'accepted') {
             setIsInstallable(false);
             setShowBanner(false);
+            if (typeof localStorage !== 'undefined') {
+              localStorage.setItem('metronav-app-installed', 'true');
+            }
+            window.dispatchEvent(new CustomEvent('app-installed-change'));
           }
           setDeferredPrompt(null);
         } catch {
@@ -142,6 +146,10 @@ export function PwaInstallPrompt() {
       setShowUniversalModal(false);
       setDeferredPrompt(null);
       setInstallSuccess(true);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('metronav-app-installed', 'true');
+      }
+      window.dispatchEvent(new CustomEvent('app-installed-change'));
       setTimeout(() => setInstallSuccess(false), 4500);
     };
 

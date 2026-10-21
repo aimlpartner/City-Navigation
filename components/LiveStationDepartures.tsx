@@ -21,6 +21,7 @@ import {
   RadioReceiver,
   CheckCircle2
 } from 'lucide-react';
+import { LiquidGlass } from '@/components/ui/liquid-glass';
 
 interface LiveStationDeparturesProps {
   stationId: string;
@@ -79,7 +80,15 @@ export function LiveStationDepartures({
     activePlatform === 1 ? schedule.arrivalsPlatform1 : schedule.arrivalsPlatform2;
 
   return (
-    <div className="ios-liquid-glass rounded-[28px] text-[#17201B] shadow-lg overflow-hidden">
+    <LiquidGlass
+      radius={28}
+      bevelDepth={59}
+      scale={120}
+      aberration={14}
+      frost={2.8}
+      tint={0.06}
+      className="rounded-[28px] text-[#17201B] shadow-xl border border-white/80 overflow-hidden"
+    >
       {/* PIDS Header (Passenger Information Display System Style) */}
       <div className="p-3.5 sm:p-5 bg-white/40 backdrop-blur-md border-b border-[#E2E4DC]/80 flex items-center justify-between gap-2.5">
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
@@ -295,6 +304,6 @@ export function LiveStationDepartures({
           </div>
         </div>
       )}
-    </div>
+    </LiquidGlass>
   );
 }

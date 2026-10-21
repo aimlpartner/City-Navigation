@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { motion } from 'motion/react';
+import { LiquidGlass } from '@/components/ui/liquid-glass';
 
 export type MobileTab = 'go' | 'map' | 'guide';
 
@@ -150,7 +151,16 @@ export function BottomTabBar({ activeTab, onTabChange, hasActiveRoute = false }:
       aria-label="Mobile navigation"
       className="fixed inset-x-0 bottom-3 sm:bottom-4 z-40 flex justify-center pointer-events-none px-4 pb-[env(safe-area-inset-bottom,0px)] lg:hidden"
     >
-      <div className="pointer-events-auto ios-liquid-dock rounded-full p-1.5 flex items-center gap-1 relative border border-white/85 shadow-[0_20px_50px_-8px_rgba(20,52,40,0.22)] ring-1 ring-black/5">
+      <LiquidGlass
+        radius={999}
+        bevelDepth={59}
+        scale={120}
+        aberration={14}
+        frost={2.8}
+        tint={0.06}
+        className="pointer-events-auto rounded-full p-1.5 relative border border-white/85 shadow-[0_20px_50px_-8px_rgba(20,52,40,0.22)] ring-1 ring-black/5"
+        contentClassName="flex items-center gap-1"
+      >
         {/* Apple Liquid Glass Specular Edge Highlight */}
         <div className="absolute inset-x-4 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent pointer-events-none rounded-full" />
 
@@ -204,7 +214,7 @@ export function BottomTabBar({ activeTab, onTabChange, hasActiveRoute = false }:
             </motion.button>
           );
         })}
-      </div>
+      </LiquidGlass>
     </nav>
   );
 }

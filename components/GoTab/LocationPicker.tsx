@@ -213,7 +213,7 @@ export function LocationPicker({
       </div>
 
       {/* Live Google Maps Connected Search Bar for Starting Point */}
-      <div className="relative z-40" ref={searchContainerRef}>
+      <div className="relative z-20" ref={searchContainerRef}>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8E9487]">
             <Search className="w-4 h-4 text-[#143428]" />
@@ -255,7 +255,7 @@ export function LocationPicker({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.98 }}
               transition={{ duration: 0.16 }}
-              className="absolute top-full left-0 right-0 mt-2 ios-liquid-glass-thin rounded-2xl shadow-2xl border border-white/85 p-2 z-50 max-h-80 overflow-y-auto ring-1 ring-[#143428]/10"
+              className="absolute top-full left-0 right-0 mt-2 ios-liquid-glass-thin rounded-2xl shadow-2xl border border-white/85 p-2 z-30 max-h-80 overflow-y-auto ring-1 ring-[#143428]/10"
             >
               <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#E2E4DC] mb-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7267] flex items-center gap-1.5">

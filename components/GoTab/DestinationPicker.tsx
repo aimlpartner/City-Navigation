@@ -211,7 +211,7 @@ export function DestinationPicker({
       </div>
 
       {/* Live Google Places Powered Search Bar with Dropdown */}
-      <div className="relative z-40" ref={searchContainerRef}>
+      <div className="relative z-20" ref={searchContainerRef}>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <Search className="w-5 h-5 text-[#8E9487]" />
@@ -256,7 +256,7 @@ export function DestinationPicker({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.98 }}
               transition={{ duration: 0.16 }}
-              className="ios-liquid-glass-thin absolute top-full left-0 right-0 mt-2 rounded-2xl shadow-2xl p-2 z-50 max-h-80 overflow-y-auto ring-1 ring-[#143428]/10"
+              className="ios-liquid-glass-thin absolute top-full left-0 right-0 mt-2 rounded-2xl shadow-2xl p-2 z-30 max-h-80 overflow-y-auto ring-1 ring-[#143428]/10"
             >
               <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#E2E4DC]/80 mb-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7267] flex items-center gap-1.5">

@@ -18,6 +18,7 @@ export function LivingTransitCanvas() {
         powerPreference: 'low-power',
         depth: false,
         stencil: false,
+        alpha: true,
       });
     } catch {
       return;
@@ -29,7 +30,7 @@ export function LivingTransitCanvas() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     // Cap pixel ratio to save power and memory
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-    renderer.setClearColor(0xF4F5F0, 1.0);
+    renderer.setClearColor(0x000000, 0.0);
     container.appendChild(renderer.domElement);
 
     // ==========================================
@@ -92,32 +93,22 @@ export function LivingTransitCanvas() {
         float dy = cos(p.x * 2.4 + u_time * 0.5) * sin(p.y * 2.8 + u_time * 0.7) * 0.45;
         vec3 normal = normalize(vec3(dx, dy, 1.0));
 
-        // Specular sun reflection
+        // Subtle specular sun reflection
         vec3 lightDir = normalize(vec3(0.35, 0.65, 0.68));
         vec3 halfVec = normalize(lightDir + vec3(0.0, 0.0, 1.0));
-        float specular = pow(max(dot(normal, halfVec), 0.0), 32.0) * 0.38;
+        float specular = pow(max(dot(normal, halfVec), 0.0), 32.0) * 0.24;
 
-        // Color palette based on natural warm stone canvas (#F4F5F0)
-        vec3 baseCanvas = vec3(0.957, 0.961, 0.941);     // #F4F5F0 base
-        vec3 deepTrough = vec3(0.898, 0.910, 0.882);     // #E5E8E1 subtle shaded trough
-        vec3 causticHighlight = vec3(1.0, 1.0, 0.995);   // Luminous clear sunlight caustic
+        // Subtle dancing caustic light network
+        float causticLine = smoothstep(0.72, 1.04, c);
+        vec3 causticHighlight = vec3(0.96, 0.98, 0.97);
 
-        // Natural water body tone
-        vec3 waterBody = mix(deepTrough, baseCanvas, clamp(c, 0.0, 1.0));
-
-        // Dancing caustic light network
-        float causticLine = smoothstep(0.70, 1.04, c);
-        vec3 finalColor = mix(waterBody, causticHighlight, causticLine * 0.42);
-
-        // Add specular sunlight glimmer
-        finalColor += specular * causticHighlight;
-
-        // Gentle vignette for zero visual distraction and crisp text contrast
+        // Gentle vignette for smooth edge falloff
         vec2 d = uv * (1.0 - uv);
         float vignette = clamp(d.x * d.y * 22.0, 0.0, 1.0);
-        finalColor = mix(baseCanvas, finalColor, 0.68 * vignette);
 
-        gl_FragColor = vec4(finalColor, 1.0);
+        float alpha = clamp((causticLine * 0.12 + specular * 0.18) * vignette, 0.0, 0.22);
+
+        gl_FragColor = vec4(causticHighlight, alpha);
       }
     `;
 
@@ -319,9 +310,20 @@ export function LivingTransitCanvas() {
 
   return (
     <div
-      ref={containerRef}
       className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
       aria-hidden="true"
-    />
+    >
+      {/* Abstract Luminous Fluid Transit Wallpaper */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-85 transition-opacity duration-700"
+        style={{ backgroundImage: "url('/abstract-bg.jpg')" }}
+      />
+
+      {/* Subtle ambient gradient overlay for card readability while letting waves shine through */}
+      <div className="absolute inset-0 bg-radial-[circle_at_center] from-transparent via-[#F4F5F0]/10 to-[#F4F5F0]/35" />
+
+      {/* Three.js Caustic Water Ripple Shimmer Layer */}
+      <div ref={containerRef} className="absolute inset-0" />
+    </div>
   );
 }

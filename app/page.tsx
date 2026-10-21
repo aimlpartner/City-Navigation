@@ -20,6 +20,8 @@ import { LiveTransitRadarModal } from '@/components/LiveTransitRadarModal';
 import { MobileAppShell } from '@/components/MobileAppShell';
 import { ActiveTicketFloatingPill } from '@/components/ActiveTicketFloatingPill';
 import { triggerPwaInstall } from '@/components/PwaInstallPrompt';
+import { LiquidGlass } from '@/components/ui/liquid-glass';
+import { useIsAppInstalled } from '@/hooks/useIsAppInstalled';
 import dynamic from 'next/dynamic';
 import {
   TrainFront,
@@ -73,6 +75,7 @@ const COMMON_ORIGINS = [
 ];
 
 export default function HomePage() {
+  const isAppInstalled = useIsAppInstalled();
   // Origin State
   const [originName, setOriginName] = useState('DLF Cyber City, Gurgaon');
   const [originCoords, setOriginCoords] = useState<{ lat: number; lng: number }>({
@@ -908,15 +911,17 @@ export default function HomePage() {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2">
-              {/* Download / Install App Button */}
-              <button
-                onClick={triggerPwaInstall}
-                className="ios-liquid-pill flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-[#143428] text-xs font-bold transition shadow-xs shrink-0 cursor-pointer group border border-white/60"
-                title="Download & Install App (PWA)"
-              >
-                <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#143428] group-hover:-translate-y-0.5 transition-transform" strokeWidth={2} />
-                <span>Download App</span>
-              </button>
+              {/* Download / Install App Button - hidden when app is installed */}
+              {!isAppInstalled && (
+                <button
+                  onClick={triggerPwaInstall}
+                  className="ios-liquid-pill flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-[#143428] text-xs font-bold transition shadow-xs shrink-0 cursor-pointer group border border-white/60"
+                  title="Download & Install App (PWA)"
+                >
+                  <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#143428] group-hover:-translate-y-0.5 transition-transform" strokeWidth={2} />
+                  <span>Download App</span>
+                </button>
+              )}
 
               <button
                 onClick={() => setIsTransitRadarOpen(true)}
@@ -943,7 +948,15 @@ export default function HomePage() {
         {/* Main Content Hub - Expanded Wide Canvas */}
         <main className="w-full max-w-[1720px] mx-auto px-3.5 sm:px-6 lg:px-10 xl:px-12 pt-4 sm:pt-6 relative z-10">
           {/* Network Status Banner */}
-          <div className="mb-4 sm:mb-6 rounded-xl sm:rounded-2xl ios-liquid-glass border border-white/80 px-3 py-2 sm:px-4 sm:py-2.5 flex items-center justify-between gap-3 text-xs shadow-sm text-[#53584E] relative overflow-hidden">
+          <LiquidGlass
+            radius={16}
+            bevelDepth={59}
+            scale={120}
+            aberration={14}
+            frost={2.8}
+            tint={0.06}
+            className="mb-4 sm:mb-6 rounded-xl sm:rounded-2xl border border-white/80 px-3 py-2 sm:px-4 sm:py-2.5 flex items-center justify-between gap-3 text-xs shadow-sm text-[#53584E] relative overflow-hidden"
+          >
             <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none" />
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 whitespace-nowrap min-w-0 flex-1">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#143428]/10 text-[#143428] text-[10px] sm:text-[11px] font-bold border border-[#143428]/20 shrink-0 whitespace-nowrap">
@@ -977,7 +990,7 @@ export default function HomePage() {
               <span>All 7 Lines</span>
               <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={1.75} />
             </button>
-          </div>
+          </LiquidGlass>
 
           {/* Navigation Query Bar (Origin & Destination Selection) */}
           <section className="ios-liquid-glass rounded-2xl sm:rounded-[28px] p-4 sm:p-6 xl:p-8 border border-white/85 shadow-[0_20px_50px_-8px_rgba(20,52,40,0.12)] mb-5 sm:mb-8 relative z-30">

@@ -9,6 +9,8 @@ import { GuideTabScreen } from './GuideTab/GuideTabScreen';
 import { LivingTransitCanvas } from './LivingTransitCanvas';
 import { TrainFront, Radar, Download } from 'lucide-react';
 import { triggerPwaInstall } from './PwaInstallPrompt';
+import { LiquidGlass } from './ui/liquid-glass';
+import { useIsAppInstalled } from '@/hooks/useIsAppInstalled';
 
 const TABS: MobileTab[] = ['go', 'map', 'guide'];
 
@@ -75,6 +77,7 @@ export function MobileAppShell({
   onOpenTransitRadar,
   onRequestAiRefresh,
 }: MobileAppShellProps) {
+  const isAppInstalled = useIsAppInstalled();
   const [activeTab, setActiveTab] = useState<MobileTab>('go');
   const activeIndex = TABS.indexOf(activeTab);
 
@@ -382,69 +385,11 @@ export function MobileAppShell({
       {/* Moving Water from Metal Shader (Drawn 30 FPS, Paused in Low Power / Reduce Motion) */}
       <LivingTransitCanvas />
 
-      {/* Mobile App Top Header with Apple iOS Liquid Glass Specular Reflection */}
-      <header className="shrink-0 z-30 ios-liquid-glass border-b border-white/60 px-4 shadow-[0_12px_32px_-6px_rgba(20,52,40,0.08)] top-header-safe pb-2.5 relative">
-        {/* Apple Specular Top Rim */}
-        <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none" />
-
-        <div className="max-w-md mx-auto flex items-center justify-between gap-2 relative z-10">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-[#143428] text-white flex items-center justify-center shadow-xs shrink-0 border border-emerald-400/30">
-              <TrainFront className="w-5 h-5 text-[#5ee9b5]" strokeWidth={2.2} />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <h1 className="font-extrabold text-base tracking-tight text-[#17201B] font-sans leading-none">
-                  MetroNav
-                </h1>
-                <span className="px-1.5 py-0.5 rounded-full bg-[#143428]/10 text-[#143428] text-[10px] font-extrabold uppercase leading-none shrink-0">
-                  NCR
-                </span>
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-800 text-[9.5px] font-bold shrink-0">
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-600" />
-                  </span>
-                  <span>Live</span>
-                </span>
-              </div>
-              <p className="text-[11px] text-[#6B7267] font-medium mt-0.5 leading-none truncate">
-                Delhi • Gurgaon • Airport
-              </p>
-            </div>
-          </div>
-
-          {/* Header Action Buttons */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              type="button"
-              onClick={triggerPwaInstall}
-              className="ios-liquid-pill flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r from-[#143428] to-[#1A3E31] text-white text-xs font-bold shadow-xs cursor-pointer shrink-0 group border border-white/20"
-              title="Download & Install MetroNav App"
-            >
-              <Download className="w-3.5 h-3.5 text-[#5ee9b5] group-hover:-translate-y-0.5 transition-transform" />
-              <span>Install</span>
-            </button>
-
-            {onOpenTransitRadar && (
-              <button
-                type="button"
-                onClick={onOpenTransitRadar}
-                className="ios-liquid-pill flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-[#143428] cursor-pointer shrink-0 group"
-              >
-                <Radar className="w-3.5 h-3.5 text-emerald-600 animate-pulse group-hover:rotate-45 transition-transform" />
-                <span>Radar</span>
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
-
       {/* Main Instagram Swiper Viewport */}
       <div
         ref={containerRef}
         onMouseDown={handleMouseDown}
-        className="flex-1 min-h-0 relative w-full overflow-hidden z-10"
+        className="flex-1 min-h-0 relative w-full overflow-hidden z-10 pt-[max(env(safe-area-inset-top,0px),8px)]"
         style={{ touchAction: 'pan-y' }}
       >
         <div
@@ -456,32 +401,30 @@ export function MobileAppShell({
           }}
         >
           {/* Slide 0: Go Tab Screen */}
-          <div className="w-full min-w-full h-full overflow-y-auto overscroll-y-contain px-4 pt-3 pb-28 sm:pb-32 no-scrollbar">
-            <div className="max-w-md mx-auto w-full">
-              <GoTabScreen
-                originName={originName}
-                originCoords={originCoords}
-                detectedLocation={detectedLocation}
-                locationError={locationError}
-                selectedDestination={selectedDestination}
-                customDestCoords={customDestCoords}
-                tripPlan={tripPlan}
-                passengerCount={passengerCount}
-                onPassengerCountChange={onPassengerCountChange}
-                firstMileMode={firstMileMode}
-                onFirstMileModeChange={onFirstMileModeChange}
-                lastMileMode={lastMileMode}
-                onLastMileModeChange={onLastMileModeChange}
-                deepLinks={deepLinks}
-                aiGuide={aiGuide}
-                isDetectingLocation={isDetectingLocation}
-                onDetectLocation={onDetectLocation}
-                onSelectOrigin={onSelectOrigin}
-                onSelectDestination={onSelectDestination}
-                onSwitchToMap={() => handleTabChange('map')}
-                onOpenTransitRadar={onOpenTransitRadar}
-              />
-            </div>
+          <div className="w-full min-w-full h-full overflow-hidden flex flex-col">
+            <GoTabScreen
+              originName={originName}
+              originCoords={originCoords}
+              detectedLocation={detectedLocation}
+              locationError={locationError}
+              selectedDestination={selectedDestination}
+              customDestCoords={customDestCoords}
+              tripPlan={tripPlan}
+              passengerCount={passengerCount}
+              onPassengerCountChange={onPassengerCountChange}
+              firstMileMode={firstMileMode}
+              onFirstMileModeChange={onFirstMileModeChange}
+              lastMileMode={lastMileMode}
+              onLastMileModeChange={onLastMileModeChange}
+              deepLinks={deepLinks}
+              aiGuide={aiGuide}
+              isDetectingLocation={isDetectingLocation}
+              onDetectLocation={onDetectLocation}
+              onSelectOrigin={onSelectOrigin}
+              onSelectDestination={onSelectDestination}
+              onSwitchToMap={() => handleTabChange('map')}
+              onOpenTransitRadar={onOpenTransitRadar}
+            />
           </div>
 
           {/* Slide 1: Map Tab Screen */}

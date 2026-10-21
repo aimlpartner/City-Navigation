@@ -7,6 +7,7 @@ import { DestinationPicker } from './DestinationPicker';
 import { RouteResult } from './RouteResult';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, Navigation, Route, Check, ChevronRight } from 'lucide-react';
+import { LiquidGlass } from '@/components/ui/liquid-glass';
 
 interface GoTabScreenProps {
   originName: string;
@@ -71,84 +72,92 @@ export function GoTabScreen({
   onSwitchToMap,
   onOpenTransitRadar,
 }: GoTabScreenProps) {
-  // If we already have a trip plan, show route; otherwise start from destination
-  const [currentStep, setCurrentStep] = useState<'origin' | 'destination' | 'route'>(
-    tripPlan ? 'route' : 'destination'
-  );
+  // Always start from the first step ('origin') - do not jump to the last step
+  const [currentStep, setCurrentStep] = useState<'origin' | 'destination' | 'route'>('origin');
 
   const handlePickOrigin = (name: string, coords: { lat: number; lng: number }) => {
     onSelectOrigin(name, coords);
-    // After picking origin, advance to destination if none selected, or route if selected
-    if (!selectedDestination) {
-      setCurrentStep('destination');
-    } else {
-      setCurrentStep('route');
-    }
+    // After picking origin (step 1), always advance to step 2 (destination), never jump directly to route
+    setCurrentStep('destination');
   };
 
   const handlePickDestination = (dest: FamousDestination) => {
     onSelectDestination(dest);
-    // Automatically advance to route
+    // After picking destination (step 2), advance to step 3 (route)
     setCurrentStep('route');
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto">
-      {/* Visual Step Wizard Indicator Header */}
-      <div className="mb-4 bg-white/90 backdrop-blur-md rounded-2xl p-1.5 border border-[#E2E4DC] shadow-xs flex items-center justify-between gap-1">
-        {/* Step 1: Start */}
-        <button
-          type="button"
-          onClick={() => setCurrentStep('origin')}
-          className={`chip-tactile flex-1 flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl text-xs font-bold transition cursor-pointer ${
-            currentStep === 'origin'
-              ? 'bg-[#143428] text-white shadow-xs'
-              : 'text-[#53584E] hover:bg-[#F4F5F0]'
-          }`}
-        >
-          <MapPin className="w-3.5 h-3.5 shrink-0" />
-          <span className="truncate">1. Start</span>
-        </button>
+    <div className="w-full max-w-md mx-auto h-full relative overflow-hidden flex flex-col">
+      {/* Floating Fixed Liquid Glass Step Wizard Indicator Header */}
+      <div className="absolute top-0 inset-x-0 z-50 px-3 pt-2 pb-2 pointer-events-none">
+        <div className="pointer-events-auto">
+          <LiquidGlass
+            radius={999}
+            bevelDepth={59}
+            scale={120}
+            aberration={14}
+            frost={2.0}
+            tint={0.06}
+            className="w-full rounded-full p-1 border border-white/70 shadow-[0_16px_36px_-6px_rgba(20,52,40,0.18)]"
+            contentClassName="flex items-center justify-between gap-1 w-full"
+          >
+            {/* Step 1: Start */}
+            <button
+              type="button"
+              onClick={() => setCurrentStep('origin')}
+              className={`chip-tactile relative z-10 flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                currentStep === 'origin'
+                  ? 'bg-[#143428] text-white shadow-xs'
+                  : 'text-[#1F2C24] hover:bg-white/40'
+              }`}
+            >
+              <MapPin className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">1. Start</span>
+            </button>
 
-        <ChevronRight className="w-3.5 h-3.5 text-[#CBD0C5] shrink-0" />
+            <ChevronRight className="w-3.5 h-3.5 text-[#143428]/30 shrink-0 relative z-10" />
 
-        {/* Step 2: Destination */}
-        <button
-          type="button"
-          onClick={() => setCurrentStep('destination')}
-          className={`chip-tactile flex-1 flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl text-xs font-bold transition cursor-pointer ${
-            currentStep === 'destination'
-              ? 'bg-[#143428] text-white shadow-xs'
-              : 'text-[#53584E] hover:bg-[#F4F5F0]'
-          }`}
-        >
-          <Navigation className="w-3.5 h-3.5 shrink-0" />
-          <span className="truncate">2. Where to</span>
-        </button>
+            {/* Step 2: Destination */}
+            <button
+              type="button"
+              onClick={() => setCurrentStep('destination')}
+              className={`chip-tactile relative z-10 flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                currentStep === 'destination'
+                  ? 'bg-[#143428] text-white shadow-xs'
+                  : 'text-[#1F2C24] hover:bg-white/40'
+              }`}
+            >
+              <Navigation className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">2. Where to</span>
+            </button>
 
-        <ChevronRight className="w-3.5 h-3.5 text-[#CBD0C5] shrink-0" />
+            <ChevronRight className="w-3.5 h-3.5 text-[#143428]/30 shrink-0 relative z-10" />
 
-        {/* Step 3: Route */}
-        <button
-          type="button"
-          onClick={() => {
-            if (tripPlan) setCurrentStep('route');
-          }}
-          disabled={!tripPlan}
-          className={`chip-tactile flex-1 flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl text-xs font-bold transition ${
-            currentStep === 'route'
-              ? 'bg-[#143428] text-white shadow-xs cursor-pointer'
-              : tripPlan
-              ? 'text-[#53584E] hover:bg-[#F4F5F0] cursor-pointer'
-              : 'text-[#CBD0C5] cursor-not-allowed opacity-50'
-          }`}
-        >
-          <Route className="w-3.5 h-3.5 shrink-0" />
-          <span className="truncate">3. Route</span>
-        </button>
+            {/* Step 3: Route */}
+            <button
+              type="button"
+              onClick={() => {
+                if (tripPlan) setCurrentStep('route');
+              }}
+              disabled={!tripPlan}
+              className={`chip-tactile relative z-10 flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-full text-xs font-bold transition-all ${
+                currentStep === 'route'
+                  ? 'bg-[#143428] text-white shadow-xs cursor-pointer'
+                  : tripPlan
+                  ? 'text-[#1F2C24] hover:bg-white/40 cursor-pointer'
+                  : 'text-[#8C958E] cursor-not-allowed opacity-50'
+              }`}
+            >
+              <Route className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">3. Route</span>
+            </button>
+          </LiquidGlass>
+        </div>
       </div>
 
-      {/* Wizard Content Screens */}
+      {/* Scrollable Wizard Content Screens - scrolls smoothly UNDER the liquid glass bar */}
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain px-4 pt-16 pb-28 sm:pb-32 no-scrollbar">
       <AnimatePresence mode="wait">
         {currentStep === 'origin' && (
           <motion.div
@@ -213,6 +222,7 @@ export function GoTabScreen({
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }
