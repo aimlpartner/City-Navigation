@@ -189,13 +189,13 @@ export function LiveTransitRadarModal({
             </div>
 
             {/* Mode / Tabs Switcher */}
-            <div className="flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 border-b border-[#E2E4DC]/80 bg-white/40 backdrop-blur-md overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 border-b border-[#E2E4DC]/80 dark:border-white/10 bg-white/40 dark:bg-black/30 backdrop-blur-md overflow-x-auto no-scrollbar">
               <button
                 onClick={() => setActiveTab('lines')}
                 className={`ios-liquid-pill px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
                   activeTab === 'lines'
-                    ? '!bg-[#143428] !text-white !border-[#143428] shadow-sm'
-                    : 'text-[#53584E]'
+                    ? '!bg-[#143428] dark:!bg-emerald-500 !text-white dark:!text-[#061C12] !border-[#143428] dark:!border-emerald-500 shadow-sm'
+                    : 'text-[#53584E] dark:text-[#A7B2A8]'
                 }`}
               >
                 <TrainFront className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
@@ -206,8 +206,8 @@ export function LiveTransitRadarModal({
                 onClick={() => setActiveTab('buses')}
                 className={`ios-liquid-pill px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
                   activeTab === 'buses'
-                    ? '!bg-[#143428] !text-white !border-[#143428] shadow-sm'
-                    : 'text-[#53584E]'
+                    ? '!bg-[#143428] dark:!bg-emerald-500 !text-white dark:!text-[#061C12] !border-[#143428] dark:!border-emerald-500 shadow-sm'
+                    : 'text-[#53584E] dark:text-[#A7B2A8]'
                 }`}
               >
                 <BusFront className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
@@ -218,8 +218,8 @@ export function LiveTransitRadarModal({
                 onClick={() => setActiveTab('alerts')}
                 className={`ios-liquid-pill px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${
                   activeTab === 'alerts'
-                    ? '!bg-[#143428] !text-white !border-[#143428] shadow-sm'
-                    : 'text-[#53584E]'
+                    ? '!bg-[#143428] dark:!bg-emerald-500 !text-white dark:!text-[#061C12] !border-[#143428] dark:!border-emerald-500 shadow-sm'
+                    : 'text-[#53584E] dark:text-[#A7B2A8]'
                 }`}
               >
             <AlertTriangle className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
@@ -228,19 +228,19 @@ export function LiveTransitRadarModal({
         </div>
 
         {/* Modal Scrollable Body */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 bg-[#F4F5F0]">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 bg-[#F4F5F0] dark:bg-[#080D0A]">
           {/* AI Live Transit Query Banner */}
-          <div className="rounded-2xl bg-white border border-[#E2E4DC] p-4 shadow-xs">
+          <div className="rounded-2xl bg-white dark:bg-[#111A15] border border-[#E2E4DC] dark:border-white/10 p-4 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-8 h-8 rounded-xl bg-[#143428]/10 text-[#143428] flex items-center justify-center font-bold shrink-0">
                   <Sparkle className="w-4 h-4 shrink-0" strokeWidth={2} />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-[#17201B]">
+                  <h4 className="text-xs font-bold text-[#17201B] dark:text-[#F3F5EE]">
                     AI Live Transit Congestion Check
                   </h4>
-                  <p className="text-[11px] text-[#6B7267]">
+                  <p className="text-[11px] text-[#6B7267] dark:text-[#9BAAA0]">
                     Corridor assessment between {defaultOrigin.split(',')[0]} and {defaultDest.split(',')[0]}
                   </p>
                 </div>
@@ -249,14 +249,14 @@ export function LiveTransitRadarModal({
               <button
                 onClick={fetchLiveAiAdvisory}
                 disabled={isLoadingAiSummary}
-                className="btn-tactile px-3.5 py-1.5 rounded-full bg-[#143428] text-white text-xs font-bold hover:bg-[#1A3E31] transition disabled:opacity-50 shrink-0 shadow-xs cursor-pointer"
+                className="btn-tactile px-3.5 py-1.5 rounded-full bg-[#143428] dark:bg-emerald-500 text-white dark:text-[#061C12] text-xs font-bold hover:bg-[#1A3E31] dark:hover:bg-emerald-400 transition disabled:opacity-50 shrink-0 shadow-xs cursor-pointer"
               >
                 {isLoadingAiSummary ? 'Analyzing...' : 'Run Transit Check'}
               </button>
             </div>
 
             {aiTransitSummary && (
-              <div className="mt-3 pt-3 border-t border-[#E2E4DC] text-xs text-[#2C332E] leading-relaxed bg-[#F8F9F5] p-3.5 rounded-xl border border-[#E2E4DC]">
+              <div className="mt-3 pt-3 border-t border-[#E2E4DC] dark:border-white/10 text-xs text-[#2C332E] dark:text-[#D1DDD6] leading-relaxed bg-[#F8F9F5] dark:bg-[#16231D] p-3.5 rounded-xl border border-[#E2E4DC] dark:border-white/10">
                 {aiTransitSummary}
               </div>
             )}
@@ -265,8 +265,8 @@ export function LiveTransitRadarModal({
           {/* TAB 1: METRO LINES STATUS */}
           {activeTab === 'lines' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between text-xs text-[#6B7267]">
-                <span className="font-bold text-[#17201B]">
+              <div className="flex items-center justify-between text-xs text-[#6B7267] dark:text-[#9BAAA0]">
+                <span className="font-bold text-[#17201B] dark:text-[#F3F5EE]">
                   Real-time Metro Network Status:
                 </span>
                 <span>Headway calculated for current Indian Standard Time</span>
@@ -276,50 +276,50 @@ export function LiveTransitRadarModal({
                 {linesList.map(line => (
                   <div
                     key={line.id}
-                    className="p-4 rounded-2xl bg-white border border-[#E2E4DC] shadow-xs space-y-3 transition hover:border-[#143428]/40"
+                    className="p-4 rounded-2xl bg-white dark:bg-[#111A15] border border-[#E2E4DC] dark:border-white/10 shadow-xs space-y-3 transition hover:border-[#143428]/40 dark:hover:border-emerald-500/40"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2.5">
                         <span
-                          className="w-3.5 h-3.5 rounded-full ring-4 ring-[#E2E4DC]/50 shrink-0"
+                          className="w-3.5 h-3.5 rounded-full ring-4 ring-[#E2E4DC]/50 dark:ring-white/10 shrink-0"
                           style={{ backgroundColor: line.color }}
                         ></span>
                         <div>
-                          <h4 className="font-bold text-sm text-[#17201B]">
+                          <h4 className="font-bold text-sm text-[#17201B] dark:text-[#F3F5EE]">
                             {line.name}
                           </h4>
-                          <span className="text-[11px] text-[#6B7267]">{line.operatingHours}</span>
+                          <span className="text-[11px] text-[#6B7267] dark:text-[#9BAAA0]">{line.operatingHours}</span>
                         </div>
                       </div>
 
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-[#143428]/10 text-[#143428] border border-[#143428]/20">
-                        <BadgeCheck className="w-3.5 h-3.5 text-[#143428]" strokeWidth={2} />
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-[#143428]/10 dark:bg-emerald-500/20 text-[#143428] dark:text-emerald-400 border border-[#143428]/20 dark:border-emerald-500/30">
+                        <BadgeCheck className="w-3.5 h-3.5 text-[#143428] dark:text-emerald-400" strokeWidth={2} />
                         {line.status}
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 bg-[#F8F9F5] border border-[#E2E4DC] p-2.5 rounded-xl text-center text-xs">
+                    <div className="grid grid-cols-3 gap-2 bg-[#F8F9F5] dark:bg-[#16231D] border border-[#E2E4DC] dark:border-white/10 p-2.5 rounded-xl text-center text-xs">
                       <div>
-                        <div className="text-[10px] text-[#6B7267] uppercase font-bold">Headway</div>
-                        <div className="font-bold text-[#17201B] mt-0.5">
+                        <div className="text-[10px] text-[#6B7267] dark:text-[#9BAAA0] uppercase font-bold">Headway</div>
+                        <div className="font-bold text-[#17201B] dark:text-[#F3F5EE] mt-0.5">
                           ~{line.currentHeadwayMin} min
                         </div>
                       </div>
                       <div>
-                        <div className="text-[10px] text-[#6B7267] uppercase font-bold">Delay</div>
-                        <div className="font-bold text-[#143428] mt-0.5">
+                        <div className="text-[10px] text-[#6B7267] dark:text-[#9BAAA0] uppercase font-bold">Delay</div>
+                        <div className="font-bold text-[#143428] dark:text-emerald-400 mt-0.5">
                           {line.expectedDelayMin === 0 ? '0m (On Time)' : `+${line.expectedDelayMin}m`}
                         </div>
                       </div>
                       <div>
-                        <div className="text-[10px] text-[#6B7267] uppercase font-bold">Crowd</div>
+                        <div className="text-[10px] text-[#6B7267] dark:text-[#9BAAA0] uppercase font-bold">Crowd</div>
                         <div
                           className={`font-bold mt-0.5 ${
                             line.crowdLevel === 'High'
-                              ? 'text-[#B9552C]'
+                              ? 'text-[#B9552C] dark:text-[#FF7A45]'
                               : line.crowdLevel === 'Moderate'
-                              ? 'text-amber-700'
-                              : 'text-[#143428]'
+                              ? 'text-amber-700 dark:text-amber-400'
+                              : 'text-[#143428] dark:text-emerald-400'
                           }`}
                         >
                           {line.crowdLevel}
@@ -328,7 +328,7 @@ export function LiveTransitRadarModal({
                     </div>
 
                     {line.advisoryText && (
-                      <p className="text-xs text-[#53584E] leading-relaxed">
+                      <p className="text-xs text-[#53584E] dark:text-[#A7B2A8] leading-relaxed">
                         {line.advisoryText}
                       </p>
                     )}
@@ -343,13 +343,13 @@ export function LiveTransitRadarModal({
             <div className="space-y-4">
               {/* Bus Search Bar */}
               <div className="relative">
-                <Search className="w-4 h-4 text-[#6B7267] absolute left-3.5 top-1/2 -translate-y-1/2" strokeWidth={2} />
+                <Search className="w-4 h-4 text-[#6B7267] dark:text-[#9BAAA0] absolute left-3.5 top-1/2 -translate-y-1/2" strokeWidth={2} />
                 <input
                   type="text"
                   value={busSearch}
                   onChange={e => setBusSearch(e.target.value)}
                   placeholder="Search bus route number (e.g. 116, 111, 134, 543A), stop, or destination..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-[#E2E4DC] text-xs text-[#17201B] font-medium focus:ring-2 focus:ring-[#143428] focus:outline-none transition shadow-xs"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-[#111A15] border border-[#E2E4DC] dark:border-white/10 text-xs text-[#17201B] dark:text-[#F3F5EE] font-medium focus:ring-2 focus:ring-[#143428] dark:focus:ring-emerald-500 focus:outline-none transition shadow-xs"
                 />
               </div>
 
@@ -357,36 +357,36 @@ export function LiveTransitRadarModal({
                 {filteredBuses.map(bus => (
                   <div
                     key={bus.busId}
-                    className="p-4 rounded-2xl bg-white border border-[#E2E4DC] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    className="p-4 rounded-2xl bg-white dark:bg-[#111A15] border border-[#E2E4DC] dark:border-white/10 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                   >
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-1 rounded-lg bg-[#143428] text-white text-xs font-bold font-mono tracking-wide">
+                        <span className="px-2.5 py-1 rounded-lg bg-[#143428] dark:bg-emerald-500 text-white dark:text-[#061C12] text-xs font-bold font-mono tracking-wide">
                           {bus.routeNumber}
                         </span>
-                        <span className="text-xs font-medium text-[#6B7267]">
+                        <span className="text-xs font-medium text-[#6B7267] dark:text-[#9BAAA0]">
                           {bus.agency}
                         </span>
                         {bus.isAirConditioned && (
-                          <span className="px-2 py-0.5 rounded-full bg-[#143428]/10 text-[#143428] text-[10px] font-bold">
+                          <span className="px-2 py-0.5 rounded-full bg-[#143428]/10 dark:bg-emerald-500/20 text-[#143428] dark:text-emerald-400 text-[10px] font-bold">
                             AC
                           </span>
                         )}
-                        <span className="px-2 py-0.5 rounded-full bg-[#F4F5F0] border border-[#E2E4DC] text-[#17201B] text-[10px] font-bold">
+                        <span className="px-2 py-0.5 rounded-full bg-[#F4F5F0] dark:bg-white/10 border border-[#E2E4DC] dark:border-white/10 text-[#17201B] dark:text-[#F3F5EE] text-[10px] font-bold">
                           ₹{bus.fareInr} Fare
                         </span>
                       </div>
 
-                      <div className="text-xs font-bold text-[#17201B] flex items-center gap-1.5 pt-0.5">
+                      <div className="text-xs font-bold text-[#17201B] dark:text-[#F3F5EE] flex items-center gap-1.5 pt-0.5">
                         <span>{bus.origin}</span>
-                        <ChevronRight className="w-3.5 h-3.5 text-[#6B7267]" strokeWidth={2} />
+                        <ChevronRight className="w-3.5 h-3.5 text-[#6B7267] dark:text-[#9BAAA0]" strokeWidth={2} />
                         <span>{bus.destination}</span>
                       </div>
 
-                      <div className="text-[11px] text-[#6B7267] flex flex-wrap gap-1 items-center">
-                        <span className="font-bold text-[#17201B]">Stops via:</span>
+                      <div className="text-[11px] text-[#6B7267] dark:text-[#9BAAA0] flex flex-wrap gap-1 items-center">
+                        <span className="font-bold text-[#17201B] dark:text-[#F3F5EE]">Stops via:</span>
                         {bus.viaKeyStops.map((stop, sidx) => (
-                          <span key={sidx} className="bg-[#F8F9F5] border border-[#E2E4DC] px-1.5 py-0.2 rounded text-[10px]">
+                          <span key={sidx} className="bg-[#F8F9F5] dark:bg-[#16231D] border border-[#E2E4DC] dark:border-white/10 px-1.5 py-0.2 rounded text-[10px]">
                             {stop}
                           </span>
                         ))}
@@ -394,15 +394,15 @@ export function LiveTransitRadarModal({
                     </div>
 
                     {/* Bus Live ETA Status */}
-                    <div className="sm:text-right bg-[#F8F9F5] border border-[#E2E4DC] sm:border-0 sm:bg-transparent p-3 sm:p-0 rounded-xl">
-                      <div className="text-[10px] font-bold text-[#6B7267] uppercase tracking-wider">Next Live Arrival</div>
-                      <div className="text-lg font-extrabold text-[#143428] font-mono mt-0.5">
+                    <div className="sm:text-right bg-[#F8F9F5] dark:bg-[#16231D] border border-[#E2E4DC] dark:border-white/10 sm:border-0 sm:bg-transparent p-3 sm:p-0 rounded-xl">
+                      <div className="text-[10px] font-bold text-[#6B7267] dark:text-[#9BAAA0] uppercase tracking-wider">Next Live Arrival</div>
+                      <div className="text-lg font-extrabold text-[#143428] dark:text-emerald-400 font-mono mt-0.5">
                         in {bus.etaMin} mins
                       </div>
-                      <div className="text-xs text-[#6B7267] mt-0.5 flex sm:justify-end items-center gap-2">
-                        <span>Next: <strong className="text-[#17201B]">{bus.nextStop}</strong></span>
+                      <div className="text-xs text-[#6B7267] dark:text-[#9BAAA0] mt-0.5 flex sm:justify-end items-center gap-2">
+                        <span>Next: <strong className="text-[#17201B] dark:text-[#F3F5EE]">{bus.nextStop}</strong></span>
                         <span>•</span>
-                        <span className={bus.delayMin > 0 ? 'text-[#B9552C] font-semibold' : 'text-[#143428]'}>
+                        <span className={bus.delayMin > 0 ? 'text-[#B9552C] dark:text-[#FF7A45] font-semibold' : 'text-[#143428] dark:text-emerald-400'}>
                           {bus.delayMin > 0 ? `+${bus.delayMin}m delay` : 'On schedule'}
                         </span>
                       </div>
@@ -419,26 +419,26 @@ export function LiveTransitRadarModal({
               {ACTIVE_TRANSIT_ALERTS.map(alert => (
                 <div
                   key={alert.id}
-                  className="p-4 rounded-2xl border border-[#E2E4DC] bg-white transition shadow-xs"
+                  className="p-4 rounded-2xl border border-[#E2E4DC] dark:border-white/10 bg-white dark:bg-[#111A15] transition shadow-xs"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2.5">
                       <span
                         className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs ${
                           alert.severity === 'warning'
-                            ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                            ? 'bg-amber-100 dark:bg-amber-950/50 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-700/50'
                             : alert.severity === 'critical'
-                            ? 'bg-[#FAF2EE] text-[#B9552C] border border-[#E8C2B3]'
-                            : 'bg-[#F4F5F0] text-[#17201B] border border-[#E2E4DC]'
+                            ? 'bg-[#FAF2EE] dark:bg-[#2A160E] text-[#B9552C] dark:text-[#FF7A45] border border-[#E8C2B3] dark:border-[#FF7A45]/30'
+                            : 'bg-[#F4F5F0] dark:bg-white/10 text-[#17201B] dark:text-[#F3F5EE] border border-[#E2E4DC] dark:border-white/10'
                         }`}
                       >
                         <AlertTriangle className="w-4 h-4" strokeWidth={2} />
                       </span>
                       <div>
-                        <h4 className="font-bold text-sm text-[#17201B]">
+                        <h4 className="font-bold text-sm text-[#17201B] dark:text-[#F3F5EE]">
                           {alert.title}
                         </h4>
-                        <span className="text-[11px] text-[#6B7267]">{alert.timestamp}</span>
+                        <span className="text-[11px] text-[#6B7267] dark:text-[#9BAAA0]">{alert.timestamp}</span>
                       </div>
                     </div>
 
@@ -446,7 +446,7 @@ export function LiveTransitRadarModal({
                       {alert.affectedLines.map((line, idx) => (
                         <span
                           key={idx}
-                          className="px-2.5 py-0.5 rounded-lg bg-[#F4F5F0] border border-[#E2E4DC] text-[#17201B] text-[10px] font-bold"
+                          className="px-2.5 py-0.5 rounded-lg bg-[#F4F5F0] dark:bg-white/10 border border-[#E2E4DC] dark:border-white/10 text-[#17201B] dark:text-[#F3F5EE] text-[10px] font-bold"
                         >
                           {line}
                         </span>
@@ -454,17 +454,17 @@ export function LiveTransitRadarModal({
                     </div>
                   </div>
 
-                  <p className="text-xs text-[#53584E] mt-2.5 leading-relaxed">
+                  <p className="text-xs text-[#53584E] dark:text-[#A7B2A8] mt-2.5 leading-relaxed">
                     {alert.description}
                   </p>
 
-                  <div className="mt-3 p-3 rounded-[12px] bg-[#F8F9F5] border border-[#E2E4DC] text-xs flex items-start gap-2">
-                    <ShieldCheck className="w-4 h-4 text-[#143428] shrink-0 mt-0.5" strokeWidth={2} />
+                  <div className="mt-3 p-3 rounded-[12px] bg-[#F8F9F5] dark:bg-[#16231D] border border-[#E2E4DC] dark:border-white/10 text-xs flex items-start gap-2">
+                    <ShieldCheck className="w-4 h-4 text-[#143428] dark:text-emerald-400 shrink-0 mt-0.5" strokeWidth={2} />
                     <div>
-                      <span className="font-bold text-[#17201B]">
+                      <span className="font-bold text-[#17201B] dark:text-[#F3F5EE]">
                         Recommended Action:{' '}
                       </span>
-                      <span className="text-[#53584E]">{alert.recommendedAction}</span>
+                      <span className="text-[#53584E] dark:text-[#D1DDD6]">{alert.recommendedAction}</span>
                     </div>
                   </div>
                 </div>
@@ -474,15 +474,15 @@ export function LiveTransitRadarModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 bg-white border-t border-[#E2E4DC] flex items-center justify-between text-xs text-[#6B7267]">
+        <div className="p-4 bg-white dark:bg-[#0c1410] border-t border-[#E2E4DC] dark:border-white/10 flex items-center justify-between text-xs text-[#6B7267] dark:text-[#9BAAA0]">
           <div className="flex items-center gap-1.5">
-            <BadgeCheck className="w-4 h-4 text-[#143428]" strokeWidth={2} />
+            <BadgeCheck className="w-4 h-4 text-[#143428] dark:text-emerald-400" strokeWidth={2} />
             <span className="hidden sm:inline">Feeds synchronized with Delhi Metro (DMRC) & Gurugram GMCBL schedules</span>
             <span className="sm:hidden">DMRC & GMCBL sync</span>
           </div>
           <button
             onClick={onClose}
-            className="px-5 py-2 rounded-full bg-[#143428] text-white text-xs font-bold hover:bg-[#1A3E31] transition shadow-xs cursor-pointer active:scale-95"
+            className="px-5 py-2 rounded-full bg-[#143428] dark:bg-emerald-500 text-white dark:text-[#061C12] text-xs font-bold hover:bg-[#1A3E31] dark:hover:bg-emerald-400 transition shadow-xs cursor-pointer active:scale-95"
           >
             Close Radar
           </button>

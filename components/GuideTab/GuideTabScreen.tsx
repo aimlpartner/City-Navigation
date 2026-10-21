@@ -49,10 +49,10 @@ export function GuideTabScreen({
     <div className="space-y-6 pb-12">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-black text-[#17201B] tracking-tight font-sans">
+        <h2 className="text-2xl font-black text-[#17201B] dark:text-[#F3F5EE] tracking-tight font-sans">
           City Navigation Guide
         </h2>
-        <p className="text-sm text-[#53584E] mt-0.5">
+        <p className="text-sm text-[#53584E] dark:text-[#A7B2A8] mt-0.5">
           Real-time line health, introvert survival checklist & local guidelines.
         </p>
       </div>
@@ -141,9 +141,9 @@ export function GuideTabScreen({
       </div>
 
       {/* Introvert's Zero-Asking Checklist */}
-      <div className="rounded-2xl bg-white/95 backdrop-blur-xs border border-[#E2E4DC] p-5 shadow-xs space-y-3">
-        <div className="flex items-center gap-2.5 text-[#17201B]">
-          <div className="w-7 h-7 rounded-lg bg-[#143428]/10 text-[#143428] flex items-center justify-center">
+      <div className="rounded-2xl bg-white/95 dark:bg-[#111A15]/90 backdrop-blur-xs border border-[#E2E4DC] dark:border-white/10 p-5 shadow-xs space-y-3">
+        <div className="flex items-center gap-2.5 text-[#17201B] dark:text-[#F3F5EE]">
+          <div className="w-7 h-7 rounded-lg bg-[#143428]/10 dark:bg-emerald-500/20 text-[#143428] dark:text-emerald-400 flex items-center justify-center">
             <Headphones className="w-4 h-4" />
           </div>
           <h3 className="font-extrabold text-base font-sans">
@@ -151,10 +151,10 @@ export function GuideTabScreen({
           </h3>
         </div>
 
-        <div className="space-y-2 text-xs text-[#2C332E]">
+        <div className="space-y-2 text-xs text-[#2C332E] dark:text-[#D1DDD6]">
           {tips.map((tip, idx) => (
-            <div key={idx} className="flex items-start gap-2.5 bg-[#F8F9F5] p-3 rounded-xl border border-[#E2E4DC]/60 card-interactive">
-              <BadgeCheck className="w-4 h-4 text-[#143428] shrink-0 mt-0.5" />
+            <div key={idx} className="flex items-start gap-2.5 bg-[#F8F9F5] dark:bg-[#16231D] p-3 rounded-xl border border-[#E2E4DC]/60 dark:border-white/10 card-interactive">
+              <BadgeCheck className="w-4 h-4 text-[#143428] dark:text-emerald-400 shrink-0 mt-0.5" />
               <span className="leading-relaxed">{tip}</span>
             </div>
           ))}
@@ -163,13 +163,13 @@ export function GuideTabScreen({
 
       {/* Gemini AI Transit Grounding with Google Maps Links */}
       {aiGuide && (
-        <div className="rounded-2xl bg-white/95 backdrop-blur-xs border border-[#E2E4DC] p-5 shadow-xs space-y-3">
+        <div className="rounded-2xl bg-white/95 dark:bg-[#111A15]/90 backdrop-blur-xs border border-[#E2E4DC] dark:border-white/10 p-5 shadow-xs space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-[#143428] flex items-center justify-center text-emerald-300 shrink-0">
                 <Sparkle className="w-4 h-4 shrink-0" />
               </div>
-              <h3 className="text-sm font-extrabold text-[#17201B]">
+              <h3 className="text-sm font-extrabold text-[#17201B] dark:text-[#F3F5EE]">
                 AI Verified Grounding
               </h3>
             </div>
@@ -179,7 +179,7 @@ export function GuideTabScreen({
                 type="button"
                 onClick={onRequestAiRefresh}
                 disabled={aiGuide.loading}
-                className="btn-tactile text-xs font-bold text-[#143428] hover:text-[#B9552C] bg-[#F4F5F0] hover:bg-[#FAF2EE] px-2.5 py-1 rounded-lg transition disabled:opacity-50 cursor-pointer"
+                className="btn-tactile text-xs font-bold text-[#143428] dark:text-emerald-400 hover:text-[#B9552C] bg-[#F4F5F0] dark:bg-white/10 hover:bg-[#FAF2EE] dark:hover:bg-white/15 px-2.5 py-1 rounded-lg transition disabled:opacity-50 cursor-pointer"
               >
                 {aiGuide.loading ? 'Updating...' : 'Refresh'}
               </button>
@@ -187,19 +187,19 @@ export function GuideTabScreen({
           </div>
 
           {aiGuide.loading ? (
-            <div className="p-3.5 rounded-xl bg-[#F8F9F5] text-xs text-[#6B7267] flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full border-2 border-[#143428] border-t-transparent animate-spin" />
+            <div className="p-3.5 rounded-xl bg-[#F8F9F5] dark:bg-[#16231D] text-xs text-[#6B7267] dark:text-[#9BAAA0] flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full border-2 border-[#143428] dark:border-emerald-400 border-t-transparent animate-spin" />
               <span>Verifying live station landmarks & maps grounding...</span>
             </div>
           ) : aiGuide.text ? (
             <div className="space-y-3">
-              <div className="text-xs text-[#2C332E] leading-relaxed whitespace-pre-line bg-[#F8F9F5] p-3.5 rounded-xl">
+              <div className="text-xs text-[#2C332E] dark:text-[#D1DDD6] leading-relaxed whitespace-pre-line bg-[#F8F9F5] dark:bg-[#16231D] p-3.5 rounded-xl">
                 {aiGuide.text}
               </div>
 
               {aiGuide.links && aiGuide.links.length > 0 && (
-                <div className="pt-2 border-t border-[#E2E4DC]">
-                  <span className="text-[10px] font-bold text-[#6B7267] uppercase tracking-wider block mb-1.5">
+                <div className="pt-2 border-t border-[#E2E4DC] dark:border-white/10">
+                  <span className="text-[10px] font-bold text-[#6B7267] dark:text-[#8E9D93] uppercase tracking-wider block mb-1.5">
                     Verified Google Maps Locations:
                   </span>
                   <div className="flex flex-wrap gap-1.5">
@@ -209,7 +209,7 @@ export function GuideTabScreen({
                         href={link.uri}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#FAF2EE] text-[#B9552C] border border-[#E8C2B3] text-xs font-medium chip-tactile"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#FAF2EE] dark:bg-[#2A160E] text-[#B9552C] dark:text-[#FF7A45] border border-[#E8C2B3] dark:border-[#FF7A45]/30 text-xs font-medium chip-tactile"
                       >
                         <MapPinned className="w-3 h-3" />
                         <span>{link.title}</span>
@@ -221,8 +221,8 @@ export function GuideTabScreen({
               )}
             </div>
           ) : aiGuide.error ? (
-            <div className="p-3 rounded-xl bg-[#F8F9F5] text-xs text-[#6B7267] flex items-center gap-2">
-              <AlertCircle className="w-4 h-4" />
+            <div className="p-3 rounded-xl bg-[#F8F9F5] dark:bg-[#16231D] text-xs text-[#6B7267] dark:text-[#9BAAA0] flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-emerald-400" />
               <span>Deterministic transit schedules are fully active.</span>
             </div>
           ) : null}
@@ -230,7 +230,7 @@ export function GuideTabScreen({
       )}
 
       {/* City Quick Guide (Accordion FAQs, Airport Tips, Metro Rules) */}
-      <div className="rounded-2xl bg-white border border-[#E2E4DC] p-5 shadow-xs">
+      <div className="rounded-2xl bg-white dark:bg-[#111A15]/90 border border-[#E2E4DC] dark:border-white/10 p-5 shadow-xs">
         <CityQuickGuide />
       </div>
     </div>

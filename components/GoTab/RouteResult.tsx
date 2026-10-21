@@ -351,18 +351,18 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
       </div>
 
       {/* Itemized Fare Breakdown & Direct Cab Comparison Card */}
-      <div className="rounded-[20px] bg-[#FAF9F5] border border-[#E2E4DC] p-4 shadow-xs space-y-3">
+      <div className="rounded-[20px] bg-[#FAF9F5] dark:bg-[#0D1813]/90 border border-[#E2E4DC] dark:border-white/10 p-4 shadow-xs space-y-3">
         <div
           onClick={() => setIsFareBreakdownOpen((prev) => !prev)}
           className="flex items-center justify-between cursor-pointer select-none"
         >
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-[#143428]" />
-            <span className="text-xs font-black text-[#17201B]">
+            <ShieldCheck className="w-4 h-4 text-[#143428] dark:text-[#5ee9b5]" />
+            <span className="text-xs font-black text-[#17201B] dark:text-white">
               Transparent Fare Itemization (~₹{totalTripFare} Total)
             </span>
           </div>
-          <div className="flex items-center gap-1 text-[11px] font-bold text-[#143428]">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-[#143428] dark:text-[#5ee9b5]">
             <span>{isFareBreakdownOpen ? 'Hide' : 'Breakdown'}</span>
             {isFareBreakdownOpen ? (
               <ChevronUp className="w-3.5 h-3.5" />
@@ -373,11 +373,11 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
         </div>
 
         {isFareBreakdownOpen && (
-          <div className="space-y-2.5 pt-2 border-t border-[#E2E4DC] text-xs">
+          <div className="space-y-2.5 pt-2 border-t border-[#E2E4DC] dark:border-white/10 text-xs">
             {/* Leg 1 */}
-            <div className="flex items-center justify-between py-1 border-b border-[#EAECE4]">
-              <div className="flex items-center gap-2 text-[#53584E]">
-                <span className="px-2 py-0.5 rounded-full bg-[#143428]/10 text-[#143428] font-mono font-bold text-[10px]">
+            <div className="flex items-center justify-between py-1 border-b border-[#EAECE4] dark:border-white/10">
+              <div className="flex items-center gap-2 text-[#53584E] dark:text-[#A7B2A8]">
+                <span className="px-2 py-0.5 rounded-full bg-[#143428]/10 dark:bg-emerald-500/20 text-[#143428] dark:text-[#5ee9b5] font-mono font-bold text-[10px]">
                   01
                 </span>
                 <span>
@@ -385,17 +385,17 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
                 </span>
               </div>
               <div className="text-right">
-                <span className="font-extrabold text-[#17201B]">
+                <span className="font-extrabold text-[#17201B] dark:text-white">
                   {firstMileCost === 0 ? 'Free' : `₹${firstMileCost}`}
                 </span>
-                <span className="text-[10px] text-[#6B7267] ml-1.5 font-medium">(~{firstMileDuration}m)</span>
+                <span className="text-[10px] text-[#6B7267] dark:text-[#9AA59D] ml-1.5 font-medium">(~{firstMileDuration}m)</span>
               </div>
             </div>
 
             {/* Leg 2 */}
-            <div className="flex items-center justify-between py-1 border-b border-[#EAECE4]">
-              <div className="flex items-center gap-2 text-[#53584E]">
-                <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-800 font-mono font-bold text-[10px]">
+            <div className="flex items-center justify-between py-1 border-b border-[#EAECE4] dark:border-white/10">
+              <div className="flex items-center gap-2 text-[#53584E] dark:text-[#A7B2A8]">
+                <span className="px-2 py-0.5 rounded-full bg-amber-500/10 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-mono font-bold text-[10px]">
                   02
                 </span>
                 <span>
@@ -403,15 +403,15 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
                 </span>
               </div>
               <div className="text-right">
-                <span className="font-extrabold text-[#17201B]">₹{metroTotalCost}</span>
-                <span className="text-[10px] text-[#6B7267] ml-1.5 font-medium">(~{metroDuration}m)</span>
+                <span className="font-extrabold text-[#17201B] dark:text-white">₹{metroTotalCost}</span>
+                <span className="text-[10px] text-[#6B7267] dark:text-[#9AA59D] ml-1.5 font-medium">(~{metroDuration}m)</span>
               </div>
             </div>
 
             {/* Leg 3 */}
-            <div className="flex items-center justify-between py-1 border-b border-[#EAECE4]">
-              <div className="flex items-center gap-2 text-[#53584E]">
-                <span className="px-2 py-0.5 rounded-full bg-[#B9552C]/10 text-[#B9552C] font-mono font-bold text-[10px]">
+            <div className="flex items-center justify-between py-1 border-b border-[#EAECE4] dark:border-white/10">
+              <div className="flex items-center gap-2 text-[#53584E] dark:text-[#A7B2A8]">
+                <span className="px-2 py-0.5 rounded-full bg-[#B9552C]/10 dark:bg-[#B9552C]/25 text-[#B9552C] dark:text-[#FF7A45] font-mono font-bold text-[10px]">
                   03
                 </span>
                 <span>
@@ -419,40 +419,40 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
                 </span>
               </div>
               <div className="text-right">
-                <span className="font-extrabold text-[#17201B]">
+                <span className="font-extrabold text-[#17201B] dark:text-white">
                   {lastMileCost === 0 ? 'Free' : `₹${lastMileCost}`}
                 </span>
-                <span className="text-[10px] text-[#6B7267] ml-1.5 font-medium">(~{lastMileDuration}m)</span>
+                <span className="text-[10px] text-[#6B7267] dark:text-[#9AA59D] ml-1.5 font-medium">(~{lastMileDuration}m)</span>
               </div>
             </div>
 
             {/* Total Row */}
-            <div className="flex items-center justify-between pt-1 font-black text-sm text-[#143428]">
+            <div className="flex items-center justify-between pt-1 font-black text-sm text-[#143428] dark:text-[#5ee9b5]">
               <span>Grand Total Multi-Modal</span>
               <div className="text-right">
-                <span className="text-base text-emerald-700">₹{totalTripFare}</span>
-                <span className="text-xs text-[#53584E] ml-2 font-bold">~{totalTripDuration} mins</span>
+                <span className="text-base text-emerald-700 dark:text-emerald-400">₹{totalTripFare}</span>
+                <span className="text-xs text-[#53584E] dark:text-[#A7B2A8] ml-2 font-bold">~{totalTripDuration} mins</span>
               </div>
             </div>
 
             {/* Accuracy Note */}
-            <div className="text-[10px] text-[#6B7267] bg-[#F4F5F0] p-2.5 rounded-[12px] flex items-start gap-1.5">
-              <span className="shrink-0 text-emerald-700 font-bold">⏱️</span>
+            <div className="text-[10px] text-[#6B7267] dark:text-[#9AA59D] bg-[#F4F5F0] dark:bg-white/5 p-2.5 rounded-[12px] flex items-start gap-1.5">
+              <span className="shrink-0 text-emerald-700 dark:text-emerald-400 font-bold">⏱️</span>
               <span>
                 Accurate travel times include live Google Maps road traffic + 15m urban transit buffers (cab dispatch, station security scan & platform wait).
               </span>
             </div>
 
             {/* Direct Cab comparison banner */}
-            <div className="mt-2 p-3 rounded-[14px] bg-white border border-[#D9DFD5] flex items-center justify-between gap-2">
+            <div className="mt-2 p-3 rounded-[14px] bg-white dark:bg-[#122019] border border-[#D9DFD5] dark:border-white/10 flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <div className="text-[11px] font-black text-[#17201B] flex items-center gap-1">
+                <div className="text-[11px] font-black text-[#17201B] dark:text-white flex items-center gap-1">
                   <span>Direct Cab (No Metro):</span>
-                  <span className="text-amber-800 font-extrabold">~₹{directCab.estimatedCostInr}</span>
-                  <span className="text-[#6B7267] font-normal">({directCab.durationMin}m in traffic)</span>
+                  <span className="text-amber-800 dark:text-amber-300 font-extrabold">~₹{directCab.estimatedCostInr}</span>
+                  <span className="text-[#6B7267] dark:text-[#9AA59D] font-normal">({directCab.durationMin}m in traffic)</span>
                 </div>
-                <div className="text-[10px] text-emerald-700 font-bold flex items-center gap-1 mt-0.5">
-                  <TrendingDown className="w-3 h-3 text-emerald-600" />
+                <div className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
+                  <TrendingDown className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                   <span>
                     Metro saves ~₹{Math.max(0, directCab.estimatedCostInr - totalTripFare)} & skips traffic!
                   </span>
@@ -468,7 +468,7 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
         <button
           type="button"
           onClick={onSwitchToMap}
-          className="btn-tactile flex items-center justify-center gap-2 p-3.5 rounded-2xl bg-[#143428] text-white font-bold text-sm shadow-md hover:bg-[#1C4535] cursor-pointer"
+          className="btn-tactile flex items-center justify-center gap-2 p-3.5 rounded-2xl bg-[#143428] dark:bg-emerald-600 text-white font-bold text-sm shadow-md hover:bg-[#1C4535] cursor-pointer"
         >
           <Map className="w-4 h-4 text-[#5ee9b5]" strokeWidth={2.2} />
           <span>See on Map</span>
@@ -477,16 +477,16 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
         <button
           type="button"
           onClick={handleCopyRoute}
-          className="btn-tactile flex items-center justify-center gap-2 p-3.5 rounded-2xl bg-white/90 backdrop-blur-xs border border-[#D5D8CD] text-[#17201B] font-bold text-sm shadow-xs hover:bg-[#F8F9F5] cursor-pointer"
+          className="btn-tactile flex items-center justify-center gap-2 p-3.5 rounded-2xl bg-white/90 dark:bg-white/10 backdrop-blur-xs border border-[#D5D8CD] dark:border-white/15 text-[#17201B] dark:text-white font-bold text-sm shadow-xs hover:bg-[#F8F9F5] dark:hover:bg-white/15 cursor-pointer"
         >
           {copiedText ? (
             <>
-              <Check className="w-4 h-4 text-emerald-600 font-black" strokeWidth={2.5} />
-              <span className="text-emerald-700">Copied!</span>
+              <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 font-black" strokeWidth={2.5} />
+              <span className="text-emerald-700 dark:text-emerald-400">Copied!</span>
             </>
           ) : (
             <>
-              <Copy className="w-4 h-4 text-[#6B7267]" strokeWidth={2} />
+              <Copy className="w-4 h-4 text-[#6B7267] dark:text-[#9AA59D]" strokeWidth={2} />
               <span>Copy Steps</span>
             </>
           )}
@@ -494,45 +494,45 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
       </div>
 
       {/* STAGE 1: First Mile Leg */}
-      <div className="rounded-[24px] bg-white/95 backdrop-blur-xs border border-[#E2E4DC] p-4 sm:p-5 shadow-xs space-y-3.5">
-        <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#E2E4DC]">
+      <div className="rounded-[24px] bg-white/95 dark:bg-[#0D1813]/90 backdrop-blur-xs border border-[#E2E4DC] dark:border-white/10 p-4 sm:p-5 shadow-xs space-y-3.5">
+        <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#E2E4DC] dark:border-white/10">
           <div className="flex items-center gap-2.5">
-            <span className="px-2.5 py-1 rounded-lg bg-[#143428] text-white font-mono font-extrabold text-xs">
+            <span className="px-2.5 py-1 rounded-lg bg-[#143428] dark:bg-emerald-500 text-white dark:text-[#061C12] font-mono font-extrabold text-xs">
               01
             </span>
             <div>
-              <span className="text-[10px] font-bold text-[#6B7267] uppercase tracking-wider block">
+              <span className="text-[10px] font-bold text-[#6B7267] dark:text-[#88988C] uppercase tracking-wider block">
                 First Mile Leg
               </span>
-              <h3 className="font-black text-base text-[#17201B]">
+              <h3 className="font-black text-base text-[#17201B] dark:text-white">
                 Go to {plan.originStation.name} Metro
               </h3>
             </div>
           </div>
 
-          <span className="px-3 py-1 rounded-full bg-[#F8F9F5] border border-[#E2E4DC] text-[#143428] text-xs font-bold shrink-0">
+          <span className="px-3 py-1 rounded-full bg-[#F8F9F5] dark:bg-white/10 border border-[#E2E4DC] dark:border-white/10 text-[#143428] dark:text-[#5ee9b5] text-xs font-bold shrink-0">
             {plan.firstMile.distanceKm} km
           </span>
         </div>
 
         {/* Mode Selector for First Mile */}
         <div className="space-y-1.5">
-          <div className="text-[11px] font-black text-[#53584E]">Choose First-Mile Ride Mode:</div>
+          <div className="text-[11px] font-black text-[#53584E] dark:text-[#A7B2A8]">Choose First-Mile Ride Mode:</div>
           <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
               onClick={() => handleFmChange('cab')}
               className={`chip-tactile h-[68px] flex flex-col justify-between p-2.5 rounded-xl border text-left cursor-pointer ${
                 fmMode === 'cab'
-                  ? 'bg-[#143428] text-white border-[#143428] shadow-xs'
-                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40 hover:bg-white'
+                  ? 'bg-[#143428] dark:bg-[#1E4333] text-white dark:text-[#5ee9b5] border-[#143428] dark:border-[#38DF92] shadow-xs'
+                  : 'bg-[#F8F9F5] dark:bg-white/5 text-[#17201B] dark:text-white border-[#E2E4DC] dark:border-white/10 hover:border-[#143428]/40 hover:bg-white dark:hover:bg-white/10'
               }`}
             >
               <div className="flex items-center justify-between text-xs font-extrabold">
                 <span className="flex items-center gap-1">🚕 Cab</span>
                 <span>₹{fmOptions.cab}</span>
               </div>
-              <div className={`text-[10px] mt-0.5 truncate ${fmMode === 'cab' ? 'text-emerald-200' : 'text-[#6B7267]'}`}>
+              <div className={`text-[10px] mt-0.5 truncate ${fmMode === 'cab' ? 'text-emerald-200 dark:text-[#5ee9b5]' : 'text-[#6B7267] dark:text-[#9AA59D]'}`}>
                 Uber Go / Ola
               </div>
             </button>
@@ -542,15 +542,15 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
               onClick={() => handleFmChange('auto')}
               className={`chip-tactile h-[68px] flex flex-col justify-between p-2.5 rounded-xl border text-left cursor-pointer ${
                 fmMode === 'auto'
-                  ? 'bg-[#143428] text-white border-[#143428] shadow-xs'
-                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40 hover:bg-white'
+                  ? 'bg-[#143428] dark:bg-[#1E4333] text-white dark:text-[#5ee9b5] border-[#143428] dark:border-[#38DF92] shadow-xs'
+                  : 'bg-[#F8F9F5] dark:bg-white/5 text-[#17201B] dark:text-white border-[#E2E4DC] dark:border-white/10 hover:border-[#143428]/40 hover:bg-white dark:hover:bg-white/10'
               }`}
             >
               <div className="flex items-center justify-between text-xs font-extrabold">
                 <span className="flex items-center gap-1">🛺 Auto</span>
                 <span>₹{fmOptions.auto}</span>
               </div>
-              <div className={`text-[10px] mt-0.5 truncate ${fmMode === 'auto' ? 'text-emerald-200' : 'text-[#6B7267]'}`}>
+              <div className={`text-[10px] mt-0.5 truncate ${fmMode === 'auto' ? 'text-emerald-200 dark:text-[#5ee9b5]' : 'text-[#6B7267] dark:text-[#9AA59D]'}`}>
                 Uber/Rapido
               </div>
             </button>
@@ -560,15 +560,15 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
               onClick={() => handleFmChange('walk')}
               className={`chip-tactile h-[68px] flex flex-col justify-between p-2.5 rounded-xl border text-left cursor-pointer ${
                 fmMode === 'walk'
-                  ? 'bg-[#143428] text-white border-[#143428] shadow-xs'
-                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40 hover:bg-white'
+                  ? 'bg-[#143428] dark:bg-[#1E4333] text-white dark:text-[#5ee9b5] border-[#143428] dark:border-[#38DF92] shadow-xs'
+                  : 'bg-[#F8F9F5] dark:bg-white/5 text-[#17201B] dark:text-white border-[#E2E4DC] dark:border-white/10 hover:border-[#143428]/40 hover:bg-white dark:hover:bg-white/10'
               }`}
             >
               <div className="flex items-center justify-between text-xs font-extrabold">
                 <span className="flex items-center gap-1">🚶 Walk</span>
                 <span>Free</span>
               </div>
-              <div className={`text-[10px] mt-0.5 truncate ${fmMode === 'walk' ? 'text-emerald-200' : 'text-[#6B7267]'}`}>
+              <div className={`text-[10px] mt-0.5 truncate ${fmMode === 'walk' ? 'text-emerald-200 dark:text-[#5ee9b5]' : 'text-[#6B7267] dark:text-[#9AA59D]'}`}>
                 ~{Math.round(plan.firstMile.distanceKm * 12)}m walk
               </div>
             </button>
@@ -599,22 +599,22 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
           </div>
         )}
 
-        <p className="text-xs text-[#53584E] leading-relaxed">
+        <p className="text-xs text-[#53584E] dark:text-[#A7B2A8] leading-relaxed">
           {plan.firstMile.instructions}
         </p>
 
-        <div className="p-3 rounded-xl bg-[#F8F9F5] text-xs text-[#53584E] flex items-start gap-2.5">
-          <VolumeX className="w-4 h-4 text-[#143428] shrink-0 mt-0.5" />
+        <div className="p-3 rounded-xl bg-[#F8F9F5] dark:bg-white/5 border border-transparent dark:border-white/10 text-xs text-[#53584E] dark:text-[#A7B2A8] flex items-start gap-2.5">
+          <VolumeX className="w-4 h-4 text-[#143428] dark:text-[#5ee9b5] shrink-0 mt-0.5" />
           <div>
-            <strong className="text-[#17201B]">Introvert Tip: </strong>
+            <strong className="text-[#17201B] dark:text-white">Introvert Tip: </strong>
             {plan.firstMile.antiAnxietyTip}
           </div>
         </div>
       </div>
 
       {/* STAGE 2: Metro Transit */}
-      <div className="rounded-[24px] bg-white/95 backdrop-blur-xs border border-[#E2E4DC] p-4 sm:p-5 shadow-xs space-y-4">
-        <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#E2E4DC]">
+      <div className="rounded-[24px] bg-white/95 dark:bg-[#0D1813]/90 backdrop-blur-xs border border-[#E2E4DC] dark:border-white/10 p-4 sm:p-5 shadow-xs space-y-4">
+        <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#E2E4DC] dark:border-white/10">
           <div className="flex items-center gap-2.5">
             <span
               className="px-2.5 py-1 rounded-lg text-white font-mono font-extrabold text-xs"
@@ -623,10 +623,10 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
               02
             </span>
             <div>
-              <span className="text-[10px] font-bold text-[#6B7267] uppercase tracking-wider block">
+              <span className="text-[10px] font-bold text-[#6B7267] dark:text-[#88988C] uppercase tracking-wider block">
                 Metro Transit
               </span>
-              <h3 className="font-black text-base text-[#17201B]">
+              <h3 className="font-black text-base text-[#17201B] dark:text-white">
                 Board at {plan.originStation.name}
               </h3>
             </div>
@@ -642,17 +642,17 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
         </div>
 
         {/* Fare info pill & Digital QR discount callout */}
-        <div className="p-3.5 rounded-2xl bg-[#FAF9F5] border border-[#E2E4DC] space-y-2.5">
+        <div className="p-3.5 rounded-2xl bg-[#FAF9F5] dark:bg-white/5 border border-[#E2E4DC] dark:border-white/10 space-y-2.5">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-[#53584E]">
+            <span className="text-[#53584E] dark:text-[#A7B2A8]">
               Metro Fare ({pax} {pax === 1 ? 'person' : 'people'}):
             </span>
             <div className="flex items-center gap-1.5 font-mono">
-              <span className="text-[#6B7267] line-through text-[11px]">₹{metroTotalCost}</span>
-              <span className="font-extrabold text-[#143428] text-sm">
+              <span className="text-[#6B7267] dark:text-[#88988C] line-through text-[11px]">₹{metroTotalCost}</span>
+              <span className="font-extrabold text-[#143428] dark:text-[#5ee9b5] text-sm">
                 ₹{calculateTicketPricing(metroFarePerPerson, pax).totalFare}
               </span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-[#5ee9b5] border border-transparent dark:border-emerald-700/50">
                 10% QR Off
               </span>
             </div>
@@ -662,7 +662,7 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
           {activeTicket && activeTicket.status === 'active' ? (
             <div
               onClick={() => setIsActivePassModalOpen(true)}
-              className="card-interactive p-3 rounded-xl bg-[#143428] text-white flex items-center justify-between gap-2 cursor-pointer hover:bg-[#1A3E31] shadow-xs group"
+              className="card-interactive p-3 rounded-xl bg-[#143428] dark:bg-emerald-950 text-white flex items-center justify-between gap-2 cursor-pointer hover:bg-[#1A3E31] shadow-xs group border border-emerald-500/30"
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="relative">
@@ -689,7 +689,7 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
               <button
                 type="button"
                 onClick={() => setIsTicketModalOpen(true)}
-                className="btn-tactile flex items-center justify-center gap-2 p-2.5 rounded-xl bg-[#143428] hover:bg-[#1A3E31] text-white text-xs font-black shadow-xs cursor-pointer group"
+                className="btn-tactile flex items-center justify-center gap-2 p-2.5 rounded-xl bg-[#143428] dark:bg-emerald-600 hover:bg-[#1A3E31] text-white text-xs font-black shadow-xs cursor-pointer group"
               >
                 <Ticket className="w-4 h-4 text-emerald-300 group-hover:rotate-12 transition-transform" />
                 <span>Book Metro QR Ticket</span>
@@ -714,26 +714,26 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
           {plan.metroLeg.lines.map((leg, idx) => (
             <div key={idx} className="space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <div className="font-bold flex items-center gap-2 min-w-0">
+                <div className="font-bold flex items-center gap-2 min-w-0 text-[#17201B] dark:text-white">
                   <span
                     className="w-3 h-3 rounded-full shrink-0"
                     style={{ backgroundColor: leg.lineColor }}
                   />
                   <span className="truncate">{leg.from}</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-[#8E9487] shrink-0" />
+                  <ArrowRight className="w-3.5 h-3.5 text-[#8E9487] dark:text-[#88988C] shrink-0" />
                   <span className="truncate">{leg.to}</span>
                 </div>
-                <span className="text-xs font-bold text-[#143428] bg-[#143428]/10 px-2 py-0.5 rounded-full shrink-0">
+                <span className="text-xs font-bold text-[#143428] dark:text-[#5ee9b5] bg-[#143428]/10 dark:bg-emerald-500/20 px-2 py-0.5 rounded-full shrink-0">
                   ~{leg.stopsCount} {leg.stopsCount === 1 ? 'stop' : 'stops'}
                 </span>
               </div>
 
-              <div className="p-3 rounded-xl bg-[#F8F9F5] text-xs flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 text-[#53584E]">
-                  <Signpost className="w-3.5 h-3.5 text-[#143428]" />
-                  <span className="font-bold text-[#17201B]">Look for signage:</span>
+              <div className="p-3 rounded-xl bg-[#F8F9F5] dark:bg-white/5 border border-transparent dark:border-white/10 text-xs flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 text-[#53584E] dark:text-[#A7B2A8]">
+                  <Signpost className="w-3.5 h-3.5 text-[#143428] dark:text-[#5ee9b5]" />
+                  <span className="font-bold text-[#17201B] dark:text-white">Look for signage:</span>
                 </div>
-                <span className="font-mono font-bold text-[#143428] bg-white px-2.5 py-0.5 rounded-full border border-[#E2E4DC] text-xs">
+                <span className="font-mono font-bold text-[#143428] dark:text-[#5ee9b5] bg-white dark:bg-white/10 px-2.5 py-0.5 rounded-full border border-[#E2E4DC] dark:border-white/10 text-xs">
                   {leg.direction}
                 </span>
               </div>
@@ -743,19 +743,19 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
 
         {/* Interchange Alert */}
         {plan.metroLeg.requiresTransfer && (
-          <div className="p-3.5 rounded-2xl bg-[#FAF2EE] text-xs space-y-1.5 border-l-4 border-[#B9552C]">
-            <div className="font-bold flex items-center gap-1.5 text-[#B9552C] text-sm">
+          <div className="p-3.5 rounded-2xl bg-[#FAF2EE] dark:bg-[#2A160E]/80 text-xs space-y-1.5 border-l-4 border-[#B9552C]">
+            <div className="font-bold flex items-center gap-1.5 text-[#B9552C] dark:text-[#FF7A45] text-sm">
               <GitCommitVertical className="w-4 h-4" />
               <span>Interchange at {plan.metroLeg.transferStation?.name}</span>
             </div>
-            <p className="text-[#53584E] leading-relaxed">
+            <p className="text-[#53584E] dark:text-[#A7B2A8] leading-relaxed">
               {plan.metroLeg.transferInstruction}
             </p>
           </div>
         )}
 
         {/* Live Platform Departures Board */}
-        <div className="pt-2 border-t border-[#F0F2EB]">
+        <div className="pt-2 border-t border-[#F0F2EB] dark:border-white/10">
           <LiveStationDepartures
             stationId={plan.originStation.id}
             stationName={plan.originStation.name}
@@ -765,17 +765,17 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
       </div>
 
       {/* STAGE 3: Crucial Exit Gate (High Priority Highlight) */}
-      <div className="rounded-[24px] bg-gradient-to-b from-white to-[#FAF6F3] border-2 border-[#E8C2B3] p-4 sm:p-5 shadow-sm space-y-4">
-        <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#E8C2B3]/60">
+      <div className="rounded-[24px] bg-gradient-to-b from-white to-[#FAF6F3] dark:from-[#1A120E] dark:to-[#0D1813] border-2 border-[#E8C2B3] dark:border-[#B9552C]/50 p-4 sm:p-5 shadow-sm space-y-4">
+        <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#E8C2B3]/60 dark:border-white/10">
           <div className="flex items-center gap-2.5">
             <span className="px-2.5 py-1 rounded-lg bg-[#B9552C] text-white font-mono font-extrabold text-xs">
               03
             </span>
             <div>
-              <span className="text-[10px] font-bold text-[#B9552C] uppercase tracking-wider block">
+              <span className="text-[10px] font-bold text-[#B9552C] dark:text-[#FF7A45] uppercase tracking-wider block">
                 Crucial Exit
               </span>
-              <h3 className="font-black text-base text-[#17201B]">
+              <h3 className="font-black text-base text-[#17201B] dark:text-white">
                 Deboard at {plan.destinationStation.name}
               </h3>
             </div>
@@ -788,17 +788,17 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
         </div>
 
         <div className="space-y-2.5 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-[#B9552C]">Gate {plan.metroExit.gateNumber} leads to:</span>
-            <span className="font-bold bg-[#FAF2EE] px-3 py-1 rounded-full border border-[#E8C2B3] text-[#17201B]">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-bold text-[#B9552C] dark:text-[#FF7A45]">Gate {plan.metroExit.gateNumber} leads to:</span>
+            <span className="font-bold bg-[#FAF2EE] dark:bg-[#2A160E] px-3 py-1 rounded-full border border-[#E8C2B3] dark:border-[#B9552C]/40 text-[#17201B] dark:text-white">
               {plan.metroExit.leadsTo}
             </span>
           </div>
 
-          <div className="text-[#53584E] leading-relaxed flex items-start gap-2 pt-1">
-            <Eye className="w-4 h-4 text-[#B9552C] shrink-0 mt-0.5" />
+          <div className="text-[#53584E] dark:text-[#A7B2A8] leading-relaxed flex items-start gap-2 pt-1">
+            <Eye className="w-4 h-4 text-[#B9552C] dark:text-[#FF7A45] shrink-0 mt-0.5" />
             <div>
-              <strong className="text-[#17201B]">Zero-asking tip: </strong>
+              <strong className="text-[#17201B] dark:text-white">Zero-asking tip: </strong>
               {plan.metroExit.signageTip} Once past turnstiles, follow overhead green signs for Gate {plan.metroExit.gateNumber}.
             </div>
           </div>
@@ -806,45 +806,45 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
       </div>
 
       {/* STAGE 4: Final Mile Leg */}
-      <div className="rounded-[24px] bg-white/95 backdrop-blur-xs border border-[#E2E4DC] p-4 sm:p-5 shadow-xs space-y-3.5">
-        <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#E2E4DC]">
+      <div className="rounded-[24px] bg-white/95 dark:bg-[#0D1813]/90 backdrop-blur-xs border border-[#E2E4DC] dark:border-white/10 p-4 sm:p-5 shadow-xs space-y-3.5">
+        <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#E2E4DC] dark:border-white/10">
           <div className="flex items-center gap-2.5">
-            <span className="px-2.5 py-1 rounded-lg bg-[#143428] text-white font-mono font-extrabold text-xs">
+            <span className="px-2.5 py-1 rounded-lg bg-[#143428] dark:bg-emerald-500 text-white dark:text-[#061C12] font-mono font-extrabold text-xs">
               04
             </span>
             <div>
-              <span className="text-[10px] font-bold text-[#6B7267] uppercase tracking-wider block">
+              <span className="text-[10px] font-bold text-[#6B7267] dark:text-[#88988C] uppercase tracking-wider block">
                 Final Leg
               </span>
-              <h3 className="font-black text-base text-[#17201B]">
+              <h3 className="font-black text-base text-[#17201B] dark:text-white">
                 Reach {plan.destination.name.split(',')[0]}
               </h3>
             </div>
           </div>
 
-          <span className="px-3 py-1 rounded-full bg-[#F8F9F5] border border-[#E2E4DC] text-[#143428] text-xs font-bold shrink-0">
+          <span className="px-3 py-1 rounded-full bg-[#F8F9F5] dark:bg-white/10 border border-[#E2E4DC] dark:border-white/10 text-[#143428] dark:text-[#5ee9b5] text-xs font-bold shrink-0">
             {plan.lastMile.distanceKm} km
           </span>
         </div>
 
         {/* Mode Selector for Last Mile */}
         <div className="space-y-1.5">
-          <div className="text-[11px] font-black text-[#53584E]">Choose Last-Mile Ride Mode:</div>
+          <div className="text-[11px] font-black text-[#53584E] dark:text-[#A7B2A8]">Choose Last-Mile Ride Mode:</div>
           <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
               onClick={() => handleLmChange('cab')}
               className={`chip-tactile h-[68px] flex flex-col justify-between p-2.5 rounded-xl border text-left cursor-pointer ${
                 lmMode === 'cab'
-                  ? 'bg-[#143428] text-white border-[#143428] shadow-xs'
-                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40 hover:bg-white'
+                  ? 'bg-[#143428] dark:bg-[#1E4333] text-white dark:text-[#5ee9b5] border-[#143428] dark:border-[#38DF92] shadow-xs'
+                  : 'bg-[#F8F9F5] dark:bg-white/5 text-[#17201B] dark:text-white border-[#E2E4DC] dark:border-white/10 hover:border-[#143428]/40 hover:bg-white dark:hover:bg-white/10'
               }`}
             >
               <div className="flex items-center justify-between text-xs font-extrabold">
                 <span className="flex items-center gap-1">🚕 Cab</span>
                 <span>₹{lmOptions.cab}</span>
               </div>
-              <div className={`text-[10px] mt-0.5 truncate ${lmMode === 'cab' ? 'text-emerald-200' : 'text-[#6B7267]'}`}>
+              <div className={`text-[10px] mt-0.5 truncate ${lmMode === 'cab' ? 'text-emerald-200 dark:text-[#5ee9b5]' : 'text-[#6B7267] dark:text-[#9AA59D]'}`}>
                 Uber Go / Ola
               </div>
             </button>
@@ -854,15 +854,15 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
               onClick={() => handleLmChange('auto')}
               className={`chip-tactile h-[68px] flex flex-col justify-between p-2.5 rounded-xl border text-left cursor-pointer ${
                 lmMode === 'auto'
-                  ? 'bg-[#143428] text-white border-[#143428] shadow-xs'
-                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40 hover:bg-white'
+                  ? 'bg-[#143428] dark:bg-[#1E4333] text-white dark:text-[#5ee9b5] border-[#143428] dark:border-[#38DF92] shadow-xs'
+                  : 'bg-[#F8F9F5] dark:bg-white/5 text-[#17201B] dark:text-white border-[#E2E4DC] dark:border-white/10 hover:border-[#143428]/40 hover:bg-white dark:hover:bg-white/10'
               }`}
             >
               <div className="flex items-center justify-between text-xs font-extrabold">
                 <span className="flex items-center gap-1">🛺 Auto</span>
                 <span>₹{lmOptions.auto}</span>
               </div>
-              <div className={`text-[10px] mt-0.5 truncate ${lmMode === 'auto' ? 'text-emerald-200' : 'text-[#6B7267]'}`}>
+              <div className={`text-[10px] mt-0.5 truncate ${lmMode === 'auto' ? 'text-emerald-200 dark:text-[#5ee9b5]' : 'text-[#6B7267] dark:text-[#9AA59D]'}`}>
                 Uber/Rapido
               </div>
             </button>
@@ -872,15 +872,15 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
               onClick={() => handleLmChange('walk')}
               className={`chip-tactile h-[68px] flex flex-col justify-between p-2.5 rounded-xl border text-left cursor-pointer ${
                 lmMode === 'walk'
-                  ? 'bg-[#143428] text-white border-[#143428] shadow-xs'
-                  : 'bg-[#F8F9F5] text-[#17201B] border-[#E2E4DC] hover:border-[#143428]/40 hover:bg-white'
+                  ? 'bg-[#143428] dark:bg-[#1E4333] text-white dark:text-[#5ee9b5] border-[#143428] dark:border-[#38DF92] shadow-xs'
+                  : 'bg-[#F8F9F5] dark:bg-white/5 text-[#17201B] dark:text-white border-[#E2E4DC] dark:border-white/10 hover:border-[#143428]/40 hover:bg-white dark:hover:bg-white/10'
               }`}
             >
               <div className="flex items-center justify-between text-xs font-extrabold">
                 <span className="flex items-center gap-1">🚶 Walk</span>
                 <span>Free</span>
               </div>
-              <div className={`text-[10px] mt-0.5 truncate ${lmMode === 'walk' ? 'text-emerald-200' : 'text-[#6B7267]'}`}>
+              <div className={`text-[10px] mt-0.5 truncate ${lmMode === 'walk' ? 'text-emerald-200 dark:text-[#5ee9b5]' : 'text-[#6B7267] dark:text-[#9AA59D]'}`}>
                 ~{Math.round(plan.lastMile.distanceKm * 12)}m walk
               </div>
             </button>
@@ -911,14 +911,14 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
           </div>
         )}
 
-        <p className="text-xs text-[#53584E] leading-relaxed">
+        <p className="text-xs text-[#53584E] dark:text-[#A7B2A8] leading-relaxed">
           {plan.lastMile.exactInstructions}
         </p>
 
         {/* Zero-speaking driver phrase */}
-        <div className="pt-2 border-t border-[#F0F2EB] space-y-2">
-          <div className="text-xs font-bold text-[#17201B] flex items-center gap-1.5">
-            <MessageSquareCode className="w-3.5 h-3.5 text-[#143428]" />
+        <div className="pt-2 border-t border-[#F0F2EB] dark:border-white/10 space-y-2">
+          <div className="text-xs font-bold text-[#17201B] dark:text-white flex items-center gap-1.5">
+            <MessageSquareCode className="w-3.5 h-3.5 text-[#143428] dark:text-[#5ee9b5]" />
             <span>Driver Phrase (Tap to copy):</span>
           </div>
           <button
@@ -926,13 +926,13 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
             onClick={() => {
               navigator.clipboard.writeText(`भैया, ${plan.destination.name.split(',')[0]} ड्रॉप पॉइंट पे उतार देना।`);
             }}
-            className="card-interactive w-full p-3 rounded-xl bg-[#F8F9F5] hover:bg-[#EAECE4] border border-[#E2E4DC] text-left group cursor-pointer"
+            className="card-interactive w-full p-3 rounded-xl bg-[#F8F9F5] dark:bg-white/5 hover:bg-[#EAECE4] dark:hover:bg-white/10 border border-[#E2E4DC] dark:border-white/10 text-left group cursor-pointer"
           >
-            <div className="text-xs font-bold text-[#17201B] flex items-center justify-between">
+            <div className="text-xs font-bold text-[#17201B] dark:text-white flex items-center justify-between">
               <span>&quot;Bhaiya, {plan.destination.name.split(',')[0]} drop point pe utaar dena.&quot;</span>
-              <Copy className="w-3.5 h-3.5 text-[#8E9487] group-hover:text-[#143428] group-hover:scale-110 transition-transform" />
+              <Copy className="w-3.5 h-3.5 text-[#8E9487] dark:text-[#9AA59D] group-hover:text-[#143428] dark:group-hover:text-[#5ee9b5] group-hover:scale-110 transition-transform" />
             </div>
-            <div className="text-[11px] text-[#6B7267] mt-0.5">
+            <div className="text-[11px] text-[#6B7267] dark:text-[#9AA59D] mt-0.5">
               Brother, please drop at the entrance.
             </div>
           </button>
@@ -944,7 +944,7 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
         <button
           type="button"
           onClick={onChangeDestination}
-          className="btn-tactile w-full p-4 rounded-2xl bg-white border border-[#D5D8CD] text-[#143428] font-black text-sm text-center hover:bg-[#F8F9F5] shadow-xs cursor-pointer"
+          className="btn-tactile w-full p-4 rounded-2xl bg-white dark:bg-white/10 border border-[#D5D8CD] dark:border-white/15 text-[#143428] dark:text-[#5ee9b5] font-black text-sm text-center hover:bg-[#F8F9F5] dark:hover:bg-white/15 shadow-xs cursor-pointer"
         >
           Plan Another Route
         </button>

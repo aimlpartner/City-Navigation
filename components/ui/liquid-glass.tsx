@@ -169,13 +169,7 @@ export function LiquidGlass({
       ) : null}
       {/* Liquid glass specular gloss overlay & bevel edge highlights */}
       <div
-        className="pointer-events-none absolute inset-0 rounded-[inherit] z-0"
-        style={{
-          boxShadow:
-            "inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.98), inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.08), inset 1px 1px 2.5px 0 rgba(60, 220, 180, 0.35), inset -1px -1px 2.5px 0 rgba(240, 120, 180, 0.30)",
-          background:
-            "linear-gradient(180deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0.02) 40%, rgba(255, 255, 255, 0.10) 100%)",
-        }}
+        className="pointer-events-none absolute inset-0 rounded-[inherit] z-0 shadow-[inset_0_1px_1px_0_rgba(255,255,255,0.35),inset_0_-1px_1.5px_0_rgba(0,0,0,0.06)] dark:shadow-[inset_0_1px_1px_0_rgba(255,255,255,0.08),inset_0_-1px_1.5px_0_rgba(0,0,0,0.4)] bg-gradient-to-b from-white/15 via-transparent to-white/5 dark:from-white/[0.03] dark:via-transparent dark:to-transparent"
       />
       {contentClassName ? (
         <div className={cn("relative z-10", contentClassName)}>{children}</div>

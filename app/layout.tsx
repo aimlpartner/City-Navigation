@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { PwaInstallPrompt } from '@/components/PwaInstallPrompt';
+import { ThemeProvider } from '@/components/ThemeProvider';
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -10,7 +11,10 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const viewport: Viewport = {
-  themeColor: '#F4F5F0',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#F4F5F0' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+  ],
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -59,19 +63,25 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={plusJakartaSans.className}>
+    <html lang="en" className={plusJakartaSans.className} suppressHydrationWarning>
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="MetroNav" />
         <meta name="apple-touch-fullscreen" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#F4F5F0" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
-      <body className="bg-[#F4F5F0] text-[#17201B] antialiased overscroll-none" suppressHydrationWarning>
-        <PwaInstallPrompt />
-        {children}
+      <body className="bg-[#F4F5F0] dark:bg-[#000000] text-[#17201B] dark:text-[#F2F5F3] antialiased overscroll-none" suppressHydrationWarning>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange={false}
+        >
+          <PwaInstallPrompt />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

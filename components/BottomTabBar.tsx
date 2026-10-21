@@ -56,7 +56,7 @@ export function BottomTabBar({ activeTab, onTabChange, hasActiveRoute = false }:
       return (
         <svg
           viewBox="0 0 24 24"
-          className="w-4 h-4 text-[#6B7267] transition-transform duration-200"
+          className="w-4 h-4 text-[#6B7267] dark:text-[#88988C] transition-transform duration-200"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.75"
@@ -93,7 +93,7 @@ export function BottomTabBar({ activeTab, onTabChange, hasActiveRoute = false }:
       return (
         <svg
           viewBox="0 0 24 24"
-          className="w-4 h-4 text-[#6B7267] transition-transform duration-200"
+          className="w-4 h-4 text-[#6B7267] dark:text-[#88988C] transition-transform duration-200"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.75"
@@ -130,7 +130,7 @@ export function BottomTabBar({ activeTab, onTabChange, hasActiveRoute = false }:
       return (
         <svg
           viewBox="0 0 24 24"
-          className="w-4 h-4 text-[#6B7267] transition-transform duration-200"
+          className="w-4 h-4 text-[#6B7267] dark:text-[#88988C] transition-transform duration-200"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.75"
@@ -158,12 +158,9 @@ export function BottomTabBar({ activeTab, onTabChange, hasActiveRoute = false }:
         aberration={14}
         frost={2.8}
         tint={0.06}
-        className="pointer-events-auto rounded-full p-1.5 relative border border-white/85 shadow-[0_20px_50px_-8px_rgba(20,52,40,0.22)] ring-1 ring-black/5"
+        className="pointer-events-auto rounded-full p-1.5 relative border border-white/85 dark:border-white/15 shadow-[0_20px_50px_-8px_rgba(20,52,40,0.22)] dark:shadow-[0_20px_50px_-8px_rgba(0,0,0,0.8)] ring-1 ring-black/5 dark:ring-white/10"
         contentClassName="flex items-center gap-1"
       >
-        {/* Apple Liquid Glass Specular Edge Highlight */}
-        <div className="absolute inset-x-4 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent pointer-events-none rounded-full" />
-
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
 
@@ -179,7 +176,7 @@ export function BottomTabBar({ activeTab, onTabChange, hasActiveRoute = false }:
               className={`relative z-10 flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-full cursor-pointer select-none transition-colors duration-150 ${
                 isActive
                   ? 'text-white'
-                  : 'text-[#53584E] hover:text-[#17201B]'
+                  : 'text-[#53584E] dark:text-[#A7B2A8] hover:text-[#17201B] dark:hover:text-white'
               }`}
             >
               {/* Motion Spring Animated Pill Background with Liquid Bevel */}
@@ -205,7 +202,7 @@ export function BottomTabBar({ activeTab, onTabChange, hasActiveRoute = false }:
 
                 <span
                   className={`text-xs font-sans tracking-tight transition-colors ${
-                    isActive ? 'font-bold text-white' : 'font-semibold text-[#53584E]'
+                    isActive ? 'font-bold text-white' : 'font-semibold text-[#53584E] dark:text-[#A7B2A8]'
                   }`}
                 >
                   {tab.label}

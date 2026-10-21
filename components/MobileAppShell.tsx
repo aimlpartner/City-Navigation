@@ -381,7 +381,7 @@ export function MobileAppShell({
   };
 
   return (
-    <div className="lg:hidden fixed inset-0 w-full h-full bg-[#F4F5F0] flex flex-col text-[#17201B] overflow-hidden select-none z-30">
+    <div className="lg:hidden fixed inset-0 w-full h-full bg-[#F4F5F0] dark:bg-[#000000] flex flex-col text-[#17201B] dark:text-[#F2F5F3] overflow-hidden select-none z-30 transition-colors duration-400">
       {/* Moving Water from Metal Shader (Drawn 30 FPS, Paused in Low Power / Reduce Motion) */}
       <LivingTransitCanvas />
 

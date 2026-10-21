@@ -22,6 +22,7 @@ import { ActiveTicketFloatingPill } from '@/components/ActiveTicketFloatingPill'
 import { triggerPwaInstall } from '@/components/PwaInstallPrompt';
 import { LiquidGlass } from '@/components/ui/liquid-glass';
 import { useIsAppInstalled } from '@/hooks/useIsAppInstalled';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import dynamic from 'next/dynamic';
 import {
   TrainFront,
@@ -879,53 +880,56 @@ export default function HomePage() {
       />
 
       {/* Desktop Dashboard Experience (>=1024px) */}
-      <div className="hidden lg:block min-h-screen bg-[#F4F5F0] text-[#17201B] antialiased selection:bg-[#143428] selection:text-white pb-20 relative overflow-x-hidden">
+      <div className="hidden lg:block min-h-screen bg-[#F4F5F0] dark:bg-[#000000] text-[#17201B] dark:text-[#F2F5F3] antialiased selection:bg-[#143428] selection:text-white pb-20 relative overflow-x-hidden transition-colors duration-300">
         {/* Moving Water from Metal Shader (Drawn 30 FPS, Paused in Low Power / Reduce Motion) */}
         <LivingTransitCanvas />
         {/* Top Application Header with Apple iOS Liquid Glass Specular Reflection */}
-        <header className="sticky top-0 z-40 ios-liquid-glass border-b border-white/70 shadow-[0_8px_32px_-4px_rgba(20,52,40,0.08)] relative">
+        <header className="sticky top-0 z-40 ios-liquid-glass border-b border-white/70 dark:border-white/10 shadow-[0_8px_32px_-4px_rgba(20,52,40,0.08)] relative">
           {/* Apple Specular Top Rim */}
           <div className="absolute inset-x-0 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent pointer-events-none" />
 
           <div className="w-full max-w-[1720px] mx-auto px-3 sm:px-6 lg:px-10 xl:px-12 h-16 flex items-center justify-between relative z-10">
             <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#143428] border border-emerald-400/30 text-white flex items-center justify-center shadow-xs shrink-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#143428] dark:bg-[#0E251D] border border-emerald-400/30 text-white flex items-center justify-center shadow-xs shrink-0">
                 <TrainFront className="w-5 h-5 text-[#5ee9b5]" strokeWidth={1.85} />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-extrabold text-lg sm:text-xl tracking-tight text-[#17201B] font-sans leading-none shrink-0">
+                  <span className="font-extrabold text-lg sm:text-xl tracking-tight text-[#17201B] dark:text-white font-sans leading-none shrink-0">
                     MetroNav
                   </span>
-                  <span className="hidden sm:inline-flex whitespace-nowrap px-2.5 py-0.5 rounded-full bg-[#143428]/10 border border-[#143428]/20 text-[#143428] text-[10px] font-bold tracking-wide uppercase shrink-0 leading-tight">
+                  <span className="hidden sm:inline-flex whitespace-nowrap px-2.5 py-0.5 rounded-full bg-[#143428]/10 dark:bg-emerald-500/15 border border-[#143428]/20 dark:border-emerald-400/30 text-[#143428] dark:text-emerald-300 text-[10px] font-bold tracking-wide uppercase shrink-0 leading-tight">
                     Delhi & Gurugram
                   </span>
                 </div>
-                <p className="text-[11px] text-[#6B7267] font-medium hidden sm:block truncate mt-0.5">
+                <p className="text-[11px] text-[#6B7267] dark:text-[#9BA8A0] font-medium hidden sm:block truncate mt-0.5">
                   Quiet, confident transit navigation • exact station exit gates & feeder buses
                 </p>
-                <p className="text-[10px] text-[#6B7267] font-bold uppercase tracking-wider sm:hidden leading-none mt-1 truncate">
+                <p className="text-[10px] text-[#6B7267] dark:text-[#9BA8A0] font-bold uppercase tracking-wider sm:hidden leading-none mt-1 truncate">
                   Delhi & Gurugram
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2">
+              {/* Theme Toggle Button */}
+              <ThemeToggle variant="pill" showLabel />
+
               {/* Download / Install App Button - hidden when app is installed */}
               {!isAppInstalled && (
                 <button
                   onClick={triggerPwaInstall}
-                  className="ios-liquid-pill flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-[#143428] text-xs font-bold transition shadow-xs shrink-0 cursor-pointer group border border-white/60"
+                  className="ios-liquid-pill flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-[#143428] dark:text-emerald-300 text-xs font-bold transition shadow-xs shrink-0 cursor-pointer group border border-white/60 dark:border-white/10"
                   title="Download & Install App (PWA)"
                 >
-                  <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#143428] group-hover:-translate-y-0.5 transition-transform" strokeWidth={2} />
+                  <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#143428] dark:text-emerald-300 group-hover:-translate-y-0.5 transition-transform" strokeWidth={2} />
                   <span>Download App</span>
                 </button>
               )}
 
               <button
                 onClick={() => setIsTransitRadarOpen(true)}
-                className="ios-liquid-pill flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-[#143428] to-[#1A3E31] text-white text-xs font-bold transition shadow-xs shrink-0 cursor-pointer group border border-white/20"
+                className="ios-liquid-pill flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-[#143428] to-[#1A3E31] dark:from-emerald-950 dark:to-[#143428] text-white text-xs font-bold transition shadow-xs shrink-0 cursor-pointer group border border-white/20"
               >
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -936,10 +940,10 @@ export default function HomePage() {
                 <span className="xs:hidden">Radar</span>
               </button>
 
-              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl ios-liquid-pill text-[#17201B] text-xs font-semibold">
-                <Headphones className="w-3.5 h-3.5 text-[#143428]" strokeWidth={1.75} />
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl ios-liquid-pill text-[#17201B] dark:text-emerald-200 text-xs font-semibold">
+                <Headphones className="w-3.5 h-3.5 text-[#143428] dark:text-emerald-400" strokeWidth={1.75} />
                 <span>Quiet Protocol</span>
-                <BadgeCheck className="w-3.5 h-3.5 text-[#143428]" strokeWidth={2} />
+                <BadgeCheck className="w-3.5 h-3.5 text-[#143428] dark:text-emerald-400" strokeWidth={2} />
               </div>
             </div>
           </div>

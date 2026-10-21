@@ -1,10 +1,19 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { useTheme } from 'next-themes';
 
 export function LivingTransitCanvas() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted ? resolvedTheme === 'dark' : false;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -53,6 +62,7 @@ export function LivingTransitCanvas() {
       uniform vec2 u_resolution;
       uniform float u_time;
       uniform vec2 u_mouse;
+      uniform float u_is_dark;
 
       #define TAU 6.28318530718
       #define ITERATIONS 4
@@ -100,13 +110,16 @@ export function LivingTransitCanvas() {
 
         // Subtle dancing caustic light network
         float causticLine = smoothstep(0.72, 1.04, c);
-        vec3 causticHighlight = vec3(0.96, 0.98, 0.97);
+        vec3 lightCaustic = vec3(0.96, 0.98, 0.97);
+        vec3 darkCaustic = vec3(0.08, 0.62, 0.38); // faint deep emerald bioluminescent ripple
+        vec3 causticHighlight = mix(lightCaustic, darkCaustic, u_is_dark);
 
         // Gentle vignette for smooth edge falloff
         vec2 d = uv * (1.0 - uv);
         float vignette = clamp(d.x * d.y * 22.0, 0.0, 1.0);
 
-        float alpha = clamp((causticLine * 0.12 + specular * 0.18) * vignette, 0.0, 0.22);
+        float maxAlpha = mix(0.18, 0.05, u_is_dark);
+        float alpha = clamp((causticLine * 0.12 + specular * 0.18) * vignette, 0.0, maxAlpha);
 
         gl_FragColor = vec4(causticHighlight, alpha);
       }
@@ -116,6 +129,7 @@ export function LivingTransitCanvas() {
       u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
       u_time: { value: 0.0 },
       u_mouse: { value: new THREE.Vector2(0.5, 0.5) },
+      u_is_dark: { value: 0.0 },
     };
 
     const material = new THREE.ShaderMaterial({
@@ -270,6 +284,10 @@ export function LivingTransitCanvas() {
       currentMouseX += (targetMouseX - currentMouseX) * 0.08;
       currentMouseY += (targetMouseY - currentMouseY) * 0.08;
 
+      // Update dark mode shader state
+      const isHtmlDark = document.documentElement.classList.contains('dark');
+      uniforms.u_is_dark.value = isHtmlDark ? 1.0 : 0.0;
+
       uniforms.u_time.value = accumulatedTime;
       uniforms.u_mouse.value.set(currentMouseX, currentMouseY);
 
@@ -310,20 +328,44 @@ export function LivingTransitCanvas() {
 
   return (
     <div
-      className="fixed inset-0 pointer-events-none z-0 overflow-hidden"
+      className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-[#F4F5F0] dark:bg-[#000000] transition-colors duration-400"
       aria-hidden="true"
     >
-      {/* Abstract Luminous Fluid Transit Wallpaper */}
+      {/* Light Abstract Luminous Fluid Transit Wallpaper - NEVER displayed in dark mode */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-85 transition-opacity duration-700"
-        style={{ backgroundImage: "url('/abstract-bg.jpg')" }}
+        className="wallpaper-light absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-500 pointer-events-none"
+        style={{
+          backgroundImage: "url('/abstract-bg.jpg')",
+          opacity: isDark ? 0 : 0.85,
+          display: isDark ? 'none' : 'block',
+        }}
       />
 
-      {/* Subtle ambient gradient overlay for card readability while letting waves shine through */}
-      <div className="absolute inset-0 bg-radial-[circle_at_center] from-transparent via-[#F4F5F0]/10 to-[#F4F5F0]/35" />
+      {/* Dark Luxury Obsidian & Emerald Transit Wallpaper - ONLY displayed in dark mode */}
+      <div
+        className="wallpaper-dark absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-500 pointer-events-none"
+        style={{
+          backgroundImage: "url('/abstract-bg-dark.jpg')",
+          opacity: isDark ? 0.35 : 0,
+          display: isDark ? 'block' : 'none',
+        }}
+      />
 
-      {/* Three.js Caustic Water Ripple Shimmer Layer */}
-      <div ref={containerRef} className="absolute inset-0" />
+      {/* Ambient gradient overlay: rich obsidian vignette in dark mode, light cream in light mode */}
+      <div
+        className={`absolute inset-0 pointer-events-none transition-all duration-500 ${
+          isDark
+            ? 'bg-radial-[circle_at_center] from-black/30 via-black/75 to-[#000000]'
+            : 'bg-radial-[circle_at_center] from-transparent via-[#F4F5F0]/10 to-[#F4F5F0]/35'
+        }`}
+      />
+
+      {/* Three.js Caustic Water Ripple Shimmer Layer - light mode only */}
+      <div
+        ref={containerRef}
+        className="absolute inset-0 pointer-events-none"
+        style={{ display: isDark ? 'none' : 'block' }}
+      />
     </div>
   );
 }
