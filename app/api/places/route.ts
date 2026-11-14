@@ -306,34 +306,39 @@ export async function GET(req: NextRequest) {
     const tokens = queryLower.split(/\s+/).filter(Boolean);
 
     // 1. Curated Local Database matches (0ms, includes verified Metro Exit Gate notes)
-    const matchedCurated: PlaceSuggestion[] = FAMOUS_DESTINATIONS.filter((d) => {
-      const target = `${d.name} ${d.city} ${d.category} ${METRO_STATIONS[d.nearestStationId]?.name || ""}`.toLowerCase();
-      return tokens.every((token) => target.includes(token)) || target.includes(queryLower);
+    const matchedCurated = FAMOUS_DESTINATIONS.filter((d) => {
+      const nameLower = d.name.toLowerCase();
+      const target = `${nameLower} ${d.city.toLowerCase()}`;
+      return target.includes(queryLower) || tokens.every((token) => target.includes(token));
     })
       .slice(0, 4)
       .map((d) => {
         const station = METRO_STATIONS[d.nearestStationId];
+        const strongNameMatch = d.name.toLowerCase().includes(queryLower);
         return {
-          id: `curated-${d.id}`,
-          curatedId: d.id,
-          name: d.name,
-          city: d.city,
-          areaHint: d.city,
-          formattedAddress: `${d.name}, ${d.city} (Near ${station?.name || "Metro"})`,
-          category: d.category === "Mall" ? "Shopping Mall" : d.category,
-          lat: d.lat,
-          lng: d.lng,
-          nearestStation: {
-            id: d.nearestStationId,
-            name: station?.name || "Metro Station",
-            line: station?.line || "Yellow",
-            lineColor: station?.lineColor || "#eab308",
-            distanceKm: d.distanceFromStationKm
-          },
-          bestExitGate: d.bestExitGate,
-          isCurated: true,
-          curatedData: d,
-          needsResolve: false
+          suggestion: {
+            id: `curated-${d.id}`,
+            curatedId: d.id,
+            name: d.name,
+            city: d.city,
+            areaHint: d.city,
+            formattedAddress: `${d.name}, ${d.city} (Near ${station?.name || "Metro"})`,
+            category: d.category === "Mall" ? "Shopping Mall" : d.category,
+            lat: d.lat,
+            lng: d.lng,
+            nearestStation: {
+              id: d.nearestStationId,
+              name: station?.name || "Metro Station",
+              line: station?.line || "Yellow",
+              lineColor: station?.lineColor || "#eab308",
+              distanceKm: d.distanceFromStationKm
+            },
+            bestExitGate: d.bestExitGate,
+            isCurated: true,
+            curatedData: d,
+            needsResolve: false
+          } as PlaceSuggestion,
+          strongNameMatch
         };
       });
 
@@ -444,25 +449,29 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 3. Merge Curated & Google results cleanly (prioritize Google exact hits when query doesn't tightly match curated, or interleave without duplicates)
+    // 3. Merge Curated & Google results cleanly:
+    // Direct curated name matches go first, then all live Google Maps suggestions, then partial curated fallback matches
     const combined: PlaceSuggestion[] = [];
     const seenKeys = new Set<string>();
     const normalizeKey = (name: string, city: string) =>
       `${name.toLowerCase().replace(/[^a-z0-9]/g, "")}-${city.toLowerCase()}`;
 
-    for (const item of matchedCurated) {
+    const pushUnique = (item: PlaceSuggestion) => {
       const k = normalizeKey(item.name, item.city);
       if (!seenKeys.has(k)) {
         seenKeys.add(k);
         combined.push(item);
       }
+    };
+
+    for (const c of matchedCurated) {
+      if (c.strongNameMatch) pushUnique(c.suggestion);
     }
     for (const item of googleSuggestions) {
-      const k = normalizeKey(item.name, item.city);
-      if (!seenKeys.has(k)) {
-        seenKeys.add(k);
-        combined.push(item);
-      }
+      pushUnique(item);
+    }
+    for (const c of matchedCurated) {
+      if (!c.strongNameMatch) pushUnique(c.suggestion);
     }
 
     if (combined.length > 0) {
