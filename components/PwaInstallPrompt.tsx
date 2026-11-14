@@ -192,7 +192,7 @@ export function PwaInstallPrompt() {
     <>
       {/* Offline Toast Banner */}
       {isOffline && (
-        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#102a20]/95 backdrop-blur-md border border-emerald-500/40 text-emerald-300 text-xs font-semibold shadow-lg animate-bounce">
+        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#102a20] border border-emerald-500/40 text-emerald-300 text-xs font-semibold shadow-lg animate-bounce">
           <WifiOff className="w-3.5 h-3.5 text-emerald-400" />
           <span>Underground / Offline • Cached metro maps ready</span>
         </div>
@@ -208,7 +208,7 @@ export function PwaInstallPrompt() {
 
       {/* Floating Bottom Install Banner for Mobile/Desktop */}
       {!isInstalled && showBanner && (
-        <div className="fixed bottom-[calc(max(env(safe-area-inset-bottom,0px),12px)+84px)] lg:bottom-6 left-3 right-3 lg:left-auto lg:right-6 max-w-md lg:max-w-sm mx-auto lg:mx-0 z-40 bg-[#143428]/95 backdrop-blur-xl border border-emerald-400/30 rounded-[20px] p-3 sm:p-4 text-white shadow-2xl transition-all duration-300">
+        <div className="fixed bottom-[calc(max(env(safe-area-inset-bottom,0px),12px)+84px)] lg:bottom-6 left-3 right-3 lg:left-auto lg:right-6 max-w-md lg:max-w-sm mx-auto lg:mx-0 z-40 bg-[#143428] border border-emerald-400/30 rounded-[20px] p-3 sm:p-4 text-white shadow-2xl transition-all duration-300">
           <div className="flex items-start gap-2.5 sm:gap-3">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-[10px] bg-[#102a20] border border-emerald-400/30 flex items-center justify-center shrink-0 p-1.5 shadow-inner">
               <Image
@@ -262,7 +262,7 @@ export function PwaInstallPrompt() {
       {/* Universal Download & Install Instructions Modal */}
       {showUniversalModal && (
         <div
-          className="fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-3 sm:p-4 pb-[max(env(safe-area-inset-bottom,0px),12px)] sm:pb-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[100] bg-black/75 flex items-end sm:items-center justify-center p-3 sm:p-4 pb-[max(env(safe-area-inset-bottom,0px),12px)] sm:pb-4 animate-in fade-in duration-200"
           onClick={() => setShowUniversalModal(false)}
         >
           <div

@@ -141,7 +141,7 @@ export function GuideTabScreen({
       </div>
 
       {/* Introvert's Zero-Asking Checklist */}
-      <div className="rounded-2xl bg-white/95 dark:bg-[#111A15]/90 backdrop-blur-xs border border-[#E2E4DC] dark:border-white/10 p-5 shadow-xs space-y-3">
+      <div className="rounded-2xl bg-white dark:bg-[#111A15] border border-[#E2E4DC] dark:border-white/10 p-5 shadow-xs space-y-3">
         <div className="flex items-center gap-2.5 text-[#17201B] dark:text-[#F3F5EE]">
           <div className="w-7 h-7 rounded-lg bg-[#143428]/10 dark:bg-emerald-500/20 text-[#143428] dark:text-emerald-400 flex items-center justify-center">
             <Headphones className="w-4 h-4" />
@@ -163,7 +163,7 @@ export function GuideTabScreen({
 
       {/* Gemini AI Transit Grounding with Google Maps Links */}
       {aiGuide && (
-        <div className="rounded-2xl bg-white/95 dark:bg-[#111A15]/90 backdrop-blur-xs border border-[#E2E4DC] dark:border-white/10 p-5 shadow-xs space-y-3">
+        <div className="rounded-2xl bg-white dark:bg-[#111A15] border border-[#E2E4DC] dark:border-white/10 p-5 shadow-xs space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-[#143428] flex items-center justify-center text-emerald-300 shrink-0">

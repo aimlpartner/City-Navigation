@@ -10,8 +10,6 @@ import {
   useMapsLibrary
 } from '@vis.gl/react-google-maps';
 import {
-  METRO_STATIONS,
-  MetroStation,
   MultiModalTripPlan
 } from '@/lib/delhi-ncr-transit';
 import { decodeGooglePolyline } from '@/lib/utils';
@@ -29,34 +27,19 @@ import {
   Layers,
   Sparkles,
   Compass,
-  CheckCircle2
+  CheckCircle2,
+  Activity,
+  MapPin
 } from 'lucide-react';
 
 interface MapComponentProps {
   plan: MultiModalTripPlan | null;
   userCoords: { lat: number; lng: number } | null;
   onSelectStation?: (name: string) => void;
+  onPickMapLocation?: (role: 'origin' | 'destination', name: string, coords: { lat: number; lng: number }) => void;
 }
 
-// Key corridor stations to display as subtle network nodes
-const KEY_CORRIDOR_STATIONS: MetroStation[] = [
-  METRO_STATIONS['cyber-city'],
-  METRO_STATIONS['moulsari-avenue'],
-  METRO_STATIONS['phase-3'],
-  METRO_STATIONS['sikanderpur-yellow'],
-  METRO_STATIONS['mg-road'],
-  METRO_STATIONS['iffco-chowk'],
-  METRO_STATIONS['millennium-city-centre'],
-  METRO_STATIONS['guru-dronacharya'],
-  METRO_STATIONS['chhatarpur'],
-  METRO_STATIONS['qutab-minar'],
-  METRO_STATIONS['saket'],
-  METRO_STATIONS['hauz-khas'],
-  METRO_STATIONS['central-secretariat'],
-  METRO_STATIONS['rajiv-chowk']
-].filter(Boolean);
-
-// Polyline component rendering double-cased transit tracks & walking paths
+// Polyline component rendering double-cased transit tracks & real Google road paths
 function RoutePolylines({ plan }: { plan: MultiModalTripPlan }) {
   const map = useMap();
   const mapsLib = useMapsLibrary('maps');
@@ -65,194 +48,260 @@ function RoutePolylines({ plan }: { plan: MultiModalTripPlan }) {
     if (!map || !mapsLib || !plan) return;
 
     const polylines: google.maps.Polyline[] = [];
+    const bounds = new google.maps.LatLngBounds();
 
-    // 1. FIRST-MILE PATH: Origin -> Boarding Metro Station (use real Google road polyline if available)
+    const extendBoundsWithPath = (path: { lat: number; lng: number }[]) => {
+      if (path.length === 0) return;
+      const step = Math.max(1, Math.floor(path.length / 25));
+      for (let i = 0; i < path.length; i += step) {
+        bounds.extend(path[i]);
+      }
+      bounds.extend(path[path.length - 1]);
+    };
+
+    bounds.extend({ lat: plan.origin.lat, lng: plan.origin.lng });
+    bounds.extend({ lat: plan.destination.lat, lng: plan.destination.lng });
+
+    const isDirectRoadMode =
+      plan.travelMode === 'driving' ||
+      plan.travelMode === 'walking' ||
+      (plan.isDirectRoadRecommended && (!plan.metroLeg?.lines || plan.metroLeg.lines.length === 0));
+
+    if (isDirectRoadMode) {
+      const decodedDirect = plan.liveTraffic?.directPolyline
+        ? decodeGooglePolyline(plan.liveTraffic.directPolyline)
+        : [];
+      const directCoords =
+        decodedDirect.length > 0
+          ? decodedDirect
+          : [
+              { lat: plan.origin.lat, lng: plan.origin.lng },
+              { lat: plan.destination.lat, lng: plan.destination.lng }
+            ];
+
+      const isWalk = plan.travelMode === 'walking';
+      const casing = new mapsLib.Polyline({
+        path: directCoords,
+        geodesic: true,
+        strokeColor: '#0F172A',
+        strokeOpacity: 0.75,
+        strokeWeight: isWalk ? 6 : 8,
+        map
+      });
+      polylines.push(casing);
+
+      const mainLine = new mapsLib.Polyline({
+        path: directCoords,
+        geodesic: true,
+        strokeColor: isWalk ? '#143428' : '#2563EB',
+        strokeOpacity: 1.0,
+        strokeWeight: isWalk ? 4 : 5,
+        ...(isWalk
+          ? {
+              icons: [
+                {
+                  icon: {
+                    path: 'M 0,-1 0,1',
+                    strokeOpacity: 1,
+                    scale: 2.5,
+                    strokeColor: '#FFFFFF',
+                    strokeWeight: 3
+                  },
+                  offset: '0',
+                  repeat: '12px'
+                }
+              ]
+            }
+          : {}),
+        map
+      });
+      polylines.push(mainLine);
+      extendBoundsWithPath(directCoords);
+      map.fitBounds(bounds, { top: 90, bottom: 90, left: 60, right: 60 });
+
+      return () => {
+        polylines.forEach(p => p.setMap(null));
+      };
+    }
+
+    // 1. FIRST-MILE PATH: Origin -> Boarding Metro Station
     const decodedFm = plan.liveTraffic?.firstMilePolyline
       ? decodeGooglePolyline(plan.liveTraffic.firstMilePolyline)
       : [];
-    const firstMileCoords = decodedFm.length > 0
-      ? decodedFm
-      : [
-          { lat: plan.origin.lat, lng: plan.origin.lng },
-          { lat: plan.originStation.lat, lng: plan.originStation.lng }
-        ];
+    const firstMileCoords =
+      decodedFm.length > 0
+        ? decodedFm
+        : [
+            { lat: plan.origin.lat, lng: plan.origin.lng },
+            { lat: plan.originStation.lat, lng: plan.originStation.lng }
+          ];
 
-    // Under-layer casing (soft translucent track)
-    const firstMileUnder = new mapsLib.Polyline({
-      path: firstMileCoords,
-      geodesic: true,
-      strokeColor: '#6B7267',
-      strokeOpacity: 0.35,
-      strokeWeight: 6,
-      map: map
-    });
-    polylines.push(firstMileUnder);
+    polylines.push(
+      new mapsLib.Polyline({
+        path: firstMileCoords,
+        geodesic: true,
+        strokeColor: '#6B7267',
+        strokeOpacity: 0.35,
+        strokeWeight: 6,
+        map
+      })
+    );
+    polylines.push(
+      new mapsLib.Polyline({
+        path: firstMileCoords,
+        geodesic: true,
+        strokeColor: '#143428',
+        strokeOpacity: 0.95,
+        strokeWeight: 3.5,
+        icons: [
+          {
+            icon: {
+              path: 'M 0,-1 0,1',
+              strokeOpacity: 1,
+              scale: 2.5,
+              strokeColor: '#143428',
+              strokeWeight: 3
+            },
+            offset: '0',
+            repeat: '12px'
+          }
+        ],
+        map
+      })
+    );
+    extendBoundsWithPath(firstMileCoords);
 
-    // Over-layer dashed walking/auto line
-    const firstMileOver = new mapsLib.Polyline({
-      path: firstMileCoords,
-      geodesic: true,
-      strokeColor: '#143428',
-      strokeOpacity: 0.95,
-      strokeWeight: 3.5,
-      icons: [
-        {
-          icon: {
-            path: 'M 0,-1 0,1',
-            strokeOpacity: 1,
-            scale: 2.5,
-            strokeColor: '#143428',
-            strokeWeight: 3
-          },
-          offset: '0',
-          repeat: '12px'
+    // 2. REAL TRANSIT LEGS (uses Google encoded per-leg polylines when available)
+    const legs = plan.metroLeg?.lines || [];
+    if (legs.length > 0) {
+      legs.forEach((leg, idx) => {
+        const decodedLeg = leg.polyline ? decodeGooglePolyline(leg.polyline) : [];
+        let legCoords = decodedLeg;
+
+        if (legCoords.length === 0) {
+          const fromCoord =
+            typeof leg.fromLat === 'number' && typeof leg.fromLng === 'number'
+              ? { lat: leg.fromLat, lng: leg.fromLng }
+              : idx === 0
+              ? { lat: plan.originStation.lat, lng: plan.originStation.lng }
+              : plan.metroLeg.transferStations?.[idx - 1]
+              ? { lat: plan.metroLeg.transferStations[idx - 1].lat, lng: plan.metroLeg.transferStations[idx - 1].lng }
+              : plan.metroLeg.transferStation
+              ? { lat: plan.metroLeg.transferStation.lat, lng: plan.metroLeg.transferStation.lng }
+              : { lat: plan.originStation.lat, lng: plan.originStation.lng };
+
+          const toCoord =
+            typeof leg.toLat === 'number' && typeof leg.toLng === 'number'
+              ? { lat: leg.toLat, lng: leg.toLng }
+              : idx === legs.length - 1
+              ? { lat: plan.destinationStation.lat, lng: plan.destinationStation.lng }
+              : plan.metroLeg.transferStations?.[idx]
+              ? { lat: plan.metroLeg.transferStations[idx].lat, lng: plan.metroLeg.transferStations[idx].lng }
+              : plan.metroLeg.transferStation
+              ? { lat: plan.metroLeg.transferStation.lat, lng: plan.metroLeg.transferStation.lng }
+              : { lat: plan.destinationStation.lat, lng: plan.destinationStation.lng };
+
+          legCoords = [fromCoord, toCoord];
         }
-      ],
-      map: map
-    });
-    polylines.push(firstMileOver);
 
-    // 2. METRO TRANSIT TRACK: Boarding station -> [Interchange] -> Deboarding station
-    if (plan.metroLeg.requiresTransfer && plan.metroLeg.transferStation) {
-      // Leg 1: Boarding Station -> Interchange Station
-      const leg1Coords = [
-        { lat: plan.originStation.lat, lng: plan.originStation.lng },
-        { lat: plan.metroLeg.transferStation.lat, lng: plan.metroLeg.transferStation.lng }
-      ];
-      // Dark casing
-      const leg1Casing = new mapsLib.Polyline({
-        path: leg1Coords,
-        geodesic: true,
-        strokeColor: '#17201B',
-        strokeOpacity: 0.85,
-        strokeWeight: 7.5,
-        map: map
+        polylines.push(
+          new mapsLib.Polyline({
+            path: legCoords,
+            geodesic: true,
+            strokeColor: '#17201B',
+            strokeOpacity: 0.85,
+            strokeWeight: 7.5,
+            map
+          })
+        );
+        polylines.push(
+          new mapsLib.Polyline({
+            path: legCoords,
+            geodesic: true,
+            strokeColor: leg.lineColor || plan.originStation.lineColor || '#2563EB',
+            strokeOpacity: 1.0,
+            strokeWeight: 4.5,
+            map
+          })
+        );
+        extendBoundsWithPath(legCoords);
       });
-      polylines.push(leg1Casing);
-
-      // Line 1 Colored track
-      const leg1Track = new mapsLib.Polyline({
-        path: leg1Coords,
-        geodesic: true,
-        strokeColor: plan.originStation.lineColor || '#EAB308',
-        strokeOpacity: 1.0,
-        strokeWeight: 4.5,
-        map: map
-      });
-      polylines.push(leg1Track);
-
-      // Leg 2: Interchange Station -> Deboarding Station
-      const leg2Coords = [
-        { lat: plan.metroLeg.transferStation.lat, lng: plan.metroLeg.transferStation.lng },
-        { lat: plan.destinationStation.lat, lng: plan.destinationStation.lng }
-      ];
-      // Dark casing
-      const leg2Casing = new mapsLib.Polyline({
-        path: leg2Coords,
-        geodesic: true,
-        strokeColor: '#17201B',
-        strokeOpacity: 0.85,
-        strokeWeight: 7.5,
-        map: map
-      });
-      polylines.push(leg2Casing);
-
-      // Line 2 Colored track
-      const leg2Track = new mapsLib.Polyline({
-        path: leg2Coords,
-        geodesic: true,
-        strokeColor: plan.destinationStation.lineColor || '#0284C7',
-        strokeOpacity: 1.0,
-        strokeWeight: 4.5,
-        map: map
-      });
-      polylines.push(leg2Track);
-    } else {
-      // Single continuous line
-      const directMetroCoords = [
+    } else if (plan.originStation && plan.destinationStation) {
+      const fallbackCoords = [
         { lat: plan.originStation.lat, lng: plan.originStation.lng },
         { lat: plan.destinationStation.lat, lng: plan.destinationStation.lng }
       ];
-
-      // Dark casing
-      const directCasing = new mapsLib.Polyline({
-        path: directMetroCoords,
-        geodesic: true,
-        strokeColor: '#17201B',
-        strokeOpacity: 0.85,
-        strokeWeight: 7.5,
-        map: map
-      });
-      polylines.push(directCasing);
-
-      // Colored metro track
-      const directTrack = new mapsLib.Polyline({
-        path: directMetroCoords,
-        geodesic: true,
-        strokeColor: plan.originStation.lineColor || '#EAB308',
-        strokeOpacity: 1.0,
-        strokeWeight: 4.5,
-        map: map
-      });
-      polylines.push(directTrack);
+      polylines.push(
+        new mapsLib.Polyline({
+          path: fallbackCoords,
+          geodesic: true,
+          strokeColor: '#17201B',
+          strokeOpacity: 0.85,
+          strokeWeight: 7.5,
+          map
+        })
+      );
+      polylines.push(
+        new mapsLib.Polyline({
+          path: fallbackCoords,
+          geodesic: true,
+          strokeColor: plan.originStation.lineColor || '#EAB308',
+          strokeOpacity: 1.0,
+          strokeWeight: 4.5,
+          map
+        })
+      );
     }
 
-    // 3. LAST-MILE PATH: Deboarding Metro Station Exit Gate -> Final Destination (use real Google road polyline if available)
+    // 3. LAST-MILE PATH: Deboarding Metro Station Exit -> Final Destination
     const decodedLm = plan.liveTraffic?.lastMilePolyline
       ? decodeGooglePolyline(plan.liveTraffic.lastMilePolyline)
       : [];
-    const lastMileCoords = decodedLm.length > 0
-      ? decodedLm
-      : [
-          { lat: plan.destinationStation.lat, lng: plan.destinationStation.lng },
-          { lat: plan.destination.lat, lng: plan.destination.lng }
-        ];
+    const lastMileCoords =
+      decodedLm.length > 0
+        ? decodedLm
+        : [
+            { lat: plan.destinationStation.lat, lng: plan.destinationStation.lng },
+            { lat: plan.destination.lat, lng: plan.destination.lng }
+          ];
 
-    // Under-layer casing (warm terracotta hint)
-    const lastMileUnder = new mapsLib.Polyline({
-      path: lastMileCoords,
-      geodesic: true,
-      strokeColor: '#FAF2EE',
-      strokeOpacity: 0.8,
-      strokeWeight: 6,
-      map: map
-    });
-    polylines.push(lastMileUnder);
+    polylines.push(
+      new mapsLib.Polyline({
+        path: lastMileCoords,
+        geodesic: true,
+        strokeColor: '#FAF2EE',
+        strokeOpacity: 0.85,
+        strokeWeight: 6,
+        map
+      })
+    );
+    polylines.push(
+      new mapsLib.Polyline({
+        path: lastMileCoords,
+        geodesic: true,
+        strokeColor: '#B9552C',
+        strokeOpacity: 1.0,
+        strokeWeight: 3.5,
+        icons: [
+          {
+            icon: {
+              path: 'M 0,-1 0,1',
+              strokeOpacity: 1,
+              scale: 2.5,
+              strokeColor: '#B9552C',
+              strokeWeight: 3.5
+            },
+            offset: '0',
+            repeat: '12px'
+          }
+        ],
+        map
+      })
+    );
+    extendBoundsWithPath(lastMileCoords);
 
-    // Over-layer dashed copper path
-    const lastMileOver = new mapsLib.Polyline({
-      path: lastMileCoords,
-      geodesic: true,
-      strokeColor: '#B9552C',
-      strokeOpacity: 1.0,
-      strokeWeight: 3.5,
-      icons: [
-        {
-          icon: {
-            path: 'M 0,-1 0,1',
-            strokeOpacity: 1,
-            scale: 2.5,
-            strokeColor: '#B9552C',
-            strokeWeight: 3.5
-          },
-          offset: '0',
-          repeat: '12px'
-        }
-      ],
-      map: map
-    });
-    polylines.push(lastMileOver);
-
-    // Fit bounds smoothly with generous breathing space
-    const bounds = new google.maps.LatLngBounds();
-    bounds.extend({ lat: plan.origin.lat, lng: plan.origin.lng });
     bounds.extend({ lat: plan.originStation.lat, lng: plan.originStation.lng });
-    if (plan.metroLeg.transferStation) {
-      bounds.extend({ lat: plan.metroLeg.transferStation.lat, lng: plan.metroLeg.transferStation.lng });
-    }
     bounds.extend({ lat: plan.destinationStation.lat, lng: plan.destinationStation.lng });
-    bounds.extend({ lat: plan.destination.lat, lng: plan.destination.lng });
-
     map.fitBounds(bounds, { top: 90, bottom: 90, left: 60, right: 60 });
 
     return () => {
@@ -263,14 +312,42 @@ function RoutePolylines({ plan }: { plan: MultiModalTripPlan }) {
   return null;
 }
 
+// Native Google Maps Transit & Live Traffic Overlays
+function GoogleMapLayers({ showTransitLayer, showTrafficLayer }: { showTransitLayer: boolean; showTrafficLayer: boolean }) {
+  const map = useMap();
+  const mapsLib = useMapsLibrary('maps');
+
+  useEffect(() => {
+    if (!map || !mapsLib || !showTransitLayer) return;
+    const transitLayer = new mapsLib.TransitLayer();
+    transitLayer.setMap(map);
+    return () => {
+      transitLayer.setMap(null);
+    };
+  }, [map, mapsLib, showTransitLayer]);
+
+  useEffect(() => {
+    if (!map || !mapsLib || !showTrafficLayer) return;
+    const trafficLayer = new mapsLib.TrafficLayer();
+    trafficLayer.setMap(map);
+    return () => {
+      trafficLayer.setMap(null);
+    };
+  }, [map, mapsLib, showTrafficLayer]);
+
+  return null;
+}
+
 // Controller component inside APIProvider to execute map interactions
 function MapControls({
   plan,
   userCoords,
   isSatellite,
   setIsSatellite,
-  showNetworkStations,
-  setShowNetworkStations,
+  showTransitLayer,
+  setShowTransitLayer,
+  showTrafficLayer,
+  setShowTrafficLayer,
   onFocusExitGate,
   onFocusWaypoint
 }: {
@@ -278,20 +355,20 @@ function MapControls({
   userCoords: { lat: number; lng: number } | null;
   isSatellite: boolean;
   setIsSatellite: (val: boolean | ((prev: boolean) => boolean)) => void;
-  showNetworkStations: boolean;
-  setShowNetworkStations: (val: boolean | ((prev: boolean) => boolean)) => void;
+  showTransitLayer: boolean;
+  setShowTransitLayer: (val: boolean | ((prev: boolean) => boolean)) => void;
+  showTrafficLayer: boolean;
+  setShowTrafficLayer: (val: boolean | ((prev: boolean) => boolean)) => void;
   onFocusExitGate: () => void;
   onFocusWaypoint: (type: 'origin' | 'originStation' | 'transferStation' | 'destStation' | 'destination') => void;
 }) {
   const map = useMap();
 
-  // Switch between roadmap and satellite
   useEffect(() => {
     if (!map) return;
     map.setMapTypeId(isSatellite ? 'hybrid' : 'roadmap');
   }, [map, isSatellite]);
 
-  // Auto-center map when userCoords updates and no plan is active
   useEffect(() => {
     if (!map || plan) return;
     if (userCoords) {
@@ -316,8 +393,8 @@ function MapControls({
       map.panTo(userCoords);
       map.setZoom(15);
     } else {
-      map.panTo({ lat: 28.4950, lng: 77.0890 });
-      map.setZoom(13);
+      map.panTo({ lat: 28.5355, lng: 77.21 });
+      map.setZoom(11);
     }
   }, [map, plan, userCoords]);
 
@@ -337,7 +414,7 @@ function MapControls({
       <div className="absolute top-3.5 left-3.5 right-3.5 flex flex-wrap items-center justify-between gap-2.5 pointer-events-none z-20">
         {/* Left: Waypoint Progression Trail */}
         {plan ? (
-          <div className="pointer-events-auto bg-white/95 backdrop-blur-md rounded-xl p-2 sm:p-2.5 shadow-sm border border-[#E2E4DC] text-xs flex flex-wrap items-center gap-2 max-w-full overflow-x-auto">
+          <div className="pointer-events-auto bg-white/95 rounded-xl p-2 sm:p-2.5 shadow-sm border border-[#E2E4DC] text-xs flex flex-wrap items-center gap-2 max-w-full overflow-x-auto">
             <button
               onClick={() => onFocusWaypoint('origin')}
               className="flex items-center gap-1.5 font-bold text-[#143428] hover:text-[#B9552C] transition px-1.5 py-0.5 rounded hover:bg-[#F4F5F0]"
@@ -347,51 +424,55 @@ function MapControls({
               <span>Start</span>
             </button>
 
-            <ArrowRight className="w-3 h-3 text-[#8E9487] shrink-0" strokeWidth={1.75} />
-
-            <button
-              onClick={() => onFocusWaypoint('originStation')}
-              className="flex items-center gap-1.5 font-semibold text-[#17201B] hover:text-[#B9552C] transition px-1.5 py-0.5 rounded hover:bg-[#F4F5F0]"
-              title={`Board at ${plan.originStation.name}`}
-            >
-              <span
-                className="w-2.5 h-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: plan.originStation.lineColor }}
-              ></span>
-              <span className="truncate max-w-[110px] sm:max-w-none">{plan.originStation.name}</span>
-            </button>
-
-            {plan.metroLeg.requiresTransfer && plan.metroLeg.transferStation && (
+            {plan.travelMode !== 'driving' && plan.travelMode !== 'walking' && !plan.isDirectRoadRecommended && (
               <>
                 <ArrowRight className="w-3 h-3 text-[#8E9487] shrink-0" strokeWidth={1.75} />
+
                 <button
-                  onClick={() => onFocusWaypoint('transferStation')}
-                  className="px-2 py-0.5 rounded-md bg-[#FAF2EE] text-[#B9552C] font-bold text-[11px] border border-[#E8C2B3] hover:bg-[#F4DDD3] transition flex items-center gap-1"
-                  title="Interchange Footbridge"
+                  onClick={() => onFocusWaypoint('originStation')}
+                  className="flex items-center gap-1.5 font-semibold text-[#17201B] hover:text-[#B9552C] transition px-1.5 py-0.5 rounded hover:bg-[#F4F5F0]"
+                  title={`Board at ${plan.originStation.name}`}
                 >
-                  <span>Skywalk</span>
+                  <span
+                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                    style={{ backgroundColor: plan.originStation.lineColor }}
+                  ></span>
+                  <span className="truncate max-w-[110px] sm:max-w-none">{plan.originStation.name}</span>
+                </button>
+
+                {plan.metroLeg.requiresTransfer && plan.metroLeg.transferStation && (
+                  <>
+                    <ArrowRight className="w-3 h-3 text-[#8E9487] shrink-0" strokeWidth={1.75} />
+                    <button
+                      onClick={() => onFocusWaypoint('transferStation')}
+                      className="px-2 py-0.5 rounded-md bg-[#FAF2EE] text-[#B9552C] font-bold text-[11px] border border-[#E8C2B3] hover:bg-[#F4DDD3] transition flex items-center gap-1"
+                      title="Interchange Station"
+                    >
+                      <span>{plan.metroLeg.transferStation.name}</span>
+                    </button>
+                  </>
+                )}
+
+                <ArrowRight className="w-3 h-3 text-[#8E9487] shrink-0" strokeWidth={1.75} />
+
+                <button
+                  onClick={() => onFocusWaypoint('destStation')}
+                  className="flex items-center gap-1.5 font-semibold text-[#17201B] hover:text-[#B9552C] transition px-1.5 py-0.5 rounded hover:bg-[#F4F5F0]"
+                  title={`Deboard at ${plan.destinationStation.name} (Exit Gate ${plan.metroExit.gateNumber})`}
+                >
+                  <span
+                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                    style={{ backgroundColor: plan.destinationStation.lineColor }}
+                  ></span>
+                  <span className="truncate max-w-[120px] sm:max-w-none">
+                    {plan.destinationStation.name}
+                  </span>
+                  <span className="bg-[#B9552C] text-white text-[10px] font-bold px-1.5 py-0.2 rounded">
+                    Gate {plan.metroExit.gateNumber}
+                  </span>
                 </button>
               </>
             )}
-
-            <ArrowRight className="w-3 h-3 text-[#8E9487] shrink-0" strokeWidth={1.75} />
-
-            <button
-              onClick={() => onFocusWaypoint('destStation')}
-              className="flex items-center gap-1.5 font-semibold text-[#17201B] hover:text-[#B9552C] transition px-1.5 py-0.5 rounded hover:bg-[#F4F5F0]"
-              title={`Deboard at ${plan.destinationStation.name} (Exit Gate ${plan.metroExit.gateNumber})`}
-            >
-              <span
-                className="w-2.5 h-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: plan.destinationStation.lineColor }}
-              ></span>
-              <span className="truncate max-w-[120px] sm:max-w-none">
-                {plan.destinationStation.name}
-              </span>
-              <span className="bg-[#B9552C] text-white text-[10px] font-bold px-1.5 py-0.2 rounded">
-                Gate {plan.metroExit.gateNumber}
-              </span>
-            </button>
 
             <ArrowRight className="w-3 h-3 text-[#8E9487] shrink-0" strokeWidth={1.75} />
 
@@ -407,43 +488,56 @@ function MapControls({
             </button>
           </div>
         ) : (
-          <div className="pointer-events-auto bg-white/95 backdrop-blur-md rounded-xl px-3 py-2 shadow-sm border border-[#E2E4DC] text-xs font-semibold text-[#143428] flex items-center gap-2">
+          <div className="pointer-events-auto bg-white/95 rounded-xl px-3 py-2 shadow-sm border border-[#E2E4DC] text-xs font-semibold text-[#143428] flex items-center gap-2">
             <Compass className="w-3.5 h-3.5 text-[#143428]" />
-            <span>Delhi & Gurugram Metro Transit Grid</span>
+            <span>Delhi • Gurgaon • Noida Google Maps Grid</span>
           </div>
         )}
 
-        {/* Right: Map Type & Re-center Actions */}
-        <div className="pointer-events-auto flex items-center gap-1.5 bg-white/95 backdrop-blur-md rounded-xl p-1 shadow-sm border border-[#E2E4DC]">
+        {/* Right: Map Layers (Satellite, Metro Transit, Live Traffic) & Fit */}
+        <div className="pointer-events-auto flex items-center gap-1 bg-white/95 rounded-xl p-1 shadow-sm border border-[#E2E4DC]">
           <button
-            onClick={() => setIsSatellite(prev => !prev)}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-              isSatellite
+            onClick={() => setShowTransitLayer(prev => !prev)}
+            className={`px-2 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+              showTransitLayer
                 ? 'bg-[#143428] text-white shadow-xs'
                 : 'text-[#53584E] hover:text-[#17201B] hover:bg-[#F4F5F0]'
             }`}
-            title="Toggle between vector roadmap and satellite aerial view"
+            title="Show full Delhi Metro, Rapid Metro & Noida Aqua Line grid on map"
           >
-            <Layers className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{isSatellite ? 'Satellite' : 'Transit Map'}</span>
+            <TrainFront className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Metro Lines</span>
           </button>
 
           <button
-            onClick={() => setShowNetworkStations(prev => !prev)}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-              showNetworkStations
-                ? 'bg-[#143428]/10 text-[#143428] border border-[#143428]/20'
+            onClick={() => setShowTrafficLayer(prev => !prev)}
+            className={`px-2 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+              showTrafficLayer
+                ? 'bg-amber-600 text-white shadow-xs'
                 : 'text-[#53584E] hover:text-[#17201B] hover:bg-[#F4F5F0]'
             }`}
-            title="Show or hide intermediate metro stations across the network"
+            title="Toggle Google Maps live road traffic overlay"
           >
-            <TrainFront className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Stations</span>
+            <Activity className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Traffic</span>
+          </button>
+
+          <button
+            onClick={() => setIsSatellite(prev => !prev)}
+            className={`px-2 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+              isSatellite
+                ? 'bg-[#17201B] text-white shadow-xs'
+                : 'text-[#53584E] hover:text-[#17201B] hover:bg-[#F4F5F0]'
+            }`}
+            title="Toggle between vector roadmap and satellite view"
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{isSatellite ? 'Satellite' : 'Map'}</span>
           </button>
 
           <button
             onClick={handleFitRoute}
-            className="p-1.5 rounded-lg text-[#53584E] hover:text-[#17201B] hover:bg-[#F4F5F0] transition"
+            className="p-1.5 rounded-lg text-[#53584E] hover:text-[#17201B] hover:bg-[#F4F5F0] transition cursor-pointer"
             title="Fit full route in viewport"
           >
             <Maximize2 className="w-3.5 h-3.5" />
@@ -453,27 +547,28 @@ function MapControls({
 
       {/* Bottom Floating Control Dock */}
       <div className="absolute bottom-3.5 left-3.5 right-3.5 flex items-center justify-between pointer-events-none z-20">
-        {/* Quick Focus Button for Exit Gate */}
-        {plan && (
-          <div className="pointer-events-auto">
+        <div className="pointer-events-auto flex items-center gap-2">
+          {plan && plan.travelMode !== 'driving' && plan.travelMode !== 'walking' && !plan.isDirectRoadRecommended && (
             <button
               onClick={onFocusExitGate}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#B9552C] hover:bg-[#A34722] text-white text-xs font-bold shadow-md transition transform active:scale-95"
-              title="Zoom directly to the station exit gate and last-mile walking path"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#B9552C] hover:bg-[#A34722] text-white text-xs font-bold shadow-md transition active:scale-95 cursor-pointer"
+              title="Zoom directly to the station exit gate and last-mile path"
             >
               <DoorOpen className="w-4 h-4 text-white" strokeWidth={2} />
               <span>Focus Exit Gate {plan.metroExit.gateNumber}</span>
             </button>
-          </div>
-        )}
-
-        {!plan && <div />}
+          )}
+          <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white/95 border border-[#E2E4DC] text-[11px] font-semibold text-[#53584E] shadow-xs">
+            <MapPin className="w-3 h-3 text-[#B9552C]" />
+            <span>Tap anywhere on map to pick point</span>
+          </span>
+        </div>
 
         {/* Custom Zoom in/out buttons */}
-        <div className="pointer-events-auto flex flex-col gap-1 bg-white/95 backdrop-blur-md rounded-xl p-1 shadow-sm border border-[#E2E4DC]">
+        <div className="pointer-events-auto flex flex-col gap-1 bg-white/95 rounded-xl p-1 shadow-sm border border-[#E2E4DC]">
           <button
             onClick={handleZoomIn}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-[#17201B] hover:bg-[#F4F5F0] transition"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-[#17201B] hover:bg-[#F4F5F0] transition cursor-pointer"
             title="Zoom In"
           >
             <Plus className="w-4 h-4" />
@@ -481,7 +576,7 @@ function MapControls({
           <div className="h-px bg-[#E2E4DC] mx-1"></div>
           <button
             onClick={handleZoomOut}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-[#17201B] hover:bg-[#F4F5F0] transition"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-[#17201B] hover:bg-[#F4F5F0] transition cursor-pointer"
             title="Zoom Out"
           >
             <Minus className="w-4 h-4" />
@@ -495,15 +590,89 @@ function MapControls({
 // Inner map view component to manage map state and events
 function MapView({
   plan,
-  userCoords
+  userCoords,
+  onPickMapLocation
 }: {
   plan: MultiModalTripPlan | null;
   userCoords: { lat: number; lng: number } | null;
+  onPickMapLocation?: (role: 'origin' | 'destination', name: string, coords: { lat: number; lng: number }) => void;
 }) {
   const map = useMap();
   const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
   const [isSatellite, setIsSatellite] = useState(false);
-  const [showNetworkStations, setShowNetworkStations] = useState(true);
+  const [showTransitLayer, setShowTransitLayer] = useState(true);
+  const [showTrafficLayer, setShowTrafficLayer] = useState(false);
+  const [droppedPin, setDroppedPin] = useState<{
+    lat: number;
+    lng: number;
+    name: string;
+    loading: boolean;
+  } | null>(null);
+
+  const isDirectRoadMode =
+    plan?.travelMode === 'driving' ||
+    plan?.travelMode === 'walking' ||
+    (plan?.isDirectRoadRecommended && (!plan?.metroLeg?.lines || plan.metroLeg.lines.length === 0));
+
+  const transferMarkers = useMemo(() => {
+    if (!plan || !plan.metroLeg?.requiresTransfer) return [];
+    if (plan.metroLeg.transferStations && plan.metroLeg.transferStations.length > 0) {
+      return plan.metroLeg.transferStations;
+    }
+    return plan.metroLeg.transferStation ? [plan.metroLeg.transferStation] : [];
+  }, [plan]);
+
+  const handleMapClick = useCallback(async (e: any) => {
+    const latLng = e?.detail?.latLng;
+    if (!latLng || typeof latLng.lat !== 'number' || typeof latLng.lng !== 'number') return;
+    const coords = { lat: latLng.lat, lng: latLng.lng };
+    const placeId: string | undefined = e?.detail?.placeId;
+
+    setSelectedMarker(null);
+    setDroppedPin({
+      lat: coords.lat,
+      lng: coords.lng,
+      name: 'Fetching address...',
+      loading: true
+    });
+
+    try {
+      if (placeId) {
+        const res = await fetch(`/api/places?placeId=${encodeURIComponent(placeId)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.place) {
+            setDroppedPin({
+              lat: data.place.lat ?? coords.lat,
+              lng: data.place.lng ?? coords.lng,
+              name: data.place.name || data.place.formattedAddress || 'Selected Place',
+              loading: false
+            });
+            return;
+          }
+        }
+      }
+
+      const geoRes = await fetch(`/api/geocode?lat=${coords.lat}&lng=${coords.lng}`);
+      if (geoRes.ok) {
+        const geoData = await geoRes.json();
+        setDroppedPin({
+          lat: coords.lat,
+          lng: coords.lng,
+          name: geoData.locationName || `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`,
+          loading: false
+        });
+        return;
+      }
+    } catch {}
+
+    setDroppedPin({
+      lat: coords.lat,
+      lng: coords.lng,
+      name: `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`,
+      loading: false
+    });
+  }, []);
 
   // Default Center
   const defaultCenter = useMemo(() => {
@@ -576,8 +745,10 @@ function MapView({
         internalUsageAttributionIds={['gmp_mcp_codeassist_v1_aistudio']}
         gestureHandling="greedy"
         disableDefaultUI={true}
+        onClick={handleMapClick}
         className="w-full h-full"
       >
+        <GoogleMapLayers showTransitLayer={showTransitLayer} showTrafficLayer={showTrafficLayer} />
         {/* Render multi-layer transit and walking polylines */}
         {plan && <RoutePolylines plan={plan} />}
 
@@ -628,7 +799,7 @@ function MapView({
         )}
 
         {/* --- BOARDING METRO STATION MARKER --- */}
-        {plan && (
+        {plan && !isDirectRoadMode && (
           <AdvancedMarker
             position={{ lat: plan.originStation.lat, lng: plan.originStation.lng }}
             title={`Board at ${plan.originStation.name}`}
@@ -652,32 +823,31 @@ function MapView({
           </AdvancedMarker>
         )}
 
-        {/* --- INTERCHANGE STATION MARKER --- */}
-        {plan && plan.metroLeg.requiresTransfer && plan.metroLeg.transferStation && (
-          <AdvancedMarker
-            position={{
-              lat: plan.metroLeg.transferStation.lat,
-              lng: plan.metroLeg.transferStation.lng
-            }}
-            title={`Transfer at ${plan.metroLeg.transferStation.name}`}
-            onClick={() => setSelectedMarker('transferStation')}
-          >
-            <div className="flex flex-col items-center group cursor-pointer">
-              <div className="mb-1 px-2.5 py-0.5 rounded-full bg-[#FAF2EE] text-[#B9552C] text-[11px] font-bold shadow-md border border-[#E8C2B3] whitespace-nowrap flex items-center gap-1.5 transition-transform group-hover:scale-105">
-                <Sparkles className="w-3 h-3 text-[#B9552C]" />
-                <span>Interchange: {plan.metroLeg.transferStation.name}</span>
-              </div>
-              <div className="flex items-center justify-center px-2 py-1 rounded-full bg-[#FAF2EE] text-[#B9552C] shadow-lg border-2 border-white">
-                <div className="flex items-center gap-1 font-extrabold text-[10px] tracking-wider uppercase">
-                  <span>Skywalk</span>
+        {/* --- INTERCHANGE STATION MARKERS (Supports 1 or multiple interchanges) --- */}
+        {plan && !isDirectRoadMode &&
+          transferMarkers.map((trSt, idx) => (
+            <AdvancedMarker
+              key={`transfer-${trSt.id}-${idx}`}
+              position={{ lat: trSt.lat, lng: trSt.lng }}
+              title={`Transfer at ${trSt.name}`}
+              onClick={() => setSelectedMarker('transferStation')}
+            >
+              <div className="flex flex-col items-center group cursor-pointer">
+                <div className="mb-1 px-2.5 py-0.5 rounded-full bg-[#FAF2EE] text-[#B9552C] text-[11px] font-bold shadow-md border border-[#E8C2B3] whitespace-nowrap flex items-center gap-1.5 transition-transform group-hover:scale-105">
+                  <Sparkles className="w-3 h-3 text-[#B9552C]" />
+                  <span>Change: {trSt.name}</span>
+                </div>
+                <div className="flex items-center justify-center px-2 py-1 rounded-full bg-[#FAF2EE] text-[#B9552C] shadow-lg border-2 border-white">
+                  <div className="flex items-center gap-1 font-extrabold text-[10px] tracking-wider uppercase">
+                    <span>Transfer {transferMarkers.length > 1 ? idx + 1 : ''}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </AdvancedMarker>
-        )}
+            </AdvancedMarker>
+          ))}
 
         {/* --- DEBOARDING METRO STATION & EXIT GATE MARKER --- */}
-        {plan && (
+        {plan && !isDirectRoadMode && (
           <AdvancedMarker
             position={{ lat: plan.destinationStation.lat, lng: plan.destinationStation.lng }}
             title={`Deboard at ${plan.destinationStation.name} (Gate ${plan.metroExit.gateNumber})`}
@@ -723,37 +893,59 @@ function MapView({
           </AdvancedMarker>
         )}
 
-        {/* --- NETWORK STATIONS NODES (Subtle context markers) --- */}
-        {showNetworkStations &&
-          KEY_CORRIDOR_STATIONS.map(st => {
-            // Avoid duplicating active trip markers
-            if (
-              plan &&
-              (plan.originStation.id === st.id ||
-                plan.destinationStation.id === st.id ||
-                plan.metroLeg.transferStation?.id === st.id)
-            ) {
-              return null;
-            }
-
-            return (
-              <AdvancedMarker
-                key={st.id}
-                position={{ lat: st.lat, lng: st.lng }}
-                title={`${st.name} (${st.line} Line)`}
-              >
-                <div className="group relative flex items-center justify-center cursor-pointer">
-                  <div
-                    className="w-3.5 h-3.5 rounded-full border-2 border-white shadow-xs transition-transform group-hover:scale-150"
-                    style={{ backgroundColor: st.lineColor }}
-                  ></div>
-                  <div className="absolute bottom-full mb-1 hidden group-hover:block px-2 py-0.5 rounded bg-[#17201B] text-white text-[10px] font-semibold whitespace-nowrap shadow-md z-30">
-                    {st.name} ({st.line})
-                  </div>
+        {/* --- DROPPED MAP CLICK PIN & GOOGLE MAPS PICKER --- */}
+        {droppedPin && (
+          <>
+            <AdvancedMarker position={{ lat: droppedPin.lat, lng: droppedPin.lng }}>
+              <div className="w-7 h-7 rounded-full bg-[#17201B] text-white border-2 border-white shadow-lg flex items-center justify-center">
+                <MapPin className="w-3.5 h-3.5 text-[#5ee9b5]" />
+              </div>
+            </AdvancedMarker>
+            <InfoWindow
+              position={{ lat: droppedPin.lat, lng: droppedPin.lng }}
+              onCloseClick={() => setDroppedPin(null)}
+            >
+              <div className="p-1.5 max-w-[240px] space-y-2 font-sans text-[#17201B]">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-[#6B7267]">
+                  Dropped Map Pin
                 </div>
-              </AdvancedMarker>
-            );
-          })}
+                <div className="text-xs font-extrabold leading-snug">
+                  {droppedPin.loading ? 'Resolving address...' : droppedPin.name}
+                </div>
+                {onPickMapLocation && !droppedPin.loading && (
+                  <div className="flex items-center gap-1.5 pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onPickMapLocation('origin', droppedPin.name, {
+                          lat: droppedPin.lat,
+                          lng: droppedPin.lng
+                        });
+                        setDroppedPin(null);
+                      }}
+                      className="flex-1 px-2.5 py-1.5 rounded-lg bg-[#143428] hover:bg-[#1A3E31] text-white text-[11px] font-bold cursor-pointer"
+                    >
+                      Set Start
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onPickMapLocation('destination', droppedPin.name, {
+                          lat: droppedPin.lat,
+                          lng: droppedPin.lng
+                        });
+                        setDroppedPin(null);
+                      }}
+                      className="flex-1 px-2.5 py-1.5 rounded-lg bg-[#B9552C] hover:bg-[#A34722] text-white text-[11px] font-bold cursor-pointer"
+                    >
+                      Set Destination
+                    </button>
+                  </div>
+                )}
+              </div>
+            </InfoWindow>
+          </>
+        )}
 
         {/* --- CUSTOM DESIGNED INFO WINDOWS --- */}
         {!plan && selectedMarker === 'userCoords' && userCoords && (
@@ -956,8 +1148,10 @@ function MapView({
           userCoords={userCoords}
           isSatellite={isSatellite}
           setIsSatellite={setIsSatellite}
-          showNetworkStations={showNetworkStations}
-          setShowNetworkStations={setShowNetworkStations}
+          showTransitLayer={showTransitLayer}
+          setShowTransitLayer={setShowTransitLayer}
+          showTrafficLayer={showTrafficLayer}
+          setShowTrafficLayer={setShowTrafficLayer}
           onFocusExitGate={handleFocusExitGate}
           onFocusWaypoint={handleFocusWaypoint}
         />
@@ -966,13 +1160,13 @@ function MapView({
   );
 }
 
-export function MapComponent({ plan, userCoords }: MapComponentProps) {
+export function MapComponent({ plan, userCoords, onPickMapLocation }: MapComponentProps) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
   return (
     <div className="w-full h-full min-h-[440px]">
       <APIProvider apiKey={apiKey}>
-        <MapView plan={plan} userCoords={userCoords} />
+        <MapView plan={plan} userCoords={userCoords} onPickMapLocation={onPickMapLocation} />
       </APIProvider>
     </div>
   );

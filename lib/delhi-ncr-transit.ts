@@ -1,11 +1,28 @@
+export type MetroLineName =
+  | 'Yellow'
+  | 'Rapid Metro'
+  | 'Blue'
+  | 'Magenta'
+  | 'Violet'
+  | 'Airport Express'
+  | 'Pink'
+  | 'Red'
+  | 'Green'
+  | 'Aqua'
+  | 'Grey'
+  | 'Bus'
+  | 'Transit'
+  | 'Direct Road'
+  | (string & {});
+
 export interface MetroStation {
   id: string;
   name: string;
-  line: 'Yellow' | 'Rapid Metro' | 'Blue' | 'Magenta' | 'Violet' | 'Airport Express' | 'Pink' | 'Red' | 'Green';
+  line: MetroLineName;
   lineColor: string;
   lat: number;
   lng: number;
-  interchangeWith?: ('Yellow' | 'Rapid Metro' | 'Blue' | 'Magenta' | 'Violet' | 'Airport Express' | 'Pink' | 'Red' | 'Green')[];
+  interchangeWith?: MetroLineName[];
   exitGates: { gateNumber: number; leadsTo: string; tip?: string }[];
 }
 
@@ -599,6 +616,53 @@ export const METRO_STATIONS: Record<string, MetroStation> = {
     exitGates: [
       { gateNumber: 1, leadsTo: 'Gaur City Mall / Greater Noida West feeder autos', tip: 'Direct autos to Gaur City Mall run continuously from Gate 1' },
       { gateNumber: 2, leadsTo: 'Sector 62 IT Parks' }
+    ]
+  },
+  'noida-sector-52': {
+    id: 'noida-sector-52',
+    name: 'Noida Sector 52',
+    line: 'Blue',
+    lineColor: '#2563eb',
+    lat: 28.5877,
+    lng: 77.3619,
+    interchangeWith: ['Aqua'],
+    exitGates: [
+      { gateNumber: 1, leadsTo: 'Aqua Line Sector 51 Foot Overbridge Transfer' },
+      { gateNumber: 2, leadsTo: 'Sector 52 / Sector 34 Road' }
+    ]
+  },
+  'noida-sector-51-aqua': {
+    id: 'noida-sector-51-aqua',
+    name: 'Noida Sector 51 (Aqua Line)',
+    line: 'Aqua',
+    lineColor: '#06b6d4',
+    lat: 28.5858,
+    lng: 77.3694,
+    interchangeWith: ['Blue'],
+    exitGates: [
+      { gateNumber: 1, leadsTo: 'Dedicated Covered Walkway to Blue Line Sec-52' }
+    ]
+  },
+  'noida-sector-137': {
+    id: 'noida-sector-137',
+    name: 'Noida Sector 137 (Aqua Line)',
+    line: 'Aqua',
+    lineColor: '#06b6d4',
+    lat: 28.5082,
+    lng: 77.4105,
+    exitGates: [
+      { gateNumber: 1, leadsTo: 'Advant Navis Business Park & Sector 137 Expressway' }
+    ]
+  },
+  'noida-pari-chowk': {
+    id: 'noida-pari-chowk',
+    name: 'Pari Chowk (Greater Noida)',
+    line: 'Aqua',
+    lineColor: '#06b6d4',
+    lat: 28.4646,
+    lng: 77.5105,
+    exitGates: [
+      { gateNumber: 1, leadsTo: 'Pari Chowk / Knowledge Park & Venice Mall Autos' }
     ]
   }
 };
@@ -2001,6 +2065,85 @@ export const FAMOUS_DESTINATIONS: FamousDestination[] = [
       'Saves 45 minutes over road cabs in evening Delhi-Gurgaon traffic!',
       'India\'s largest shopping mall with 7 floors, indoor ski park, and 300+ global brands.'
     ]
+  },
+  {
+    id: 'noida-sector-62-it-hub',
+    name: 'Sector 62 IT Park & Electronic City, Noida',
+    city: 'Noida',
+    category: 'Tech Park / Hub',
+    lat: 28.6279,
+    lng: 77.3649,
+    nearestStationId: 'noida-electronic-city',
+    distanceFromStationKm: 0.9,
+    bestExitGate: 2,
+    lastMileOptions: [
+      {
+        mode: 'e-rickshaw',
+        durationMin: 4,
+        estimatedCostInr: 20,
+        description: 'Shared e-rickshaws wait outside Noida Electronic City Gate 2 towards Stellar / Candor / Symbiosis.'
+      },
+      {
+        mode: 'auto',
+        durationMin: 4,
+        estimatedCostInr: 40,
+        description: 'Quick auto to any IT tower in Sector 62.'
+      }
+    ],
+    introvertTips: [
+      'Take Blue Line (vaishali/noida-electronic-city branch) right to the Noida Electronic City terminal.',
+      'Direct access to Candor TechSpace, Stellar IT Park, and institutional campuses.'
+    ]
+  },
+  {
+    id: 'gardens-galleria-noida',
+    name: 'Gardens Galleria / GIP Mall, Noida Sector 38A',
+    city: 'Noida',
+    category: 'Mall',
+    lat: 28.5674,
+    lng: 77.3260,
+    nearestStationId: 'noida-sector-18',
+    distanceFromStationKm: 1.0,
+    bestExitGate: 1,
+    lastMileOptions: [
+      {
+        mode: 'e-rickshaw',
+        durationMin: 4,
+        estimatedCostInr: 20,
+        description: 'Shared e-rickshaws outside Noida Sector 18 Gate 1 drop directly at GIP / Gardens Galleria main entrance.'
+      },
+      {
+        mode: 'walk',
+        durationMin: 12,
+        estimatedCostInr: 0,
+        description: 'Direct sidewalk walk past Wave / GIP complex from Sector 18 Metro.'
+      }
+    ],
+    introvertTips: [
+      'Deboard at Noida Sector 18 (Blue Line) or Botanical Garden (Magenta Line from South Delhi/Gurgaon).'
+    ]
+  },
+  {
+    id: 'advant-navis-noida-142',
+    name: 'Advant Navis Business Park, Noida Sector 142',
+    city: 'Noida',
+    category: 'Tech Park / Hub',
+    lat: 28.5008,
+    lng: 77.4106,
+    nearestStationId: 'noida-sector-137',
+    distanceFromStationKm: 0.9,
+    bestExitGate: 1,
+    lastMileOptions: [
+      {
+        mode: 'auto',
+        durationMin: 4,
+        estimatedCostInr: 40,
+        description: 'Auto along the Noida-Greater Noida Expressway service road from Sector 137/142 Aqua Line.'
+      }
+    ],
+    introvertTips: [
+      'From DMRC Blue Line, get off at Noida Sector 52, take the skybridge to Sector 51 Aqua Line, and ride down the Expressway corridor.'
+    ]
   }
 ];
 
@@ -2033,8 +2176,28 @@ export function findNearestMetroStation(lat: number, lng: number): { station: Me
   return { station: nearest, distanceKm: minDistance };
 }
 
+export type TravelModeChoice = 'multimodal' | 'transit' | 'driving' | 'walking';
+
+export interface TransitStepDetail {
+  mode: 'WALKING' | 'TRANSIT';
+  instruction: string;
+  lineName?: string;
+  lineColor?: string;
+  vehicleType?: string;
+  from?: string;
+  to?: string;
+  headsign?: string;
+  stopsCount?: number;
+  distanceText: string;
+  durationText: string;
+  polyline?: string;
+}
+
 // Route breakdown result
 export interface MultiModalTripPlan {
+  travelMode?: TravelModeChoice;
+  dataSource?: 'google-live' | 'local-fallback';
+  isDirectRoadRecommended?: boolean;
   origin: {
     name: string;
     lat: number;
@@ -2061,6 +2224,7 @@ export interface MultiModalTripPlan {
     deboardStation: MetroStation;
     requiresTransfer: boolean;
     transferStation?: MetroStation;
+    transferStations?: MetroStation[];
     lines: {
       line: string;
       lineColor: string;
@@ -2068,6 +2232,12 @@ export interface MultiModalTripPlan {
       to: string;
       direction: string;
       stopsCount: number;
+      polyline?: string;
+      vehicleType?: string;
+      fromLat?: number;
+      fromLng?: number;
+      toLat?: number;
+      toLng?: number;
     }[];
     totalStops: number;
     totalDurationMin: number;
@@ -2090,6 +2260,12 @@ export interface MultiModalTripPlan {
     exactInstructions: string;
     antiAnxietyTip: string;
   };
+  directSteps?: {
+    instruction: string;
+    distanceText: string;
+    durationText: string;
+  }[];
+  transitSteps?: TransitStepDetail[];
   introvertChecklist: string[];
   fareBreakdown: FareBreakdown;
   liveTraffic?: LiveTrafficInfo;
@@ -2137,7 +2313,12 @@ export interface LiveTrafficInfo {
   totalDurationMin: number;
   firstMilePolyline?: string;
   lastMilePolyline?: string;
+  transitPolyline?: string;
+  walkPolylines?: string[];
+  directPolyline?: string;
+  directDistanceKm?: number;
   directCabDurationMin?: number;
+  summaryRoad?: string;
   lastUpdated?: string;
 }
 
@@ -2370,22 +2551,47 @@ export function planMultiModalTrip(
       });
     } else {
       requiresTransfer = true;
-      transferStation = METRO_STATIONS['sikanderpur-yellow'];
+      const isBlueYellow =
+        (oStation.line === 'Blue' && dStation.line === 'Yellow') ||
+        (oStation.line === 'Yellow' && dStation.line === 'Blue');
+      const isBlueMagenta =
+        (oStation.line === 'Blue' && dStation.line === 'Magenta') ||
+        (oStation.line === 'Magenta' && dStation.line === 'Blue');
+      const isBlueAqua =
+        (oStation.line === 'Blue' && dStation.line === 'Aqua') ||
+        (oStation.line === 'Aqua' && dStation.line === 'Blue');
+      const isYellowViolet =
+        (oStation.line === 'Yellow' && dStation.line === 'Violet') ||
+        (oStation.line === 'Violet' && dStation.line === 'Yellow');
+
+      if (isBlueYellow) {
+        transferStation = METRO_STATIONS['rajiv-chowk'];
+      } else if (isBlueMagenta) {
+        transferStation = METRO_STATIONS['botanical-garden'];
+      } else if (isBlueAqua) {
+        transferStation = METRO_STATIONS['noida-sector-52'];
+      } else if (isYellowViolet) {
+        transferStation = METRO_STATIONS['central-secretariat'];
+      } else {
+        transferStation = METRO_STATIONS['hauz-khas'] || METRO_STATIONS['rajiv-chowk'];
+      }
+
+      const hubName = transferStation?.name || 'Interchange Hub';
       lines.push({
         line: oStation.line,
         lineColor: oStation.lineColor,
         from: oStation.name,
-        to: 'Interchange Station',
-        direction: 'Towards Central Line',
-        stopsCount: 4
+        to: hubName,
+        direction: `Towards ${hubName}`,
+        stopsCount: transferStation ? estimateStopsCount(oStation, transferStation) : 5
       });
       lines.push({
         line: dStation.line,
         lineColor: dStation.lineColor,
-        from: 'Interchange Station',
+        from: hubName,
         to: dStation.name,
         direction: `Towards ${dStation.name}`,
-        stopsCount: 4
+        stopsCount: transferStation ? estimateStopsCount(transferStation, dStation) : 5
       });
     }
   }

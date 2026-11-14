@@ -1,12 +1,11 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { MultiModalTripPlan, FamousDestination, RideMode } from '@/lib/delhi-ncr-transit';
+import { MultiModalTripPlan, FamousDestination, RideMode, TravelModeChoice } from '@/lib/delhi-ncr-transit';
 import { BottomTabBar, MobileTab } from './BottomTabBar';
 import { GoTabScreen } from './GoTab/GoTabScreen';
 import { MapTabScreen } from './MapTab/MapTabScreen';
 import { GuideTabScreen } from './GuideTab/GuideTabScreen';
-import { LivingTransitCanvas } from './LivingTransitCanvas';
 import { TrainFront, Radar, Download } from 'lucide-react';
 import { triggerPwaInstall } from './PwaInstallPrompt';
 import { LiquidGlass } from './ui/liquid-glass';
@@ -20,6 +19,8 @@ interface MobileAppShellProps {
   selectedDestination: FamousDestination | null;
   customDestCoords?: { name: string; lat: number; lng: number } | null;
   tripPlan: MultiModalTripPlan | null;
+  travelMode?: TravelModeChoice;
+  onTravelModeChange?: (mode: TravelModeChoice) => void;
   passengerCount?: number;
   onPassengerCountChange?: (count: number) => void;
   firstMileMode?: RideMode;
@@ -31,6 +32,7 @@ interface MobileAppShellProps {
     uberLastMileUrl?: string;
     uberDirectUrl?: string;
     rapidoUrl?: string;
+    googleMapsUrl?: string;
   };
   aiGuide?: {
     loading: boolean;
@@ -50,6 +52,7 @@ interface MobileAppShellProps {
   onDetectLocation: () => void;
   onSelectOrigin: (name: string, coords: { lat: number; lng: number }) => void;
   onSelectDestination: (dest: any) => void;
+  onPickMapLocation?: (role: 'origin' | 'destination', name: string, coords: { lat: number; lng: number }) => void;
   onOpenTransitRadar?: () => void;
   onRequestAiRefresh?: () => void;
 }
@@ -62,6 +65,8 @@ export function MobileAppShell({
   selectedDestination,
   customDestCoords,
   tripPlan,
+  travelMode,
+  onTravelModeChange,
   passengerCount,
   onPassengerCountChange,
   firstMileMode,
@@ -74,6 +79,7 @@ export function MobileAppShell({
   onDetectLocation,
   onSelectOrigin,
   onSelectDestination,
+  onPickMapLocation,
   onOpenTransitRadar,
   onRequestAiRefresh,
 }: MobileAppShellProps) {
@@ -381,9 +387,7 @@ export function MobileAppShell({
   };
 
   return (
-    <div className="lg:hidden fixed inset-0 w-full h-full bg-[#F4F5F0] dark:bg-[#000000] flex flex-col text-[#17201B] dark:text-[#F2F5F3] overflow-hidden select-none z-30 transition-colors duration-400">
-      {/* Moving Water from Metal Shader (Drawn 30 FPS, Paused in Low Power / Reduce Motion) */}
-      <LivingTransitCanvas />
+    <div className="lg:hidden fixed inset-0 w-full h-full bg-[#F4F5F0] dark:bg-[#000000] flex flex-col text-[#17201B] dark:text-[#F2F5F3] overflow-hidden select-none z-30">
 
       {/* Main Instagram Swiper Viewport */}
       <div
@@ -410,6 +414,8 @@ export function MobileAppShell({
               selectedDestination={selectedDestination}
               customDestCoords={customDestCoords}
               tripPlan={tripPlan}
+              travelMode={travelMode}
+              onTravelModeChange={onTravelModeChange}
               passengerCount={passengerCount}
               onPassengerCountChange={onPassengerCountChange}
               firstMileMode={firstMileMode}
@@ -434,6 +440,7 @@ export function MobileAppShell({
                 tripPlan={tripPlan}
                 originCoords={originCoords}
                 onSwitchToGoTab={() => handleTabChange('go')}
+                onPickMapLocation={onPickMapLocation}
               />
             </div>
           </div>

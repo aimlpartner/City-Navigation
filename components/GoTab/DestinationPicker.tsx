@@ -7,6 +7,7 @@ import {
   FAMOUS_DESTINATIONS,
   METRO_STATIONS
 } from '@/lib/delhi-ncr-transit';
+import { resolveFreeformLocation, resolvePlaceSuggestion } from '@/lib/utils';
 import {
   Search,
   ArrowLeft,
@@ -77,7 +78,9 @@ export function DestinationPicker({
   onBackToOrigin,
 }: DestinationPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'All' | 'Gurgaon' | 'Delhi' | 'Mall' | 'Food'>('All');
+  const [activeFilter, setActiveFilter] = useState<'All' | 'Gurgaon' | 'Delhi' | 'Noida' | 'Mall' | 'Food'>('All');
+  const [isResolvingSelection, setIsResolvingSelection] = useState(false);
+  const [resolveError, setResolveError] = useState<string | null>(null);
   
   // Real-time Google Places state
   const [placesResults, setPlacesResults] = useState<any[]>([]);
@@ -129,12 +132,62 @@ export function DestinationPicker({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Resolve any Google Places suggestion (hydrating lat/lng from placeId when needed)
+  const handlePickPlace = async (place: any) => {
+    setResolveError(null);
+    if (!place?.needsResolve && typeof place?.lat === 'number' && typeof place?.lng === 'number') {
+      setIsSearchFocused(false);
+      onSelectDestination(place);
+      return;
+    }
+
+    setIsResolvingSelection(true);
+    try {
+      const resolved = await resolvePlaceSuggestion(place);
+      if (resolved && typeof resolved.lat === 'number' && typeof resolved.lng === 'number') {
+        setIsSearchFocused(false);
+        onSelectDestination(resolved);
+      } else {
+        setResolveError(`Could not pinpoint "${place?.name || 'that place'}" in Delhi, Gurgaon, or Noida.`);
+      }
+    } finally {
+      setIsResolvingSelection(false);
+    }
+  };
+
+  // Submit freeform address or Enter key in the search box
+  const handleSubmitFreeform = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (!q || isResolvingSelection) return;
+    setResolveError(null);
+
+    if (placesResults.length > 0) {
+      await handlePickPlace(placesResults[0]);
+      return;
+    }
+
+    setIsResolvingSelection(true);
+    try {
+      const resolved = await resolveFreeformLocation(q);
+      if (resolved) {
+        setIsSearchFocused(false);
+        onSelectDestination(resolved);
+      } else {
+        setResolveError(`No exact Delhi, Gurgaon, or Noida address matched "${q}". Try adding sector or landmark.`);
+      }
+    } finally {
+      setIsResolvingSelection(false);
+    }
+  };
+
   // Filter curated destinations based on filter pill
   const filteredCuratedDestinations = useMemo(() => {
     return FAMOUS_DESTINATIONS.filter((dest) => {
       if (activeFilter === 'All') return true;
       if (activeFilter === 'Gurgaon') return dest.city === 'Gurgaon';
       if (activeFilter === 'Delhi') return dest.city === 'Delhi';
+      if (activeFilter === 'Noida') return dest.city === 'Noida';
       if (activeFilter === 'Mall') return dest.category === 'Mall';
       if (activeFilter === 'Food') return dest.category === 'Dining / Nightlife';
       return true;
@@ -182,7 +235,7 @@ export function DestinationPicker({
   return (
     <div className="space-y-4 pb-6">
       {/* Starting Location Confirmation Bar */}
-      <div className="p-2.5 sm:p-3 rounded-2xl bg-white/90 dark:bg-[#0D1813]/85 backdrop-blur-md border border-[#E2E4DC] dark:border-white/10 shadow-xs flex items-center justify-between gap-2">
+      <div className="p-2.5 sm:p-3 rounded-2xl bg-white dark:bg-[#0D1813] border border-[#E2E4DC] dark:border-white/10 shadow-xs flex items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-7 h-7 rounded-lg bg-[#143428]/10 dark:bg-emerald-500/20 flex items-center justify-center text-[#143428] dark:text-[#5ee9b5] shrink-0">
             <MapPin className="w-3.5 h-3.5" />
@@ -202,17 +255,17 @@ export function DestinationPicker({
 
       {/* Main Title */}
       <div>
-        <h2 className="text-2xl font-black text-[#17201B] dark:text-[#F3F5EE] tracking-tight font-sans dark:drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)]">
+        <h2 className="text-2xl font-black text-[#17201B] dark:text-[#F3F5EE] tracking-tight font-sans">
           Where do you want to go?
         </h2>
-        <p className="text-sm text-[#53584E] dark:text-[#A7B2A8] mt-0.5 dark:drop-shadow-[0_1px_6px_rgba(0,0,0,0.8)]">
-          Type any local place, hospital, society, college, market, or landmark.
+        <p className="text-sm text-[#53584E] dark:text-[#A7B2A8] mt-0.5">
+          Search any address, sector, colony, office, mall, or landmark across Delhi, Gurgaon &amp; Noida.
         </p>
       </div>
 
       {/* Live Google Places Powered Search Bar with Dropdown */}
       <div className="relative z-20" ref={searchContainerRef}>
-        <div className="relative">
+        <form onSubmit={handleSubmitFreeform} className="relative">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <Search className="w-5 h-5 text-[#8E9487] dark:text-[#5ee9b5]" />
           </div>
@@ -221,22 +274,24 @@ export function DestinationPicker({
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
+              setResolveError(null);
               if (!isSearchFocused) setIsSearchFocused(true);
             }}
             onFocus={() => setIsSearchFocused(true)}
-            placeholder="Search landmark, sector, mall, hospital..."
-            className="ios-liquid-input w-full pl-11 pr-11 py-3.5 rounded-2xl text-[#17201B] dark:text-white placeholder-[#8E9487] dark:placeholder-[#768478] text-base font-medium shadow-xs outline-none"
+            placeholder="Search address, sector, landmark in Delhi / Gurgaon / Noida..."
+            className="ios-liquid-input w-full pl-11 pr-24 py-3.5 rounded-2xl text-[#17201B] dark:text-white placeholder-[#8E9487] dark:placeholder-[#768478] text-base font-medium shadow-xs outline-none"
           />
-          <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center gap-1.5">
-            {isSearchingPlaces && (
-              <Loader2 className="w-5 h-5 text-[#143428] dark:text-[#5ee9b5] animate-spin" />
+          <div className="absolute inset-y-0 right-0 pr-2 flex items-center gap-1">
+            {(isSearchingPlaces || isResolvingSelection) && (
+              <Loader2 className="w-4 h-4 text-[#143428] dark:text-[#5ee9b5] animate-spin mr-1" />
             )}
-            {searchQuery && !isSearchingPlaces && (
+            {searchQuery && !isSearchingPlaces && !isResolvingSelection && (
               <button
                 type="button"
                 onClick={() => {
                   setSearchQuery('');
                   setPlacesResults([]);
+                  setResolveError(null);
                   setIsSearchFocused(false);
                 }}
                 className="btn-tactile p-1.5 rounded-full text-[#8E9487] dark:text-[#9AA59D] hover:text-[#17201B] dark:hover:text-white hover:bg-[#F4F5F0] dark:hover:bg-white/10 transition cursor-pointer active:rotate-90"
@@ -245,8 +300,23 @@ export function DestinationPicker({
                 <X className="w-4 h-4" />
               </button>
             )}
+            {searchQuery.trim().length >= 2 && (
+              <button
+                type="submit"
+                disabled={isResolvingSelection}
+                className="px-2.5 py-1.5 rounded-xl bg-[#143428] dark:bg-emerald-500 text-white dark:text-[#061C12] text-xs font-black hover:bg-[#1A4333] disabled:opacity-50 cursor-pointer shrink-0"
+              >
+                Go
+              </button>
+            )}
           </div>
-        </div>
+        </form>
+
+        {resolveError && (
+          <p className="mt-1.5 px-1 text-xs font-semibold text-[#B9552C] dark:text-[#FF7A45]">
+            {resolveError}
+          </p>
+        )}
 
         {/* Floating Google Places Autocomplete Dropdown with iOS Liquid Glass */}
         <AnimatePresence>
@@ -276,10 +346,7 @@ export function DestinationPicker({
                   <button
                     key={p.id}
                     type="button"
-                    onClick={() => {
-                      onSelectDestination(p);
-                      setIsSearchFocused(false);
-                    }}
+                    onClick={() => handlePickPlace(p)}
                     className="w-full text-left p-2.5 rounded-xl hover:bg-[#F8F9F5] dark:hover:bg-white/10 text-xs flex items-center justify-between transition group cursor-pointer"
                   >
                     <div className="flex items-start gap-2.5 min-w-0 flex-1">
@@ -307,6 +374,20 @@ export function DestinationPicker({
                     <ChevronRight className="w-3.5 h-3.5 text-[#8E9487] dark:text-[#9AA59D] group-hover:text-[#143428] dark:group-hover:text-[#5ee9b5] shrink-0 ml-1.5" />
                   </button>
                 ))}
+
+                {searchQuery.trim().length >= 2 && (
+                  <button
+                    type="button"
+                    onClick={handleSubmitFreeform}
+                    className="w-full text-left p-2.5 rounded-xl hover:bg-[#F8F9F5] dark:hover:bg-white/10 text-xs flex items-center justify-between gap-2 text-[#143428] dark:text-[#5ee9b5] font-bold cursor-pointer"
+                  >
+                    <span className="flex items-center gap-2 truncate">
+                      <Navigation className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">Search exact address &quot;{searchQuery.trim()}&quot;</span>
+                    </span>
+                    <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                  </button>
+                )}
               </div>
             </motion.div>
           )}
@@ -364,11 +445,11 @@ export function DestinationPicker({
                   <button
                     key={place.id || `${place.name}-${place.lat}`}
                     type="button"
-                    onClick={() => onSelectDestination(place)}
+                    onClick={() => handlePickPlace(place)}
                     className={`card-interactive w-full p-3.5 rounded-2xl border text-left flex items-center justify-between gap-3 group cursor-pointer ${
                       isSelected
                         ? 'bg-[#FAF6F3] dark:bg-[#2A160E] border-[#B9552C] dark:border-[#FF7A45] ring-2 ring-[#B9552C] dark:ring-[#FF7A45]/40 shadow-sm'
-                        : 'bg-white/95 dark:bg-[#0D1813]/85 backdrop-blur-xs hover:bg-[#F8F9F5] dark:hover:bg-[#13221A] border-[#E2E4DC] dark:border-white/10 hover:border-[#143428]/40 dark:hover:border-white/20 shadow-xs'
+                        : 'bg-white dark:bg-[#0D1813] hover:bg-[#F8F9F5] dark:hover:bg-[#13221A] border-[#E2E4DC] dark:border-white/10 hover:border-[#143428]/40 dark:hover:border-white/20 shadow-xs'
                     }`}
                   >
                     <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -436,23 +517,34 @@ export function DestinationPicker({
 
           {/* No results notice with helpful suggestions */}
           {!isSearchingPlaces && placesResults.length === 0 && (
-            <div className="p-7 text-center bg-white dark:bg-[#0D1813]/90 rounded-2xl border border-[#E2E4DC] dark:border-white/10 space-y-2">
+            <div className="p-7 text-center bg-white dark:bg-[#0D1813] rounded-2xl border border-[#E2E4DC] dark:border-white/10 space-y-3">
               <p className="text-sm font-bold text-[#17201B] dark:text-white">
-                No places found for &quot;{searchQuery}&quot;
+                No instant suggestions for &quot;{searchQuery}&quot;
               </p>
               <p className="text-xs text-[#6B7267] dark:text-[#9AA59D] leading-relaxed max-w-xs mx-auto">
-                Google Maps could not find a direct match. Try searching by sector (e.g. &quot;Sector 14&quot;), landmark, or street name.
+                Press Search Directly to geocode any Delhi, Gurgaon, or Noida address on Google Maps.
               </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery('');
-                  setPlacesResults([]);
-                }}
-                className="chip-tactile mt-2 inline-block text-xs font-bold text-[#143428] dark:text-[#5ee9b5] underline px-3 py-1 rounded-lg hover:bg-[#F4F5F0] dark:hover:bg-white/10"
-              >
-                Clear search and view all places
-              </button>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleSubmitFreeform}
+                  disabled={isResolvingSelection}
+                  className="px-4 py-2 rounded-xl bg-[#143428] dark:bg-emerald-500 text-white dark:text-[#061C12] text-xs font-black cursor-pointer"
+                >
+                  {isResolvingSelection ? 'Locating...' : 'Search Address Directly'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setPlacesResults([]);
+                    setResolveError(null);
+                  }}
+                  className="chip-tactile text-xs font-bold text-[#143428] dark:text-[#5ee9b5] underline px-3 py-1.5 rounded-lg hover:bg-[#F4F5F0] dark:hover:bg-white/10 cursor-pointer"
+                >
+                  Clear search
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -484,6 +576,7 @@ export function DestinationPicker({
               { key: 'All', label: 'All' },
               { key: 'Gurgaon', label: 'Gurgaon' },
               { key: 'Delhi', label: 'Delhi' },
+              { key: 'Noida', label: 'Noida' },
               { key: 'Mall', label: 'Malls' },
               { key: 'Food', label: 'Dining' },
             ] as const).map((filter) => {

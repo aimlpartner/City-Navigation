@@ -136,7 +136,7 @@ export function MetroTicketModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs">
+      <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -185,7 +185,7 @@ export function MetroTicketModal({
             </div>
 
             {/* Route preview strip */}
-            <div className="mt-4 p-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-xs flex items-center justify-between text-xs">
+            <div className="mt-4 p-3 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-between text-xs">
               <div className="flex items-center gap-2 min-w-0">
                 <span
                   className="w-3 h-3 rounded-full shrink-0 ring-2 ring-white/30"

@@ -8,11 +8,13 @@ import {
   planMultiModalTrip,
   MultiModalTripPlan,
   RideMode,
+  TravelModeChoice,
   FareBreakdown,
   LiveTrafficInfo,
   METRO_STATIONS,
   findNearestMetroStation
 } from '@/lib/delhi-ncr-transit';
+import { resolvePlaceSuggestion, resolveFreeformLocation } from '@/lib/utils';
 import { MapComponent } from '@/components/MapComponent';
 import { IntrovertGuideCard } from '@/components/IntrovertGuideCard';
 import { CityQuickGuide } from '@/components/CityQuickGuide';
@@ -23,7 +25,6 @@ import { triggerPwaInstall } from '@/components/PwaInstallPrompt';
 import { LiquidGlass } from '@/components/ui/liquid-glass';
 import { useIsAppInstalled } from '@/hooks/useIsAppInstalled';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import dynamic from 'next/dynamic';
 import {
   TrainFront,
   Radar,
@@ -36,6 +37,7 @@ import {
   Search,
   ArrowUpRight,
   ArrowRight,
+  ArrowLeftRight,
   Headphones,
   BadgeCheck,
   Landmark,
@@ -58,20 +60,16 @@ import {
   Loader2
 } from 'lucide-react';
 
-const LivingTransitCanvas = dynamic(
-  () => import('@/components/LivingTransitCanvas').then((mod) => mod.LivingTransitCanvas),
-  { ssr: false }
-);
 
 
 const COMMON_ORIGINS = [
   { name: 'DLF Cyber City, Gurgaon', lat: 28.4950, lng: 77.0890 },
   { name: 'Sector 29 / Leisure Valley, Gurgaon', lat: 28.4682, lng: 77.0655 },
-  { name: 'DLF Phase 3 (U-Block), Gurgaon', lat: 28.4912, lng: 77.0967 },
-  { name: 'Golf Course Road (Sec 54), Gurgaon', lat: 28.4417, lng: 77.1065 },
+  { name: 'Connaught Place, Central Delhi', lat: 28.6328, lng: 77.2195 },
+  { name: 'Sector 18 / Mall of India, Noida', lat: 28.5672, lng: 77.3210 },
+  { name: 'Sector 62 IT Park, Noida', lat: 28.6279, lng: 77.3649 },
   { name: 'Saket / Malviya Nagar, Delhi', lat: 28.5204, lng: 77.2014 },
   { name: 'Hauz Khas, South Delhi', lat: 28.5494, lng: 77.2001 },
-  { name: 'Connaught Place, Central Delhi', lat: 28.6328, lng: 77.2195 },
   { name: 'IGI Airport Terminal 3', lat: 28.5562, lng: 77.0864 }
 ];
 
@@ -127,10 +125,11 @@ export default function HomePage() {
   const destContainerRef = useRef<HTMLDivElement>(null);
 
   // Popular Places Filter & Explorer Modal State
-  const [activeRegionFilter, setActiveRegionFilter] = useState<'All' | 'Gurgaon' | 'Delhi' | 'Transit'>('All');
+  const [activeRegionFilter, setActiveRegionFilter] = useState<'All' | 'Gurgaon' | 'Delhi' | 'Noida' | 'Transit'>('All');
   const [isAllPlacesModalOpen, setIsAllPlacesModalOpen] = useState(false);
   const [placesModalSearch, setPlacesModalSearch] = useState('');
   const [placesModalCategory, setPlacesModalCategory] = useState<string>('All');
+  const [isResolvingPlace, setIsResolvingPlace] = useState(false);
 
   // Mobile App Experience: Segmented View & Floating Map Modal
   const [isMobileMapModalOpen, setIsMobileMapModalOpen] = useState(false);
@@ -138,6 +137,7 @@ export default function HomePage() {
 
   // Gemini AI with Maps Grounding State
   const [aiGuide, setAiGuide] = useState<{
+    routeKey?: string;
     loading: boolean;
     text: string | null;
     error: string | null;
@@ -149,13 +149,18 @@ export default function HomePage() {
     links: []
   });
 
-  // Passenger & Ride Mode State
+  // Passenger, Travel Mode & Ride Mode State
+  const [travelMode, setTravelMode] = useState<TravelModeChoice>('multimodal');
   const [passengerCount, setPassengerCount] = useState<number>(1);
   const [firstMileMode, setFirstMileMode] = useState<RideMode>('cab');
   const [lastMileMode, setLastMileMode] = useState<RideMode>('cab');
 
   // Live Trip Estimate & Real Google Traffic State
   const [liveTripEstimate, setLiveTripEstimate] = useState<{
+    routeKey?: string;
+    dataSource?: 'google-live' | 'local-fallback';
+    isDirectRoadRecommended?: boolean;
+    resolvedRoute?: any;
     liveTraffic?: LiveTrafficInfo;
     fareBreakdown?: FareBreakdown;
     deepLinks?: {
@@ -163,6 +168,7 @@ export default function HomePage() {
       uberLastMileUrl?: string;
       uberDirectUrl?: string;
       rapidoUrl?: string;
+      googleMapsUrl?: string;
     };
     loading: boolean;
   }>({ loading: false });
@@ -189,22 +195,53 @@ export default function HomePage() {
     );
   }, [originName, originCoords, selectedDestination, customDestCoords, passengerCount, firstMileMode, lastMileMode]);
 
-  // Combine base plan with live traffic & dynamic fare estimation
+  const currentRouteKey = useMemo(() => {
+    if (!baseTripPlan) return '';
+    return `${baseTripPlan.origin.lat.toFixed(4)},${baseTripPlan.origin.lng.toFixed(4)}->${baseTripPlan.destination.lat.toFixed(4)},${baseTripPlan.destination.lng.toFixed(4)}:${travelMode}:${firstMileMode}:${lastMileMode}:${passengerCount}`;
+  }, [baseTripPlan, travelMode, firstMileMode, lastMileMode, passengerCount]);
+
+  // Combine base plan with live Google Directions route, traffic, and dynamic fare estimation
   const tripPlan = useMemo(() => {
     if (!baseTripPlan) return null;
-    if (!liveTripEstimate.fareBreakdown && !liveTripEstimate.liveTraffic) return baseTripPlan;
+    const matchingEstimate = liveTripEstimate.routeKey === currentRouteKey ? liveTripEstimate : null;
+    if (!matchingEstimate) {
+      return {
+        ...baseTripPlan,
+        travelMode,
+      };
+    }
+
+    const rr = matchingEstimate.resolvedRoute;
+    const keepCuratedExit =
+      Boolean(selectedDestination) &&
+      (!rr?.destinationStation?.id || selectedDestination?.nearestStationId === rr.destinationStation.id);
 
     return {
       ...baseTripPlan,
-      fareBreakdown: liveTripEstimate.fareBreakdown || baseTripPlan.fareBreakdown,
-      liveTraffic: liveTripEstimate.liveTraffic || baseTripPlan.liveTraffic
+      travelMode,
+      dataSource: matchingEstimate.dataSource || baseTripPlan.dataSource,
+      isDirectRoadRecommended:
+        matchingEstimate.isDirectRoadRecommended !== undefined
+          ? matchingEstimate.isDirectRoadRecommended
+          : baseTripPlan.isDirectRoadRecommended,
+      originStation: rr?.originStation || baseTripPlan.originStation,
+      destinationStation: rr?.destinationStation || baseTripPlan.destinationStation,
+      firstMile: rr?.firstMile || baseTripPlan.firstMile,
+      metroLeg: rr?.metroLeg || baseTripPlan.metroLeg,
+      metroExit: keepCuratedExit ? baseTripPlan.metroExit : rr?.metroExit || baseTripPlan.metroExit,
+      lastMile: rr?.lastMile || baseTripPlan.lastMile,
+      directSteps: rr?.directSteps || baseTripPlan.directSteps,
+      transitSteps: rr?.transitSteps || baseTripPlan.transitSteps,
+      fareBreakdown: matchingEstimate.fareBreakdown || baseTripPlan.fareBreakdown,
+      liveTraffic: matchingEstimate.liveTraffic || baseTripPlan.liveTraffic
     };
-  }, [baseTripPlan, liveTripEstimate]);
+  }, [baseTripPlan, liveTripEstimate, currentRouteKey, travelMode, selectedDestination]);
 
-  // Query /api/trip-estimate for live Google Maps traffic and real-world ride-hailing fares
+  // Query /api/trip-estimate for live Google Maps transit/driving/walking routes, polylines & traffic
   useEffect(() => {
     if (!baseTripPlan) return;
     let isCancelled = false;
+    const requestRouteKey = currentRouteKey;
 
     const fetchEstimate = async () => {
       try {
@@ -235,6 +272,7 @@ export default function HomePage() {
               name: baseTripPlan.destinationStation.name,
               line: baseTripPlan.destinationStation.line
             },
+            travelMode,
             passengerCount,
             firstMileMode,
             lastMileMode,
@@ -247,6 +285,10 @@ export default function HomePage() {
           const data = await res.json();
           if (data.success) {
             setLiveTripEstimate({
+              routeKey: requestRouteKey,
+              dataSource: data.dataSource,
+              isDirectRoadRecommended: data.isDirectRoadRecommended,
+              resolvedRoute: data.resolvedRoute,
               liveTraffic: data.liveTraffic,
               fareBreakdown: data.fareBreakdown,
               deepLinks: data.deepLinks,
@@ -269,10 +311,9 @@ export default function HomePage() {
       clearTimeout(timer);
     };
   }, [
-    baseTripPlan.origin.lat,
-    baseTripPlan.origin.lng,
-    baseTripPlan.destination.lat,
-    baseTripPlan.destination.lng,
+    currentRouteKey,
+    baseTripPlan,
+    travelMode,
     passengerCount,
     firstMileMode,
     lastMileMode
@@ -285,7 +326,8 @@ export default function HomePage() {
     oCoords: { lat: number; lng: number },
     dCoords: { lat: number; lng: number }
   ) => {
-    setAiGuide(prev => ({ ...prev, loading: true, error: null }));
+    const reqKey = currentRouteKey;
+    setAiGuide({ routeKey: reqKey, loading: true, text: null, error: null, links: [] });
     try {
       const res = await fetch('/api/transit-ai', {
         method: 'POST',
@@ -303,6 +345,7 @@ export default function HomePage() {
       const data = await res.json();
       if (data.success && data.guideMarkdown) {
         setAiGuide({
+          routeKey: reqKey,
           loading: false,
           text: data.guideMarkdown,
           error: null,
@@ -310,6 +353,7 @@ export default function HomePage() {
         });
       } else {
         setAiGuide({
+          routeKey: reqKey,
           loading: false,
           text: null,
           error: data.error || 'Could not fetch live AI suggestions',
@@ -318,6 +362,7 @@ export default function HomePage() {
       }
     } catch (e: any) {
       setAiGuide({
+        routeKey: reqKey,
         loading: false,
         text: null,
         error: e?.message || 'Network error',
@@ -326,62 +371,13 @@ export default function HomePage() {
     }
   };
 
-  // Synchronize AI transit grounding when tripPlan changes
-  useEffect(() => {
-    if (!tripPlan) return;
-
-    let isSubscribed = true;
-    const loadAi = async () => {
-      await Promise.resolve(); // shift past synchronous render frame
-      if (!isSubscribed) return;
-      setAiGuide(prev => ({ ...prev, loading: true, error: null }));
-      try {
-        const res = await fetch('/api/transit-ai', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            originName: tripPlan.origin.name,
-            destName: tripPlan.destination.name,
-            originLat: tripPlan.origin.lat,
-            originLng: tripPlan.origin.lng,
-            destLat: tripPlan.destination.lat,
-            destLng: tripPlan.destination.lng
-          })
-        });
-
-        const data = await res.json();
-        if (!isSubscribed) return;
-        if (data.success && data.guideMarkdown) {
-          setAiGuide({
-            loading: false,
-            text: data.guideMarkdown,
-            error: null,
-            links: data.groundingLinks || []
-          });
-        } else {
-          setAiGuide({
-            loading: false,
-            text: null,
-            error: data.error || 'Could not fetch live AI suggestions',
-            links: []
-          });
-        }
-      } catch (e: any) {
-        if (!isSubscribed) return;
-        setAiGuide({
-          loading: false,
-          text: null,
-          error: e?.message || 'Network error',
-          links: []
-        });
-      }
-    };
-
-    loadAi();
-    return () => {
-      isSubscribed = false;
-    };
-  }, [tripPlan]);
+  // Derive current-route AI state cleanly without synchronous effect writes
+  const activeAiGuide = useMemo(() => {
+    if (aiGuide.routeKey === currentRouteKey) {
+      return aiGuide;
+    }
+    return { loading: false, text: null, error: null, links: [] };
+  }, [aiGuide, currentRouteKey]);
 
   // Persistent, Zero-Friction Browser Geolocation with Silent Auto-Pickup
   const handleDetectLocation = async (options?: { silent?: boolean }) => {
@@ -713,11 +709,20 @@ export default function HomePage() {
   };
 
   // Select an origin place from dropdown (Google Places or Curated)
-  const handleSelectOriginSearchResult = (place: any) => {
+  const handleSelectOriginSearchResult = async (rawPlace: any) => {
+    let place = rawPlace;
+    if (place?.needsResolve || typeof place?.lat !== 'number' || typeof place?.lng !== 'number') {
+      setIsResolvingPlace(true);
+      const resolved = await resolvePlaceSuggestion(place);
+      setIsResolvingPlace(false);
+      if (!resolved) return;
+      place = resolved;
+    }
+
     const chosenName = place.name;
     setOriginName(chosenName);
     setOriginSearchQuery(chosenName);
-    if (place.lat && place.lng) {
+    if (typeof place.lat === 'number' && typeof place.lng === 'number') {
       setOriginCoords({ lat: place.lat, lng: place.lng });
       try {
         localStorage.setItem(
@@ -746,7 +751,16 @@ export default function HomePage() {
   };
 
   // Select a place from search dropdown (Google Places or Curated)
-  const handleSelectSearchResult = (place: any) => {
+  const handleSelectSearchResult = async (rawPlace: any) => {
+    let place = rawPlace;
+    if (!place?.curatedData && (place?.needsResolve || typeof place?.lat !== 'number' || typeof place?.lng !== 'number')) {
+      setIsResolvingPlace(true);
+      const resolved = await resolvePlaceSuggestion(place);
+      setIsResolvingPlace(false);
+      if (!resolved) return;
+      place = resolved;
+    }
+
     if (place.curatedData) {
       handleSelectFamousDest(place.curatedData);
       return;
@@ -764,7 +778,7 @@ export default function HomePage() {
       return;
     }
 
-    if (place.lat && place.lng) {
+    if (typeof place.lat === 'number' && typeof place.lng === 'number') {
       setSelectedDestination(null);
       setCustomDestCoords({
         name: place.name,
@@ -784,7 +798,101 @@ export default function HomePage() {
     } else if (placeOrDest.nearestStationId && typeof placeOrDest.nearestStationId === 'string' && !placeOrDest.curatedData) {
       handleSelectFamousDest(placeOrDest as FamousDestination);
     } else {
-      handleSelectSearchResult(placeOrDest);
+      void handleSelectSearchResult(placeOrDest);
+    }
+  };
+
+  // Submit freeform address or Enter key in Origin input
+  const handleSubmitOriginQuery = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const q = originSearchQuery.trim();
+    if (!q || isResolvingPlace) return;
+    if (originPlacesResults.length > 0) {
+      await handleSelectOriginSearchResult(originPlacesResults[0]);
+      return;
+    }
+    setIsResolvingPlace(true);
+    try {
+      const resolved = await resolveFreeformLocation(q);
+      if (resolved) {
+        await handleSelectOriginSearchResult(resolved);
+      }
+    } finally {
+      setIsResolvingPlace(false);
+    }
+  };
+
+  // Submit freeform address or Enter key in Destination input
+  const handleSubmitDestQuery = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const q = searchQuery.trim();
+    if (!q || isResolvingPlace) return;
+    if (placesResults.length > 0) {
+      await handleSelectSearchResult(placesResults[0]);
+      return;
+    }
+    setIsResolvingPlace(true);
+    try {
+      const resolved = await resolveFreeformLocation(q);
+      if (resolved) {
+        await handleSelectSearchResult(resolved);
+      }
+    } finally {
+      setIsResolvingPlace(false);
+    }
+  };
+
+  // Swap Origin and Destination cleanly
+  const handleSwapLocations = () => {
+    const prevOriginName = originName;
+    const prevOriginCoords = { ...originCoords };
+    const destName = selectedDestination
+      ? selectedDestination.name
+      : customDestCoords?.name || 'Ambience Mall, Gurugram';
+    const destCoords = selectedDestination
+      ? { lat: selectedDestination.lat, lng: selectedDestination.lng }
+      : customDestCoords
+      ? { lat: customDestCoords.lat, lng: customDestCoords.lng }
+      : { lat: 28.5049, lng: 77.0968 };
+
+    setOriginName(destName);
+    setOriginSearchQuery(destName);
+    setOriginCoords(destCoords);
+
+    setSelectedDestination(null);
+    setCustomDestCoords({
+      name: prevOriginName,
+      lat: prevOriginCoords.lat,
+      lng: prevOriginCoords.lng,
+    });
+    setSearchQuery(prevOriginName);
+    setIsOriginFocused(false);
+    setIsSearchFocused(false);
+  };
+
+  // Set Origin or Destination from clicking anywhere on the Google Map
+  const handlePickMapLocation = (
+    role: 'origin' | 'destination',
+    name: string,
+    coords: { lat: number; lng: number }
+  ) => {
+    if (role === 'origin') {
+      setOriginName(name);
+      setOriginSearchQuery(name);
+      setOriginCoords(coords);
+      setLocationError(null);
+      try {
+        localStorage.setItem(
+          'metronav_user_location',
+          JSON.stringify({ name, coords })
+        );
+      } catch {}
+    } else {
+      setSelectedDestination(null);
+      setCustomDestCoords({ name, lat: coords.lat, lng: coords.lng });
+      setSearchQuery(name);
+      setPlacesResults([]);
+      setIsSearchFocused(false);
     }
   };
 
@@ -842,6 +950,8 @@ export default function HomePage() {
         selectedDestination={selectedDestination}
         customDestCoords={customDestCoords}
         tripPlan={tripPlan}
+        travelMode={travelMode}
+        onTravelModeChange={setTravelMode}
         passengerCount={passengerCount}
         onPassengerCountChange={setPassengerCount}
         firstMileMode={firstMileMode}
@@ -849,7 +959,7 @@ export default function HomePage() {
         lastMileMode={lastMileMode}
         onLastMileModeChange={setLastMileMode}
         deepLinks={liveTripEstimate.deepLinks}
-        aiGuide={aiGuide}
+        aiGuide={activeAiGuide}
         isDetectingLocation={isDetectingLocation}
         onDetectLocation={() => handleDetectLocation({ silent: false })}
         onSelectOrigin={(name, coords) => {
@@ -866,6 +976,7 @@ export default function HomePage() {
           } catch {}
         }}
         onSelectDestination={handleSelectAnyDestination}
+        onPickMapLocation={handlePickMapLocation}
         onOpenTransitRadar={() => setIsTransitRadarOpen(true)}
         onRequestAiRefresh={() => {
           if (tripPlan) {
@@ -880,9 +991,7 @@ export default function HomePage() {
       />
 
       {/* Desktop Dashboard Experience (>=1024px) */}
-      <div className="hidden lg:block min-h-screen bg-[#F4F5F0] dark:bg-[#000000] text-[#17201B] dark:text-[#F2F5F3] antialiased selection:bg-[#143428] selection:text-white pb-20 relative overflow-x-hidden transition-colors duration-300">
-        {/* Moving Water from Metal Shader (Drawn 30 FPS, Paused in Low Power / Reduce Motion) */}
-        <LivingTransitCanvas />
+      <div className="hidden lg:block min-h-screen bg-[#F4F5F0] dark:bg-[#000000] text-[#17201B] dark:text-[#F2F5F3] antialiased selection:bg-[#143428] selection:text-white pb-20 relative overflow-x-hidden">
         {/* Top Application Header with Apple iOS Liquid Glass Specular Reflection */}
         <header className="sticky top-0 z-40 ios-liquid-glass border-b border-white/70 dark:border-white/10 shadow-[0_8px_32px_-4px_rgba(20,52,40,0.08)] relative">
           {/* Apple Specular Top Rim */}
@@ -899,14 +1008,14 @@ export default function HomePage() {
                     MetroNav
                   </span>
                   <span className="hidden sm:inline-flex whitespace-nowrap px-2.5 py-0.5 rounded-full bg-[#143428]/10 dark:bg-emerald-500/15 border border-[#143428]/20 dark:border-emerald-400/30 text-[#143428] dark:text-emerald-300 text-[10px] font-bold tracking-wide uppercase shrink-0 leading-tight">
-                    Delhi & Gurugram
+                    Delhi • Gurgaon • Noida
                   </span>
                 </div>
                 <p className="text-[11px] text-[#6B7267] dark:text-[#9BA8A0] font-medium hidden sm:block truncate mt-0.5">
-                  Quiet, confident transit navigation • exact station exit gates & feeder buses
+                  Full-coverage Google Maps routing • Metro, Rapid Metro, Aqua Line, Bus &amp; Cab/Walk
                 </p>
                 <p className="text-[10px] text-[#6B7267] dark:text-[#9BA8A0] font-bold uppercase tracking-wider sm:hidden leading-none mt-1 truncate">
-                  Delhi & Gurugram
+                  Delhi • Gurgaon • Noida
                 </p>
               </div>
             </div>
@@ -1022,44 +1131,55 @@ export default function HomePage() {
                 </div>
 
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8E9487]">
-                    <CircleDot className="w-4 h-4 text-[#143428]" strokeWidth={2} />
-                  </div>
-                  <input
-                    type="text"
-                    value={originSearchQuery}
-                    onChange={e => {
-                      const val = e.target.value;
-                      setOriginSearchQuery(val);
-                      if (!isOriginFocused) setIsOriginFocused(true);
-                      if (val.trim().length < 2) {
-                        setOriginPlacesResults([]);
-                      }
-                    }}
-                    onFocus={() => setIsOriginFocused(true)}
-                    placeholder="Type any starting place, mall, sector, hospital..."
-                    className="w-full pl-10 pr-16 py-3.5 rounded-xl ios-liquid-input text-sm text-[#17201B] font-medium placeholder:text-[#8E9487] shadow-xs"
-                  />
-
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center gap-1.5">
-                    {isSearchingOrigin && (
-                      <div className="w-4 h-4 rounded-full border-2 border-[#143428] border-t-transparent animate-spin"></div>
-                    )}
-                    {originSearchQuery.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setOriginSearchQuery('');
+                  <form onSubmit={handleSubmitOriginQuery} className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8E9487]">
+                      <CircleDot className="w-4 h-4 text-[#143428]" strokeWidth={2} />
+                    </div>
+                    <input
+                      type="text"
+                      value={originSearchQuery}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setOriginSearchQuery(val);
+                        if (!isOriginFocused) setIsOriginFocused(true);
+                        if (val.trim().length < 2) {
                           setOriginPlacesResults([]);
-                          setIsOriginFocused(true);
-                        }}
-                        className="p-1 rounded-md text-[#8E9487] hover:text-[#17201B] hover:bg-[#EAECE4] transition cursor-pointer"
-                        title="Clear origin"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
+                        }
+                      }}
+                      onFocus={() => setIsOriginFocused(true)}
+                      placeholder="Type any address, sector, landmark in Delhi / Gurgaon / Noida..."
+                      className="w-full pl-10 pr-24 py-3.5 rounded-xl ios-liquid-input text-sm text-[#17201B] font-medium placeholder:text-[#8E9487] shadow-xs"
+                    />
+
+                    <div className="absolute inset-y-0 right-0 pr-2 flex items-center gap-1">
+                      {(isSearchingOrigin || isResolvingPlace) && (
+                        <div className="w-4 h-4 rounded-full border-2 border-[#143428] border-t-transparent animate-spin mr-1"></div>
+                      )}
+                      {originSearchQuery.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setOriginSearchQuery('');
+                            setOriginPlacesResults([]);
+                            setIsOriginFocused(true);
+                          }}
+                          className="p-1 rounded-md text-[#8E9487] hover:text-[#17201B] hover:bg-[#EAECE4] transition cursor-pointer"
+                          title="Clear origin"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      {originSearchQuery.trim().length >= 2 && (
+                        <button
+                          type="submit"
+                          disabled={isResolvingPlace}
+                          className="px-2.5 py-1 rounded-lg bg-[#143428] text-white text-[11px] font-bold hover:bg-[#1E4837] disabled:opacity-50 cursor-pointer"
+                        >
+                          Go
+                        </button>
+                      )}
+                    </div>
+                  </form>
 
                   {/* Live Origin Autocomplete Dropdown */}
                   <AnimatePresence>
@@ -1139,12 +1259,21 @@ export default function HomePage() {
                               <ChevronRight className="w-3.5 h-3.5 text-[#8E9487] group-hover:text-[#143428] shrink-0 ml-2 transition" />
                             </button>
                           ))}
+                          {originSearchQuery.trim().length >= 2 && (
+                            <button
+                              type="button"
+                              onClick={() => handleSubmitOriginQuery()}
+                              className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-[#F8F9F5] text-xs font-bold text-[#143428] flex items-center justify-between gap-2 border-t border-[#E2E4DC] cursor-pointer"
+                            >
+                              <span className="truncate">
+                                Search exact address &quot;{originSearchQuery.trim()}&quot; on Google Maps
+                              </span>
+                              <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                            </button>
+                          )}
                           {originPlacesResults.length === 0 && !isSearchingOrigin && (
-                            <div className="py-6 text-center text-xs text-[#6B7267] space-y-1">
-                              <p>No direct matches found for &quot;{originSearchQuery}&quot;</p>
-                              <p className="text-[11px] text-[#8E9487]">
-                                Try typing any mall, colony, sector, or hospital across Delhi-NCR
-                              </p>
+                            <div className="py-4 text-center text-xs text-[#6B7267] space-y-1">
+                              <p>Press Enter or Go to geocode &quot;{originSearchQuery}&quot; anywhere in Delhi-NCR</p>
                             </div>
                           )}
                         </div>
@@ -1266,52 +1395,74 @@ export default function HomePage() {
 
             {/* Destination Search & Pick with Google Places Dropdown */}
             <div className="space-y-2.5 relative z-40" ref={destContainerRef}>
-              <label className="text-xs font-bold uppercase tracking-wider text-[#17201B] flex items-center gap-2">
-                <div className="w-5 h-5 rounded-md bg-[#FAF2EE] text-[#B9552C] flex items-center justify-center">
-                  <Milestone className="w-3.5 h-3.5" strokeWidth={1.75} />
-                </div>
-                <span>Target Destination</span>
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold uppercase tracking-wider text-[#17201B] flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-md bg-[#FAF2EE] text-[#B9552C] flex items-center justify-center">
+                    <Milestone className="w-3.5 h-3.5" strokeWidth={1.75} />
+                  </div>
+                  <span>Target Destination</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleSwapLocations}
+                  className="ios-liquid-pill text-xs font-bold text-[#143428] hover:text-[#B9552C] flex items-center gap-1.5 transition px-2.5 py-1 rounded-lg cursor-pointer"
+                  title="Swap Origin and Destination"
+                >
+                  <ArrowLeftRight className="w-3.5 h-3.5" strokeWidth={1.85} />
+                  <span>Swap</span>
+                </button>
+              </div>
 
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8E9487]">
-                  <Search className="w-4 h-4" strokeWidth={1.75} />
-                </div>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={e => {
-                    const val = e.target.value;
-                    setSearchQuery(val);
-                    if (!isSearchFocused) setIsSearchFocused(true);
-                    if (val.trim().length < 2) {
-                      setPlacesResults([]);
-                    }
-                  }}
-                  onFocus={() => setIsSearchFocused(true)}
-                  placeholder="Type any mall (Pacific, Vegas, Citywalk), sector, hospital..."
-                  className="w-full pl-10 pr-16 py-3.5 rounded-xl ios-liquid-input text-sm text-[#17201B] font-medium placeholder:text-[#8E9487] shadow-xs"
-                />
-
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center gap-1.5">
-                  {isSearchingPlaces && (
-                    <div className="w-4 h-4 rounded-full border-2 border-[#143428] border-t-transparent animate-spin"></div>
-                  )}
-                  {searchQuery.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSearchQuery('');
+                <form onSubmit={handleSubmitDestQuery} className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8E9487]">
+                    <Search className="w-4 h-4" strokeWidth={1.75} />
+                  </div>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setSearchQuery(val);
+                      if (!isSearchFocused) setIsSearchFocused(true);
+                      if (val.trim().length < 2) {
                         setPlacesResults([]);
-                        setIsSearchFocused(true);
-                      }}
-                      className="p-1 rounded-md text-[#8E9487] hover:text-[#17201B] hover:bg-[#EAECE4] transition cursor-pointer"
-                      title="Clear search"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
+                      }
+                    }}
+                    onFocus={() => setIsSearchFocused(true)}
+                    placeholder="Type any address, sector, mall, hospital in Delhi / Gurgaon / Noida..."
+                    className="w-full pl-10 pr-24 py-3.5 rounded-xl ios-liquid-input text-sm text-[#17201B] font-medium placeholder:text-[#8E9487] shadow-xs"
+                  />
+
+                  <div className="absolute inset-y-0 right-0 pr-2 flex items-center gap-1">
+                    {(isSearchingPlaces || isResolvingPlace) && (
+                      <div className="w-4 h-4 rounded-full border-2 border-[#143428] border-t-transparent animate-spin mr-1"></div>
+                    )}
+                    {searchQuery.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchQuery('');
+                          setPlacesResults([]);
+                          setIsSearchFocused(true);
+                        }}
+                        className="p-1 rounded-md text-[#8E9487] hover:text-[#17201B] hover:bg-[#EAECE4] transition cursor-pointer"
+                        title="Clear search"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    {searchQuery.trim().length >= 2 && (
+                      <button
+                        type="submit"
+                        disabled={isResolvingPlace}
+                        className="px-2.5 py-1 rounded-lg bg-[#143428] text-white text-[11px] font-bold hover:bg-[#1E4837] disabled:opacity-50 cursor-pointer"
+                      >
+                        Go
+                      </button>
+                    )}
+                  </div>
+                </form>
 
                 {/* Autocomplete Dropdown anchored directly below the input */}
                 <AnimatePresence>
@@ -1332,7 +1483,7 @@ export default function HomePage() {
                               <span>Live Google Maps Results ({placesResults.length} found)</span>
                             </>
                           ) : (
-                            <span>Popular Curated Destinations (Delhi & Gurgaon)</span>
+                            <span>Popular Curated Destinations (Delhi, Gurgaon &amp; Noida)</span>
                           )}
                         </span>
                         <button
@@ -1408,12 +1559,22 @@ export default function HomePage() {
                             </button>
                           ))}
 
+                          {searchQuery.trim().length >= 2 && (
+                            <button
+                              type="button"
+                              onClick={() => handleSubmitDestQuery()}
+                              className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-[#F8F9F5] text-xs font-bold text-[#143428] flex items-center justify-between gap-2 border-t border-[#E2E4DC] cursor-pointer"
+                            >
+                              <span className="truncate">
+                                Route to &quot;{searchQuery.trim()}&quot; on Google Maps
+                              </span>
+                              <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                            </button>
+                          )}
+
                           {placesResults.length === 0 && !isSearchingPlaces && (
-                            <div className="py-6 text-center text-xs text-[#6B7267] space-y-1">
-                              <p>No direct matches found for &quot;{searchQuery}&quot;</p>
-                              <p className="text-[11px] text-[#8E9487]">
-                                Try searching by landmark, sector, or metro station across Delhi-NCR
-                              </p>
+                            <div className="py-4 text-center text-xs text-[#6B7267] space-y-1">
+                              <p>Press Enter or Go to geocode &quot;{searchQuery}&quot; anywhere in Delhi-NCR</p>
                             </div>
                           )}
                         </div>
@@ -1454,7 +1615,7 @@ export default function HomePage() {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-1">
                     <span className="text-[11px] font-semibold text-[#6B7267] mr-1">Popular Places:</span>
-                    {(['All', 'Gurgaon', 'Delhi'] as const).map(reg => (
+                    {(['All', 'Gurgaon', 'Delhi', 'Noida'] as const).map(reg => (
                       <button
                         key={reg}
                         onClick={() => setActiveRegionFilter(reg)}
@@ -1474,7 +1635,7 @@ export default function HomePage() {
                     onClick={() => setIsAllPlacesModalOpen(true)}
                     className="ios-liquid-pill text-[11px] text-[#143428] hover:text-[#B9552C] font-bold flex items-center gap-1 transition px-2.5 py-1 rounded-lg"
                   >
-                    <span>View All 39 Places</span>
+                    <span>View All {FAMOUS_DESTINATIONS.length} Places</span>
                     <ArrowRight className="w-3 h-3" />
                   </button>
                 </div>
@@ -1485,6 +1646,7 @@ export default function HomePage() {
                       if (activeRegionFilter === 'All') return true;
                       if (activeRegionFilter === 'Gurgaon') return dest.city === 'Gurgaon';
                       if (activeRegionFilter === 'Delhi') return dest.city === 'Delhi';
+                      if (activeRegionFilter === 'Noida') return dest.city === 'Noida';
                       return true;
                     })
                     .slice(0, 16)
@@ -1513,10 +1675,12 @@ export default function HomePage() {
                                 ? 'bg-black/20 text-white'
                                 : dest.city === 'Gurgaon'
                                 ? 'bg-[#FAF2EE] text-[#B9552C]'
+                                : dest.city === 'Noida'
+                                ? 'bg-purple-50 text-purple-700'
                                 : 'bg-[#F4F5F0] text-[#143428]'
                             }`}
                           >
-                            {dest.city === 'Gurgaon' ? 'GGN' : 'DEL'}
+                            {dest.city === 'Gurgaon' ? 'GGN' : dest.city === 'Noida' ? 'NOI' : 'DEL'}
                           </span>
                         </button>
                       );
@@ -1534,6 +1698,8 @@ export default function HomePage() {
             {tripPlan && (
               <IntrovertGuideCard
                 plan={tripPlan}
+                travelMode={travelMode}
+                onTravelModeChange={setTravelMode}
                 passengerCount={passengerCount}
                 onPassengerCountChange={setPassengerCount}
                 firstMileMode={firstMileMode}
@@ -1541,7 +1707,7 @@ export default function HomePage() {
                 lastMileMode={lastMileMode}
                 onLastMileModeChange={setLastMileMode}
                 deepLinks={liveTripEstimate.deepLinks}
-                aiGuide={aiGuide}
+                aiGuide={activeAiGuide}
                 onOpenTransitRadar={() => setIsTransitRadarOpen(true)}
                 onRequestAiRefresh={() => {
                   if (tripPlan) {
@@ -1578,7 +1744,7 @@ export default function HomePage() {
             </div>
 
             <div className="h-[480px] sm:h-[560px] xl:h-[640px] w-full rounded-2xl overflow-hidden border border-[#E2E4DC] shadow-sm relative bg-[#F4F5F0]">
-              <MapComponent plan={tripPlan} userCoords={originCoords} />
+              <MapComponent plan={tripPlan} userCoords={originCoords} onPickMapLocation={handlePickMapLocation} />
             </div>
 
             {/* Station Legend Helper */}
@@ -1639,7 +1805,7 @@ export default function HomePage() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={() => setIsAllPlacesModalOpen(false)}
-            className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-2.5 sm:p-4 pb-[max(env(safe-area-inset-bottom,0px),12px)] sm:pb-4 bg-black/60 backdrop-blur-xs"
+            className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-2.5 sm:p-4 pb-[max(env(safe-area-inset-bottom,0px),12px)] sm:pb-4 bg-black/70"
           >
             <motion.div
               key="all-places-dialog"
@@ -1794,7 +1960,7 @@ export default function HomePage() {
 
               {/* Modal Footer */}
               <div className="p-3.5 border-t border-[#E2E4DC] bg-[#F8F9F5] text-center text-xs text-[#6B7267]">
-                Showing destinations across Gurgaon, Airport Corridor, South Delhi, and Central/Old Delhi
+                Showing curated hotspots across Gurgaon, Noida, Airport Corridor, South Delhi, and Central/Old Delhi — plus live Google Maps search for any address.
               </div>
             </motion.div>
           </motion.div>

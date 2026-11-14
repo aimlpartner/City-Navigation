@@ -128,7 +128,7 @@ export function LiveTransitRadarModal({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
           onClick={onClose}
-          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-2.5 sm:p-6 pb-[max(env(safe-area-inset-bottom,0px),12px)] sm:pb-6 bg-black/60 backdrop-blur-md"
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-2.5 sm:p-6 pb-[max(env(safe-area-inset-bottom,0px),12px)] sm:pb-6 bg-black/70"
         >
           <motion.div
             key="transit-radar-card"
@@ -155,7 +155,7 @@ export function LiveTransitRadarModal({
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
                     <h3 className="text-base sm:text-lg font-bold tracking-tight text-white font-sans truncate">
-                      Delhi & Gurugram Transit Radar
+                      Delhi, Gurgaon &amp; Noida Transit Radar
                     </h3>
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/10 text-emerald-200 text-[10px] font-mono font-medium border border-white/15 whitespace-nowrap shrink-0">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
@@ -189,7 +189,7 @@ export function LiveTransitRadarModal({
             </div>
 
             {/* Mode / Tabs Switcher */}
-            <div className="flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 border-b border-[#E2E4DC]/80 dark:border-white/10 bg-white/40 dark:bg-black/30 backdrop-blur-md overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 border-b border-[#E2E4DC]/80 dark:border-white/10 bg-white dark:bg-[#0D1813] overflow-x-auto no-scrollbar">
               <button
                 onClick={() => setActiveTab('lines')}
                 className={`ios-liquid-pill px-3.5 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-2 whitespace-nowrap shrink-0 cursor-pointer ${

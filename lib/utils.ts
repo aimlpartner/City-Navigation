@@ -79,3 +79,84 @@ export function openRapidoApp() {
     window.open(webFallbackUrl, '_blank');
   }
 }
+
+/**
+ * Resolves a suggestion returned by /api/places so coordinates (lat, lng) are always populated.
+ */
+export async function resolvePlaceSuggestion(place: any): Promise<any> {
+  if (!place) return null;
+  if (typeof place.lat === 'number' && typeof place.lng === 'number') {
+    return place;
+  }
+
+  if (place.id) {
+    try {
+      const res = await fetch(`/api/places?placeId=${encodeURIComponent(place.id)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.place && typeof data.place.lat === 'number' && typeof data.place.lng === 'number') {
+          return { ...place, ...data.place, needsResolve: false };
+        }
+      }
+    } catch {}
+  }
+
+  const fallbackText = place.formattedAddress || place.name;
+  if (fallbackText) {
+    try {
+      const geoRes = await fetch(`/api/geocode?address=${encodeURIComponent(fallbackText)}`);
+      if (geoRes.ok) {
+        const geo = await geoRes.json();
+        if (typeof geo.lat === 'number' && typeof geo.lng === 'number') {
+          return {
+            ...place,
+            lat: geo.lat,
+            lng: geo.lng,
+            formattedAddress: geo.fullAddress || fallbackText,
+            needsResolve: false
+          };
+        }
+      }
+    } catch {}
+  }
+
+  return place;
+}
+
+/**
+ * Directly resolves any typed address, sector, mall, or landmark in Delhi, Gurgaon, or Noida on Enter / Search submit.
+ */
+export async function resolveFreeformLocation(rawQuery: string): Promise<any | null> {
+  const query = rawQuery.trim();
+  if (query.length < 2) return null;
+
+  try {
+    const res = await fetch(`/api/places?q=${encodeURIComponent(query)}&resolve=1`);
+    if (res.ok) {
+      const data = await res.json();
+      const top = data.places?.[0];
+      if (top) {
+        return await resolvePlaceSuggestion(top);
+      }
+    }
+  } catch {}
+
+  try {
+    const geoRes = await fetch(`/api/geocode?address=${encodeURIComponent(query)}`);
+    if (geoRes.ok) {
+      const geo = await geoRes.json();
+      if (typeof geo.lat === 'number' && typeof geo.lng === 'number') {
+        return {
+          id: `geo-${geo.lat.toFixed(4)}-${geo.lng.toFixed(4)}`,
+          name: geo.locationName || query,
+          formattedAddress: geo.fullAddress || query,
+          lat: geo.lat,
+          lng: geo.lng,
+          isCurated: false
+        };
+      }
+    }
+  } catch {}
+
+  return null;
+}

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MultiModalTripPlan, RideMode } from '@/lib/delhi-ncr-transit';
+import { MultiModalTripPlan, RideMode, TravelModeChoice } from '@/lib/delhi-ncr-transit';
 import { LiveStationDepartures } from '@/components/LiveStationDepartures';
 import { ACTIVE_TRANSIT_ALERTS, getConnectingBusesForStation } from '@/lib/realtime-transit';
 import { openRapidoApp } from '@/lib/utils';
@@ -9,8 +9,11 @@ import {
   TrainFront,
   DoorOpen,
   CarTaxiFront,
+  BusFront,
+  Footprints,
   PersonStanding,
   Map,
+  Navigation,
   Copy,
   Check,
   Zap,
@@ -42,6 +45,8 @@ import { calculateTicketPricing, getDmrcWhatsAppUrl, MetroTicket } from '@/lib/m
 
 interface RouteResultProps {
   plan: MultiModalTripPlan;
+  travelMode?: TravelModeChoice;
+  onTravelModeChange?: (mode: TravelModeChoice) => void;
   passengerCount?: number;
   onPassengerCountChange?: (count: number) => void;
   firstMileMode?: RideMode;
@@ -53,6 +58,7 @@ interface RouteResultProps {
     uberLastMileUrl?: string;
     uberDirectUrl?: string;
     rapidoUrl?: string;
+    googleMapsUrl?: string;
   };
   aiGuide?: {
     loading: boolean;
@@ -67,6 +73,8 @@ interface RouteResultProps {
 
 export function RouteResult({
   plan,
+  travelMode,
+  onTravelModeChange,
   passengerCount: externalPax,
   onPassengerCountChange,
   firstMileMode: externalFmMode,
@@ -172,6 +180,26 @@ export function RouteResult({
     timeDiffMin: 15
   };
 
+  const activeTravelMode: TravelModeChoice = travelMode || plan.travelMode || 'multimodal';
+  const isDirectRoadMode = activeTravelMode === 'driving' || activeTravelMode === 'walking';
+  const directDistKm =
+    liveTraffic?.directDistanceKm ||
+    Math.max(0.4, Number((plan.firstMile.distanceKm + plan.lastMile.distanceKm).toFixed(1)));
+  const directDurationMin =
+    activeTravelMode === 'walking'
+      ? (plan.travelMode === 'walking' ? liveTraffic?.totalDurationMin : undefined) || Math.max(3, Math.round(directDistKm * 12))
+      : liveTraffic?.directCabDurationMin || directCab.durationMin;
+
+  const googleMapsUrl =
+    deepLinks?.googleMapsUrl ||
+    `https://www.google.com/maps/dir/?api=1&origin=${plan.origin.lat},${plan.origin.lng}&destination=${plan.destination.lat},${plan.destination.lng}&travelmode=${
+      activeTravelMode === 'driving' ? 'driving' : activeTravelMode === 'walking' ? 'walking' : 'transit'
+    }`;
+
+  const uberDirectLink =
+    deepLinks?.uberDirectUrl ||
+    `https://m.uber.com/ul/?action=setPickup&client_id=metronav&pickup[latitude]=${plan.origin.lat}&pickup[longitude]=${plan.origin.lng}&dropoff[latitude]=${plan.destination.lat}&dropoff[longitude]=${plan.destination.lng}`;
+
   // Uber links
   const uberFmLink =
     deepLinks?.uberFirstMileUrl ||
@@ -182,7 +210,15 @@ export function RouteResult({
     `https://m.uber.com/ul/?action=setPickup&client_id=metronav&pickup[latitude]=${plan.destinationStation.lat}&pickup[longitude]=${plan.destinationStation.lng}&dropoff[latitude]=${plan.destination.lat}&dropoff[longitude]=${plan.destination.lng}`;
 
   const handleCopyRoute = () => {
-    const summary = `📍 Route to ${plan.destination.name} (${pax} ${pax === 1 ? 'person' : 'people'}):
+    const summary = isDirectRoadMode
+      ? `📍 ${activeTravelMode === 'walking' ? 'Walking' : 'Driving'} Route to ${plan.destination.name}:
+From: ${plan.origin.name}
+Distance: ~${directDistKm} km • Time: ~${directDurationMin} mins${
+          activeTravelMode === 'driving' ? ` • Est. Cab Fare: ~₹${directCab.estimatedCostInr}` : ''
+        }
+${(plan.directSteps || []).slice(0, 6).map((s, i) => `${i + 1}. ${s.instruction} (${s.distanceText})`).join('\n')}
+Google Maps: ${googleMapsUrl}`
+      : `📍 Route to ${plan.destination.name} (${pax} ${pax === 1 ? 'person' : 'people'}):
 1. First Mile: Start at ${plan.origin.name} ➔ Go to ${plan.originStation.name} (${fmMode.toUpperCase()}: ~₹${firstMileCost}, ~${firstMileDuration}m)
 2. Metro: Board ${plan.originStation.line} Line at ${plan.originStation.name}
 ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferStation?.name}\n` : ''}   Metro Fare: ₹${metroFarePerPerson}/pax (₹${metroTotalCost} total for ${pax} pax)
@@ -199,15 +235,68 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
 
   return (
     <div className="space-y-4 pb-8">
-      {/* Editorial Racing Green Hero Banner */}
-      <div className="rounded-[28px] bg-[#143428] text-white p-5 sm:p-6 shadow-xl relative overflow-hidden border border-[#1E4837]">
-        {/* Glow */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Mode Switcher Bar (Google Maps style) */}
+      {onTravelModeChange && (
+        <div className="grid grid-cols-4 gap-1.5 p-1 rounded-2xl bg-white dark:bg-[#0D1813] border border-[#E2E4DC] dark:border-white/10 shadow-xs">
+          {([
+            { id: 'multimodal', label: 'Metro+Ride', Icon: TrainFront },
+            { id: 'transit', label: 'Transit', Icon: BusFront },
+            { id: 'driving', label: 'Cab / Car', Icon: CarTaxiFront },
+            { id: 'walking', label: 'Walk', Icon: Footprints },
+          ] as const).map(({ id, label, Icon }) => {
+            const active = activeTravelMode === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => onTravelModeChange(id)}
+                className={`flex flex-col sm:flex-row items-center justify-center gap-1 py-2 px-1.5 rounded-xl text-[11px] font-extrabold transition-colors cursor-pointer ${
+                  active
+                    ? 'bg-[#143428] dark:bg-emerald-500 text-white dark:text-[#061C12] shadow-xs'
+                    : 'text-[#53584E] dark:text-[#A7B2A8] hover:bg-[#F4F5F0] dark:hover:bg-white/10'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
+      {/* Direct Recommendation Alert on short trips */}
+      {plan.isDirectRoadRecommended && !isDirectRoadMode && onTravelModeChange && (
+        <div className="p-3 rounded-2xl bg-[#FAF2EE] dark:bg-[#2A160E] border border-[#E8C2B3] dark:border-[#B9552C]/40 flex items-center justify-between gap-2.5 text-xs">
+          <div className="min-w-0">
+            <div className="font-black text-[#B9552C] dark:text-[#FF7A45]">
+              Direct Cab / Walk is faster ({directDistKm} km)
+            </div>
+            <div className="text-[11px] text-[#53584E] dark:text-[#A7B2A8]">
+              Avoid metro transfers for this short NCR hop (~{directDurationMin} mins).
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => onTravelModeChange(directDistKm <= 1.2 ? 'walking' : 'driving')}
+            className="px-3 py-1.5 rounded-xl bg-[#B9552C] text-white text-[11px] font-black shrink-0 cursor-pointer"
+          >
+            {directDistKm <= 1.2 ? 'Walk Direct' : 'Cab Direct'}
+          </button>
+        </div>
+      )}
+
+      {/* Editorial Racing Green Hero Banner */}
+      <div className="rounded-[28px] bg-[#143428] text-white p-5 sm:p-6 shadow-md relative overflow-hidden border border-[#1E4837]">
         <div className="flex items-start justify-between gap-3 relative z-10">
           <div className="min-w-0 flex-1">
             <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">
-              Complete Multi-Modal Itinerary
+              {activeTravelMode === 'driving'
+                ? 'Live Google Driving Route'
+                : activeTravelMode === 'walking'
+                ? 'Google Walking Directions'
+                : activeTravelMode === 'transit'
+                ? 'Live Google Public Transit'
+                : 'Complete Multi-Modal Itinerary'}
             </span>
             <h2 className="text-xl sm:text-2xl font-black text-white mt-0.5 leading-tight truncate">
               To {plan.destination.name}
@@ -227,7 +316,7 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
           </button>
         </div>
 
-        {/* 3 Metric Stat Boxes: Time, Total Fare, Exit Gate */}
+        {/* 3 Metric Stat Boxes: Time, Total Fare / Cost, Exit Gate / Distance */}
         <div className="grid grid-cols-3 gap-2 sm:gap-2.5 mt-4 pt-4 border-t border-white/15 relative z-10">
           {/* Time with Live Google Traffic */}
           <div className="bg-[#1A3E31]/95 rounded-[16px] p-2.5 sm:p-3 border border-[#235241] text-center flex flex-col justify-between">
@@ -236,7 +325,7 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
               <span>Time</span>
             </div>
             <div className="text-base sm:text-xl font-black text-white mt-1 tabular-nums">
-              ~{totalTripDuration}m
+              ~{isDirectRoadMode ? directDurationMin : totalTripDuration}m
             </div>
             <div className="mt-1">
               {liveTraffic?.trafficCondition === 'heavy' ? (
@@ -262,29 +351,37 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
           <div className="bg-[#1A3E31]/95 rounded-[16px] p-2.5 sm:p-3 border border-amber-400/30 text-center flex flex-col justify-between">
             <div className="text-[10px] text-amber-200 font-bold uppercase tracking-wider flex items-center justify-center gap-1">
               <IndianRupee className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-              <span>Total Fare</span>
+              <span>{activeTravelMode === 'walking' ? 'Cost' : activeTravelMode === 'driving' ? 'Cab Est.' : 'Total Fare'}</span>
             </div>
             <div className="text-base sm:text-xl font-black text-amber-200 mt-1 tabular-nums">
-              ₹{totalTripFare}
+              {activeTravelMode === 'walking'
+                ? 'Free'
+                : activeTravelMode === 'driving'
+                ? `₹${directCab.estimatedCostInr}`
+                : `₹${totalTripFare}`}
             </div>
             <div className="text-[9px] font-bold text-amber-100/70 mt-1 truncate">
-              {pax} {pax === 1 ? 'person' : 'passengers'}
+              {isDirectRoadMode ? `${directDistKm} km direct` : `${pax} ${pax === 1 ? 'person' : 'passengers'}`}
             </div>
           </div>
 
-          {/* Exit Gate */}
+          {/* Exit Gate / Via Road */}
           <div className="bg-[#1A3E31]/95 rounded-[16px] p-2.5 sm:p-3 border border-[#B9552C]/50 text-center flex flex-col justify-between">
             <div className="text-[10px] text-[#F3A585] font-bold uppercase tracking-wider flex items-center justify-center gap-1">
-              <DoorOpen className="w-3.5 h-3.5 text-[#F3A585] shrink-0" />
-              <span>Exit Gate</span>
+              {isDirectRoadMode ? (
+                <Navigation className="w-3.5 h-3.5 text-[#F3A585] shrink-0" />
+              ) : (
+                <DoorOpen className="w-3.5 h-3.5 text-[#F3A585] shrink-0" />
+              )}
+              <span>{isDirectRoadMode ? 'Distance' : 'Exit Gate'}</span>
             </div>
             <div className="mt-1 flex items-center justify-center">
               <span className="px-2.5 py-0.5 rounded-full bg-[#B9552C] text-white text-[11px] sm:text-xs font-black shadow-xs whitespace-nowrap inline-block">
-                Gate {plan.metroExit.gateNumber}
+                {isDirectRoadMode ? `${directDistKm} km` : `Gate ${plan.metroExit.gateNumber}`}
               </span>
             </div>
             <div className="text-[9px] font-bold text-[#F3A585]/90 mt-1 truncate">
-              Deboard point
+              {isDirectRoadMode ? plan.liveTraffic?.summaryRoad || 'Google Maps road' : 'Deboard point'}
             </div>
           </div>
         </div>
@@ -318,8 +415,10 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
         )}
       </div>
 
-      {/* Interactive Commuter Count Selector */}
-      <div className="p-3 sm:p-3.5 rounded-[20px] bg-white/95 backdrop-blur-xs border border-[#E2E4DC] shadow-xs flex items-center justify-between gap-3">
+      {/* Interactive Commuter Count Selector (shown for transit / multimodal) */}
+      {!isDirectRoadMode && (
+        <>
+      <div className="p-3 sm:p-3.5 rounded-[20px] bg-white dark:bg-[#0D1813] border border-[#E2E4DC] dark:border-white/10 shadow-xs flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <div className="w-8 h-8 rounded-[10px] bg-[#143428]/10 text-[#143428] flex items-center justify-center shrink-0">
             <Users className="w-4 h-4" />
@@ -462,39 +561,194 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
           </div>
         )}
       </div>
+        </>
+      )}
 
       {/* Quick Action CTAs */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-2">
         <button
           type="button"
           onClick={onSwitchToMap}
-          className="btn-tactile flex items-center justify-center gap-2 p-3.5 rounded-2xl bg-[#143428] dark:bg-emerald-600 text-white font-bold text-sm shadow-md hover:bg-[#1C4535] cursor-pointer"
+          className="btn-tactile flex items-center justify-center gap-1.5 p-3 rounded-2xl bg-[#143428] dark:bg-emerald-600 text-white font-bold text-xs sm:text-sm shadow-md hover:bg-[#1C4535] cursor-pointer"
         >
-          <Map className="w-4 h-4 text-[#5ee9b5]" strokeWidth={2.2} />
-          <span>See on Map</span>
+          <Map className="w-4 h-4 text-[#5ee9b5] shrink-0" strokeWidth={2.2} />
+          <span className="truncate">See Map</span>
         </button>
 
         <button
           type="button"
           onClick={handleCopyRoute}
-          className="btn-tactile flex items-center justify-center gap-2 p-3.5 rounded-2xl bg-white/90 dark:bg-white/10 backdrop-blur-xs border border-[#D5D8CD] dark:border-white/15 text-[#17201B] dark:text-white font-bold text-sm shadow-xs hover:bg-[#F8F9F5] dark:hover:bg-white/15 cursor-pointer"
+          className="btn-tactile flex items-center justify-center gap-1.5 p-3 rounded-2xl bg-white dark:bg-white/10 border border-[#D5D8CD] dark:border-white/15 text-[#17201B] dark:text-white font-bold text-xs sm:text-sm shadow-xs hover:bg-[#F8F9F5] dark:hover:bg-white/15 cursor-pointer"
         >
           {copiedText ? (
             <>
-              <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 font-black" strokeWidth={2.5} />
-              <span className="text-emerald-700 dark:text-emerald-400">Copied!</span>
+              <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 font-black shrink-0" strokeWidth={2.5} />
+              <span className="text-emerald-700 dark:text-emerald-400">Copied</span>
             </>
           ) : (
             <>
-              <Copy className="w-4 h-4 text-[#6B7267] dark:text-[#9AA59D]" strokeWidth={2} />
-              <span>Copy Steps</span>
+              <Copy className="w-4 h-4 text-[#6B7267] dark:text-[#9AA59D] shrink-0" strokeWidth={2} />
+              <span className="truncate">Copy</span>
             </>
           )}
         </button>
+
+        <a
+          href={googleMapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-tactile flex items-center justify-center gap-1.5 p-3 rounded-2xl bg-white dark:bg-white/10 border border-[#D5D8CD] dark:border-white/15 text-[#143428] dark:text-[#5ee9b5] font-bold text-xs sm:text-sm shadow-xs hover:bg-[#F8F9F5] dark:hover:bg-white/15 cursor-pointer"
+        >
+          <ExternalLink className="w-3.5 h-3.5 shrink-0" strokeWidth={2.2} />
+          <span className="truncate">GMaps</span>
+        </a>
       </div>
 
+      {isDirectRoadMode ? (
+        <div className="space-y-3.5">
+          {activeTravelMode === 'driving' && (
+            <div className="rounded-[24px] bg-white dark:bg-[#0D1813] border border-[#E2E4DC] dark:border-white/10 p-4 sm:p-5 shadow-xs space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <div className="text-xs font-black text-[#17201B] dark:text-white">Book Direct Cab / Auto</div>
+                  <div className="text-[11px] text-[#6B7267] dark:text-[#9AA59D]">
+                    Door-to-door (~₹{directCab.estimatedCostInr}, ~{directDurationMin} mins)
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 text-[#143428] dark:text-[#5ee9b5] text-[10px] font-black">
+                  {directDistKm} km
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <a
+                  href={uberDirectLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-tactile flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-black text-white text-xs font-bold hover:bg-neutral-800 shadow-xs"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Book on Uber</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={openRapidoApp}
+                  className="btn-tactile flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-amber-400 text-amber-950 text-xs font-black hover:bg-amber-300 shadow-xs cursor-pointer"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 text-amber-900" />
+                  <span>Book on Rapido</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="rounded-[24px] bg-white dark:bg-[#0D1813] border border-[#E2E4DC] dark:border-white/10 p-4 sm:p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#E2E4DC] dark:border-white/10">
+              <div className="flex items-center gap-2">
+                <Navigation className="w-4 h-4 text-[#143428] dark:text-[#5ee9b5]" />
+                <h3 className="font-black text-sm text-[#17201B] dark:text-white">
+                  Turn-by-Turn {activeTravelMode === 'walking' ? 'Walking' : 'Driving'} Steps
+                </h3>
+              </div>
+              {liveTraffic?.summaryRoad && (
+                <span className="text-[11px] font-bold text-[#6B7267] dark:text-[#9AA59D] truncate max-w-[140px]">
+                  Via {liveTraffic.summaryRoad}
+                </span>
+              )}
+            </div>
+
+            {plan.directSteps && plan.directSteps.length > 0 ? (
+              <div className="divide-y divide-[#EAECE4] dark:divide-white/10">
+                {plan.directSteps.map((step, idx) => (
+                  <div key={idx} className="py-2.5 flex items-start justify-between gap-3 text-xs">
+                    <div className="flex items-start gap-2.5 min-w-0">
+                      <span className="w-5 h-5 rounded-full bg-[#143428]/10 dark:bg-emerald-500/20 text-[#143428] dark:text-[#5ee9b5] font-mono font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                        {idx + 1}
+                      </span>
+                      <span className="text-[#17201B] dark:text-[#F3F5EE] font-medium leading-relaxed">
+                        {step.instruction}
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-bold text-[#6B7267] dark:text-[#9AA59D] shrink-0 whitespace-nowrap">
+                      {step.distanceText}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-[#53584E] dark:text-[#A7B2A8] leading-relaxed">
+                Head from {plan.origin.name} toward {plan.destination.name} ({directDistKm} km, ~{directDurationMin} mins). Open in Google Maps for voice turn-by-turn guidance.
+              </p>
+            )}
+          </div>
+        </div>
+      ) : activeTravelMode === 'transit' && plan.transitSteps && plan.transitSteps.length > 0 ? (
+        <div className="space-y-3.5">
+          <div className="rounded-[24px] bg-white dark:bg-[#0D1813] border border-[#E2E4DC] dark:border-white/10 p-4 sm:p-5 shadow-xs space-y-3.5">
+            <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#E2E4DC] dark:border-white/10">
+              <div className="flex items-center gap-2">
+                <BusFront className="w-4 h-4 text-[#143428] dark:text-[#5ee9b5]" />
+                <h3 className="font-black text-base text-[#17201B] dark:text-white">
+                  Google Public Transit Directions
+                </h3>
+              </div>
+              <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#143428]/10 dark:bg-emerald-500/20 text-[#143428] dark:text-[#5ee9b5]">
+                {plan.transitSteps.length} steps
+              </span>
+            </div>
+
+            <div className="space-y-2.5">
+              {plan.transitSteps.map((step, idx) => (
+                <div
+                  key={idx}
+                  className="p-3 rounded-2xl bg-[#F8F9F5] dark:bg-white/5 border border-[#E2E4DC] dark:border-white/10 space-y-1.5"
+                >
+                  <div className="flex items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2 font-black text-[#17201B] dark:text-white min-w-0">
+                      <span
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: step.mode === 'TRANSIT' ? step.lineColor || '#0284c7' : '#6B7267' }}
+                      />
+                      <span className="truncate">
+                        {step.mode === 'TRANSIT'
+                          ? step.lineName || step.vehicleType || 'Transit'
+                          : 'Walk'}
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-bold text-[#6B7267] dark:text-[#9AA59D] shrink-0">
+                      {step.durationText} • {step.distanceText}
+                    </span>
+                  </div>
+
+                  {step.mode === 'TRANSIT' && step.from && step.to ? (
+                    <div className="text-xs text-[#53584E] dark:text-[#A7B2A8] pl-4 space-y-1">
+                      <div className="font-bold text-[#17201B] dark:text-[#F3F5EE]">
+                        {step.from} ➔ {step.to}
+                        {step.stopsCount ? ` (${step.stopsCount} stops)` : ''}
+                      </div>
+                      {step.headsign && (
+                        <div className="text-[11px]">Towards {step.headsign}</div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-xs text-[#53584E] dark:text-[#A7B2A8] pl-4">
+                      {step.instruction}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <LiveStationDepartures
+            stationId={plan.originStation.id}
+            stationName={plan.originStation.name}
+            lineColor={plan.originStation.lineColor}
+          />
+        </div>
+      ) : (
+        <>
       {/* STAGE 1: First Mile Leg */}
-      <div className="rounded-[24px] bg-white/95 dark:bg-[#0D1813]/90 backdrop-blur-xs border border-[#E2E4DC] dark:border-white/10 p-4 sm:p-5 shadow-xs space-y-3.5">
+      <div className="rounded-[24px] bg-white dark:bg-[#0D1813] border border-[#E2E4DC] dark:border-white/10 p-4 sm:p-5 shadow-xs space-y-3.5">
         <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#E2E4DC] dark:border-white/10">
           <div className="flex items-center gap-2.5">
             <span className="px-2.5 py-1 rounded-lg bg-[#143428] dark:bg-emerald-500 text-white dark:text-[#061C12] font-mono font-extrabold text-xs">
@@ -613,7 +867,7 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
       </div>
 
       {/* STAGE 2: Metro Transit */}
-      <div className="rounded-[24px] bg-white/95 dark:bg-[#0D1813]/90 backdrop-blur-xs border border-[#E2E4DC] dark:border-white/10 p-4 sm:p-5 shadow-xs space-y-4">
+      <div className="rounded-[24px] bg-white dark:bg-[#0D1813] border border-[#E2E4DC] dark:border-white/10 p-4 sm:p-5 shadow-xs space-y-4">
         <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#E2E4DC] dark:border-white/10">
           <div className="flex items-center gap-2.5">
             <span
@@ -744,9 +998,14 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
         {/* Interchange Alert */}
         {plan.metroLeg.requiresTransfer && (
           <div className="p-3.5 rounded-2xl bg-[#FAF2EE] dark:bg-[#2A160E]/80 text-xs space-y-1.5 border-l-4 border-[#B9552C]">
-            <div className="font-bold flex items-center gap-1.5 text-[#B9552C] dark:text-[#FF7A45] text-sm">
-              <GitCommitVertical className="w-4 h-4" />
-              <span>Interchange at {plan.metroLeg.transferStation?.name}</span>
+            <div className="font-bold flex items-center gap-1.5 text-[#B9552C] dark:text-[#FF7A45] text-sm flex-wrap">
+              <GitCommitVertical className="w-4 h-4 shrink-0" />
+              <span>
+                Interchange at{' '}
+                {plan.metroLeg.transferStations && plan.metroLeg.transferStations.length > 0
+                  ? plan.metroLeg.transferStations.map((st) => st.name).join(' ➔ ')
+                  : plan.metroLeg.transferStation?.name}
+              </span>
             </div>
             <p className="text-[#53584E] dark:text-[#A7B2A8] leading-relaxed">
               {plan.metroLeg.transferInstruction}
@@ -806,7 +1065,7 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
       </div>
 
       {/* STAGE 4: Final Mile Leg */}
-      <div className="rounded-[24px] bg-white/95 dark:bg-[#0D1813]/90 backdrop-blur-xs border border-[#E2E4DC] dark:border-white/10 p-4 sm:p-5 shadow-xs space-y-3.5">
+      <div className="rounded-[24px] bg-white dark:bg-[#0D1813] border border-[#E2E4DC] dark:border-white/10 p-4 sm:p-5 shadow-xs space-y-3.5">
         <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#E2E4DC] dark:border-white/10">
           <div className="flex items-center gap-2.5">
             <span className="px-2.5 py-1 rounded-lg bg-[#143428] dark:bg-emerald-500 text-white dark:text-[#061C12] font-mono font-extrabold text-xs">
@@ -940,6 +1199,9 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
       </div>
 
       {/* Bottom Switch Destination Button */}
+      </>
+      )}
+
       <div className="pt-2">
         <button
           type="button"

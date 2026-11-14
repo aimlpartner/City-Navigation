@@ -90,7 +90,7 @@ export function LiveStationDepartures({
       className="rounded-[28px] text-[#17201B] shadow-xl border border-white/80 overflow-hidden"
     >
       {/* PIDS Header (Passenger Information Display System Style) */}
-      <div className="p-3.5 sm:p-5 bg-white/40 backdrop-blur-md border-b border-[#E2E4DC]/80 flex items-center justify-between gap-2.5">
+      <div className="p-3.5 sm:p-5 bg-white/85 dark:bg-[#0D1813]/85 border-b border-[#E2E4DC]/80 flex items-center justify-between gap-2.5">
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#143428] text-white flex items-center justify-center shrink-0 shadow-xs">
             <TrainFront className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-300" strokeWidth={1.75} />
@@ -126,7 +126,7 @@ export function LiveStationDepartures({
       </div>
 
       {/* Platform Switcher */}
-      <div className="grid grid-cols-2 bg-white/30 backdrop-blur-sm border-b border-[#E2E4DC]/80 p-1.5 sm:p-2 gap-2">
+      <div className="grid grid-cols-2 bg-white/75 dark:bg-[#0D1813]/75 border-b border-[#E2E4DC]/80 p-1.5 sm:p-2 gap-2">
         <button
           onClick={() => setActivePlatform(1)}
           className={`py-2 px-3 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-2 chip-tactile ${

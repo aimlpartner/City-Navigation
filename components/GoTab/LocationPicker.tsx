@@ -23,6 +23,7 @@ import {
   TrainFront,
   MapPinned
 } from 'lucide-react';
+import { resolveFreeformLocation, resolvePlaceSuggestion } from '@/lib/utils';
 
 export interface OriginOption {
   name: string;
@@ -83,6 +84,20 @@ export const POPULAR_ORIGINS: OriginOption[] = [
     iconType: 'metro',
   },
   {
+    name: 'Sector 18 / Mall of India, Noida',
+    subtitle: 'Noida Sec 18 Blue Line & Botanical Garden Hub',
+    lat: 28.5678,
+    lng: 77.3211,
+    iconType: 'office',
+  },
+  {
+    name: 'Sector 62 IT Park, Noida',
+    subtitle: 'Noida Electronic City Blue Line Terminal',
+    lat: 28.6279,
+    lng: 77.3649,
+    iconType: 'office',
+  },
+  {
     name: 'IGI Airport Terminal 3',
     subtitle: 'Airport Express Line & Aerocity Hub',
     lat: 28.5562,
@@ -123,8 +138,48 @@ export function LocationPicker({
   const [searchQuery, setSearchQuery] = useState('');
   const [placesResults, setPlacesResults] = useState<any[]>([]);
   const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
+  const [isResolvingSelection, setIsResolvingSelection] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  const handlePickPlace = async (place: any) => {
+    setIsResolvingSelection(true);
+    try {
+      const resolved = await resolvePlaceSuggestion(place);
+      if (resolved && typeof resolved.lat === 'number' && typeof resolved.lng === 'number') {
+        onSelectOrigin(resolved.name, { lat: resolved.lat, lng: resolved.lng });
+        setSearchQuery(resolved.name);
+        setIsSearchFocused(false);
+        setPlacesResults([]);
+        if (onProceedToDestination) onProceedToDestination();
+      }
+    } finally {
+      setIsResolvingSelection(false);
+    }
+  };
+
+  const handleSubmitFreeform = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const q = searchQuery.trim();
+    if (q.length < 2) return;
+    setIsResolvingSelection(true);
+    try {
+      if (placesResults.length > 0) {
+        await handlePickPlace(placesResults[0]);
+        return;
+      }
+      const resolved = await resolveFreeformLocation(q);
+      if (resolved && typeof resolved.lat === 'number' && typeof resolved.lng === 'number') {
+        onSelectOrigin(resolved.name, { lat: resolved.lat, lng: resolved.lng });
+        setSearchQuery(resolved.name);
+        setIsSearchFocused(false);
+        setPlacesResults([]);
+        if (onProceedToDestination) onProceedToDestination();
+      }
+    } finally {
+      setIsResolvingSelection(false);
+    }
+  };
 
   // Debounced search querying Google Places API via /api/places
   useEffect(() => {
@@ -207,13 +262,13 @@ export function LocationPicker({
         <h2 className="text-2xl font-black text-[#17201B] dark:text-[#F3F5EE] tracking-tight font-sans dark:drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)]">
           Where are you starting from?
         </h2>
-        <p className="text-sm text-[#53584E] dark:text-[#A7B2A8] mt-0.5 dark:drop-shadow-[0_1px_6px_rgba(0,0,0,0.8)]">
-          Type any mall, colony, hospital, or tap GPS / preset station below.
+        <p className="text-sm text-[#53584E] dark:text-[#A7B2A8] mt-0.5">
+          Search any sector, address, mall, or landmark in Delhi, Gurgaon &amp; Noida, or tap GPS.
         </p>
       </div>
 
       {/* Live Google Maps Connected Search Bar for Starting Point */}
-      <div className="relative z-20" ref={searchContainerRef}>
+      <form onSubmit={handleSubmitFreeform} className="relative z-20" ref={searchContainerRef as any}>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8E9487] dark:text-[#5ee9b5]">
             <Search className="w-4 h-4 text-[#143428] dark:text-[#5ee9b5]" />
@@ -226,12 +281,14 @@ export function LocationPicker({
               if (!isSearchFocused) setIsSearchFocused(true);
             }}
             onFocus={() => setIsSearchFocused(true)}
-            placeholder="Type any mall (Pacific, Ambience), sector, colony..."
-            className="w-full pl-10 pr-10 py-3.5 rounded-2xl ios-liquid-input text-[#17201B] dark:text-white placeholder-[#8E9487] dark:placeholder-[#768478] text-sm font-medium shadow-xs outline-none transition duration-200"
+            placeholder="Any street, sector, metro, mall (Delhi, Gurgaon, Noida)..."
+            className="w-full pl-10 pr-24 py-3.5 rounded-2xl ios-liquid-input text-[#17201B] dark:text-white placeholder-[#8E9487] dark:placeholder-[#768478] text-sm font-medium shadow-xs outline-none transition duration-200"
           />
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center gap-1.5">
-            {isSearchingPlaces && <Loader2 className="w-4 h-4 text-[#143428] dark:text-[#5ee9b5] animate-spin" />}
-            {searchQuery && (
+          <div className="absolute inset-y-0 right-0 pr-2 flex items-center gap-1">
+            {(isSearchingPlaces || isResolvingSelection) && (
+              <Loader2 className="w-4 h-4 text-[#143428] dark:text-[#5ee9b5] animate-spin mr-1" />
+            )}
+            {searchQuery && !isResolvingSelection && (
               <button
                 type="button"
                 onClick={() => {
@@ -244,18 +301,26 @@ export function LocationPicker({
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
+            {searchQuery.trim().length >= 2 && (
+              <button
+                type="submit"
+                className="px-2.5 py-1.5 rounded-xl bg-[#143428] dark:bg-emerald-500 text-white dark:text-[#061C12] text-xs font-bold cursor-pointer"
+              >
+                Go
+              </button>
+            )}
           </div>
         </div>
 
         {/* Live Dropdown */}
         <AnimatePresence>
-          {isSearchFocused && placesResults.length > 0 && (
+          {isSearchFocused && searchQuery.trim().length >= 2 && (placesResults.length > 0 || !isSearchingPlaces) && (
             <motion.div
               initial={{ opacity: 0, y: -6, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.98 }}
               transition={{ duration: 0.16 }}
-              className="absolute top-full left-0 right-0 mt-2 ios-liquid-glass-thin rounded-2xl shadow-2xl border border-white/85 dark:border-white/15 p-2 z-30 max-h-80 overflow-y-auto ring-1 ring-[#143428]/10 dark:ring-white/10"
+              className="ios-liquid-glass-thin absolute top-full left-0 right-0 mt-2 rounded-2xl shadow-2xl border border-white/85 dark:border-white/15 p-2 z-30 max-h-80 overflow-y-auto ring-1 ring-[#143428]/10 dark:ring-white/10"
             >
               <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#E2E4DC] dark:border-white/10 mb-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7267] dark:text-[#88988C] flex items-center gap-1.5">
@@ -275,13 +340,7 @@ export function LocationPicker({
                   <button
                     key={p.id}
                     type="button"
-                    onClick={() => {
-                      onSelectOrigin(p.name, { lat: p.lat, lng: p.lng });
-                      setSearchQuery(p.name);
-                      setIsSearchFocused(false);
-                      setPlacesResults([]);
-                      if (onProceedToDestination) onProceedToDestination();
-                    }}
+                    onClick={() => handlePickPlace(p)}
                     className="w-full text-left p-2.5 rounded-xl hover:bg-[#F8F9F5] dark:hover:bg-white/10 text-xs flex items-center justify-between transition group cursor-pointer"
                   >
                     <div className="flex items-start gap-2.5 min-w-0 flex-1">
@@ -309,11 +368,19 @@ export function LocationPicker({
                     <ChevronRight className="w-3.5 h-3.5 text-[#8E9487] dark:text-[#9AA59D] group-hover:text-[#143428] dark:group-hover:text-[#5ee9b5] shrink-0 ml-1.5" />
                   </button>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => handleSubmitFreeform()}
+                  className="w-full text-left p-2.5 rounded-xl bg-[#F4F5F0]/80 dark:bg-white/5 hover:bg-[#EAECE4] dark:hover:bg-white/10 text-xs flex items-center justify-between font-bold text-[#143428] dark:text-[#5ee9b5] cursor-pointer mt-1"
+                >
+                  <span>Use exact address &quot;{searchQuery.trim()}&quot; on Google Maps</span>
+                  <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                </button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </form>
 
       {/* Location Error Notice if GPS encountered an issue */}
       {locationError && (
@@ -462,7 +529,7 @@ export function LocationPicker({
               className={`card-interactive w-full min-h-[64px] p-3.5 sm:p-4 rounded-2xl border text-left flex items-center justify-between gap-3.5 group cursor-pointer ${
                 isSelected
                   ? 'bg-white dark:bg-[#12221A] border-[#143428] dark:border-[#38DF92] ring-2 ring-[#143428] dark:ring-[#38DF92]/50 shadow-sm'
-                  : 'bg-white/90 dark:bg-[#0D1813]/85 backdrop-blur-xs hover:bg-white dark:hover:bg-[#13221A] border-[#E2E4DC] dark:border-white/10 hover:border-[#143428]/40 dark:hover:border-white/20 shadow-xs'
+                  : 'bg-white dark:bg-[#0D1813] hover:bg-white dark:hover:bg-[#13221A] border-[#E2E4DC] dark:border-white/10 hover:border-[#143428]/40 dark:hover:border-white/20 shadow-xs'
               }`}
             >
               <div className="flex items-center gap-3.5 min-w-0">
