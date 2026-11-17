@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { apiFetch } from "@/lib/api-client"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -83,7 +84,10 @@ export function openRapidoApp() {
 /**
  * Resolves a suggestion returned by /api/places so coordinates (lat, lng) are always populated.
  */
-export async function resolvePlaceSuggestion(place: any): Promise<any> {
+export async function resolvePlaceSuggestion(
+  place: any,
+  options?: { sessionToken?: string; originCoords?: { lat: number; lng: number } }
+): Promise<any> {
   if (!place) return null;
   if (typeof place.lat === 'number' && typeof place.lng === 'number') {
     return place;
@@ -91,7 +95,13 @@ export async function resolvePlaceSuggestion(place: any): Promise<any> {
 
   if (place.id) {
     try {
-      const res = await fetch(`/api/places?placeId=${encodeURIComponent(place.id)}`);
+      const qs = new URLSearchParams({ placeId: place.id });
+      if (options?.sessionToken) qs.set('sessionToken', options.sessionToken);
+      if (options?.originCoords) {
+        qs.set('lat', String(options.originCoords.lat));
+        qs.set('lng', String(options.originCoords.lng));
+      }
+      const res = await apiFetch(`/api/places?${qs.toString()}`);
       if (res.ok) {
         const data = await res.json();
         if (data.place && typeof data.place.lat === 'number' && typeof data.place.lng === 'number') {
@@ -104,7 +114,7 @@ export async function resolvePlaceSuggestion(place: any): Promise<any> {
   const fallbackText = place.formattedAddress || place.name;
   if (fallbackText) {
     try {
-      const geoRes = await fetch(`/api/geocode?address=${encodeURIComponent(fallbackText)}`);
+      const geoRes = await apiFetch(`/api/geocode?address=${encodeURIComponent(fallbackText)}`);
       if (geoRes.ok) {
         const geo = await geoRes.json();
         if (typeof geo.lat === 'number' && typeof geo.lng === 'number') {
@@ -126,23 +136,34 @@ export async function resolvePlaceSuggestion(place: any): Promise<any> {
 /**
  * Directly resolves any typed address, sector, mall, or landmark in Delhi, Gurgaon, or Noida on Enter / Search submit.
  */
-export async function resolveFreeformLocation(rawQuery: string): Promise<any | null> {
+export async function resolveFreeformLocation(
+  rawQuery: string,
+  options?: { originCoords?: { lat: number; lng: number }; scope?: 'ncr' | 'india'; sessionToken?: string }
+): Promise<any | null> {
   const query = rawQuery.trim();
   if (query.length < 2) return null;
 
   try {
-    const res = await fetch(`/api/places?q=${encodeURIComponent(query)}&resolve=1`);
+    const qs = new URLSearchParams({ q: query, resolve: '1' });
+    if (options?.originCoords) {
+      qs.set('lat', String(options.originCoords.lat));
+      qs.set('lng', String(options.originCoords.lng));
+    }
+    if (options?.scope) qs.set('scope', options.scope);
+    if (options?.sessionToken) qs.set('sessionToken', options.sessionToken);
+    const res = await apiFetch(`/api/places?${qs.toString()}`);
     if (res.ok) {
       const data = await res.json();
       const top = data.places?.[0];
       if (top) {
-        return await resolvePlaceSuggestion(top);
+        return await resolvePlaceSuggestion(top, options);
       }
     }
   } catch {}
 
   try {
-    const geoRes = await fetch(`/api/geocode?address=${encodeURIComponent(query)}`);
+    const scopeParam = options?.scope ? `&scope=${options.scope}` : '';
+    const geoRes = await apiFetch(`/api/geocode?address=${encodeURIComponent(query)}${scopeParam}`);
     if (geoRes.ok) {
       const geo = await geoRes.json();
       if (typeof geo.lat === 'number' && typeof geo.lng === 'number') {
@@ -159,4 +180,78 @@ export async function resolveFreeformLocation(rawQuery: string): Promise<any | n
   } catch {}
 
   return null;
+}
+
+export interface RecentPlaceItem {
+  id: string;
+  name: string;
+  formattedAddress: string;
+  lat: number;
+  lng: number;
+  city?: string;
+}
+
+const RECENT_PLACES_KEY = 'metronav_recent_places_v1';
+
+export function getRecentPlaces(): RecentPlaceItem[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(RECENT_PLACES_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? parsed.filter((p) => p && typeof p.name === 'string' && typeof p.lat === 'number' && typeof p.lng === 'number')
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveRecentPlace(place: {
+  id?: string;
+  name: string;
+  formattedAddress?: string;
+  lat?: number;
+  lng?: number;
+  city?: string;
+}) {
+  if (typeof window === 'undefined') return;
+  if (typeof place.lat !== 'number' || typeof place.lng !== 'number' || !place.name) return;
+  try {
+    const existing = getRecentPlaces();
+    const item: RecentPlaceItem = {
+      id: place.id || `recent-${place.lat.toFixed(4)}-${place.lng.toFixed(4)}`,
+      name: place.name,
+      formattedAddress: place.formattedAddress || place.name,
+      lat: place.lat,
+      lng: place.lng,
+      city: place.city
+    };
+    const norm = (s: string) => s.toLowerCase().trim();
+    const filtered = existing.filter(
+      (x) => norm(x.name) !== norm(item.name) && (Math.abs(x.lat - item.lat) > 0.0008 || Math.abs(x.lng - item.lng) > 0.0008)
+    );
+    localStorage.setItem(RECENT_PLACES_KEY, JSON.stringify([item, ...filtered].slice(0, 8)));
+  } catch {}
+}
+
+export function formatDistanceBetweenCoords(
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number
+): string {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  const km = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  if (km < 1) return `${Math.max(50, Math.round((km * 1000) / 50) * 50)} m`;
+  if (km < 10) return `${km.toFixed(1)} km`;
+  return `${Math.round(km)} km`;
 }

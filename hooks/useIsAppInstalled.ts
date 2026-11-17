@@ -1,13 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 
 /**
  * Checks whether the web app is running as an installed PWA / standalone application
- * or has been marked as installed on the device.
+ * or natively inside Capacitor Android/iOS.
  */
 export function checkIsAppInstalled(): boolean {
   if (typeof window === 'undefined') return false;
+
+  try {
+    if (Capacitor.isNativePlatform()) return true;
+  } catch {}
 
   const isStandalone =
     window.matchMedia('(display-mode: standalone)').matches ||

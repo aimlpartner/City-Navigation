@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import Image from 'next/image';
+import { Capacitor } from '@capacitor/core';
 import {
   Download,
   Share2,
@@ -56,6 +57,12 @@ export function PwaInstallPrompt() {
   const [installSuccess, setInstallSuccess] = useState(false);
 
   useEffect(() => {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        return;
+      }
+    } catch {}
+
     // 1. Register Service Worker
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       window.addEventListener('load', () => {

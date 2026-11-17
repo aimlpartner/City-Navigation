@@ -1,7 +1,14 @@
 import type {NextConfig} from 'next';
 
+const isCapacitorBuild = process.env.CAPACITOR_BUILD === 'true';
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  ...(isCapacitorBuild
+    ? {
+        output: 'export' as const,
+      }
+    : {}),
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -10,6 +17,7 @@ const nextConfig: NextConfig = {
   },
   // Allow access to remote image placeholder.
   images: {
+    unoptimized: isCapacitorBuild,
     remotePatterns: [
       {
         protocol: 'https',

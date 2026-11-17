@@ -69,6 +69,7 @@
   html.dark, body.dark, .dark html, .dark body, html.dark body {
     background-color: #000000 !important;
     color: #F2F5F3;
+    color-scheme: dark;
   }
 
   /* Tactile Touch & Physical Interaction Defaults */
@@ -107,6 +108,13 @@
     border-color: #143428 !important;
     box-shadow: 0 0 0 3px rgba(20, 52, 40, 0.12), var(--shadow-xs);
     transition: border-color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  .dark input:focus-visible,
+  .dark select:focus-visible,
+  .dark textarea:focus-visible {
+    border-color: rgba(94, 233, 181, 0.55) !important;
+    box-shadow: 0 0 0 3px rgba(94, 233, 181, 0.14);
   }
 
   /* Mathematically calculated corner radii design tokens (R_inner = R_outer - Padding) */

@@ -45,15 +45,17 @@ export async function GET(req: NextRequest) {
     const addressQuery = searchParams.get("address")?.trim();
     const apiKey = getGoogleApiKey();
 
-    // Forward Geocoding mode: ?address=... (for direct address / sector / Enter-key submission across Delhi, Gurgaon, Noida)
+    // Forward Geocoding mode: ?address=... (supports NCR default bounds and optional &scope=india)
     if (addressQuery) {
       if (!apiKey) {
         return NextResponse.json({ error: "Google Maps API key missing" }, { status: 500 });
       }
+      const scope = searchParams.get("scope") === "india" ? "india" : "ncr";
       const hasNcrCity = /delhi|gurgaon|gurugram|noida|faridabad|ghaziabad|manesar/i.test(addressQuery);
-      const q = hasNcrCity ? addressQuery : `${addressQuery}, Delhi NCR, India`;
+      const q = scope === "india" || hasNcrCity ? addressQuery : `${addressQuery}, Delhi NCR, India`;
+      const boundsParam = scope === "india" ? "" : `&bounds=${NCR_BOUNDS_PARAM}`;
       const geoRes = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(q)}&bounds=${NCR_BOUNDS_PARAM}&region=in&components=country:in&key=${apiKey}`
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(q)}${boundsParam}&region=in&components=country:in&key=${apiKey}`
       );
       if (!geoRes.ok) {
         return NextResponse.json({ error: "Geocoding request failed" }, { status: 502 });

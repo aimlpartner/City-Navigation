@@ -25,6 +25,7 @@ import {
   getDmrcWhatsAppUrl,
   MetroTicket,
 } from '@/lib/metro-ticketing';
+import { apiFetch } from '@/lib/api-client';
 
 interface MetroTicketModalProps {
   isOpen: boolean;
@@ -81,7 +82,7 @@ export function MetroTicketModal({
     setErrorMessage(null);
 
     try {
-      const response = await fetch('/api/metro/book-ticket', {
+      const response = await apiFetch('/api/metro/book-ticket', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -150,7 +151,7 @@ export function MetroTicketModal({
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 26, stiffness: 280 }}
-          className="relative w-full sm:max-w-lg bg-white rounded-t-[28px] sm:rounded-[28px] shadow-2xl overflow-hidden z-10 flex flex-col max-h-[92vh]"
+          className="relative w-full sm:max-w-lg bg-white dark:bg-[#111A15] border border-transparent dark:border-white/10 rounded-t-[28px] sm:rounded-[28px] shadow-2xl overflow-hidden z-10 flex flex-col max-h-[92vh]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header Bar */}
@@ -205,32 +206,32 @@ export function MetroTicketModal({
           </div>
 
           {/* Modal Body */}
-          <div className="p-5 overflow-y-auto space-y-4 text-xs text-[#53584E]">
+          <div className="p-5 overflow-y-auto space-y-4 text-xs text-[#53584E] dark:text-[#A7B2A8]">
             {/* Passenger Count & Pricing Banner */}
-            <div className="p-4 rounded-2xl bg-[#F8F9F5] border border-[#E2E4DC] space-y-3.5">
+            <div className="p-4 rounded-2xl bg-[#F8F9F5] dark:bg-[#16231D] border border-[#E2E4DC] dark:border-white/10 space-y-3.5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[#17201B] font-bold">
-                  <Users className="w-4 h-4 text-[#143428]" />
+                <div className="flex items-center gap-2 text-[#17201B] dark:text-[#F3F5EE] font-bold">
+                  <Users className="w-4 h-4 text-[#143428] dark:text-[#5ee9b5]" />
                   <span>Passengers ({passengerCount})</span>
                 </div>
 
-                <div className="flex items-center gap-3 bg-white px-2 py-1 rounded-xl border border-[#E2E4DC]">
+                <div className="flex items-center gap-3 bg-white dark:bg-[#111A15] px-2 py-1 rounded-xl border border-[#E2E4DC] dark:border-white/10">
                   <button
                     type="button"
                     onClick={() => setPassengerCount((p) => Math.max(1, p - 1))}
                     disabled={passengerCount <= 1}
-                    className="w-7 h-7 rounded-lg bg-[#F4F5F0] hover:bg-[#EAECE4] disabled:opacity-40 text-[#17201B] font-black text-sm flex items-center justify-center transition cursor-pointer"
+                    className="w-7 h-7 rounded-lg bg-[#F4F5F0] dark:bg-white/10 hover:bg-[#EAECE4] dark:hover:bg-white/15 disabled:opacity-40 text-[#17201B] dark:text-white font-black text-sm flex items-center justify-center transition cursor-pointer"
                   >
                     -
                   </button>
-                  <span className="font-mono font-bold text-sm text-[#17201B] w-4 text-center">
+                  <span className="font-mono font-bold text-sm text-[#17201B] dark:text-white w-4 text-center">
                     {passengerCount}
                   </span>
                   <button
                     type="button"
                     onClick={() => setPassengerCount((p) => Math.min(6, p + 1))}
                     disabled={passengerCount >= 6}
-                    className="w-7 h-7 rounded-lg bg-[#143428] hover:bg-[#1A3E31] disabled:opacity-40 text-white font-black text-sm flex items-center justify-center transition cursor-pointer"
+                    className="w-7 h-7 rounded-lg bg-[#143428] dark:bg-emerald-500 hover:bg-[#1A3E31] disabled:opacity-40 text-white dark:text-[#061C12] font-black text-sm flex items-center justify-center transition cursor-pointer"
                   >
                     +
                   </button>
@@ -238,20 +239,20 @@ export function MetroTicketModal({
               </div>
 
               {/* Price Calculation Pill */}
-              <div className="pt-2 border-t border-[#E2E4DC] flex items-center justify-between text-xs">
+              <div className="pt-2 border-t border-[#E2E4DC] dark:border-white/10 flex items-center justify-between text-xs">
                 <div>
-                  <div className="text-[11px] text-[#6B7267]">
+                  <div className="text-[11px] text-[#6B7267] dark:text-[#9CAEA3]">
                     Station Token Price: <span className="line-through">₹{pricing.totalBaseFare}</span>
                   </div>
-                  <div className="text-[#143428] font-black text-sm flex items-center gap-1.5">
+                  <div className="text-[#143428] dark:text-[#5ee9b5] font-black text-sm flex items-center gap-1.5">
                     <span>Payable: ₹{pricing.totalFare}</span>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300">
                       Save ₹{pricing.totalSavings}
                     </span>
                   </div>
                 </div>
 
-                <span className="text-[11px] font-mono text-[#143428] font-bold bg-white px-2.5 py-1 rounded-lg border border-[#E2E4DC]">
+                <span className="text-[11px] font-mono text-[#143428] dark:text-[#5ee9b5] font-bold bg-white dark:bg-[#111A15] px-2.5 py-1 rounded-lg border border-[#E2E4DC] dark:border-white/10">
                   ₹{pricing.discountedFarePerPerson}/pax
                 </span>
               </div>
@@ -261,14 +262,14 @@ export function MetroTicketModal({
             {(interchangeStation || exitGate) && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
                 {interchangeStation && (
-                  <div className="p-2.5 rounded-xl bg-[#FAF2EE] border border-[#E8C2B3] text-[#B9552C] flex items-center gap-2">
+                  <div className="p-2.5 rounded-xl bg-[#FAF2EE] dark:bg-[#2A160E] border border-[#E8C2B3] dark:border-[#B9552C]/40 text-[#B9552C] dark:text-[#FF7A45] flex items-center gap-2">
                     <Info className="w-3.5 h-3.5 shrink-0" />
                     <span>Change lines at <strong>{interchangeStation.name}</strong></span>
                   </div>
                 )}
                 {exitGate && (
-                  <div className="p-2.5 rounded-xl bg-[#F0F7F4] border border-[#C5E3D5] text-[#143428] flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <div className="p-2.5 rounded-xl bg-[#F0F7F4] dark:bg-emerald-950/50 border border-[#C5E3D5] dark:border-emerald-500/30 text-[#143428] dark:text-emerald-300 flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <span>Deboard at <strong>Gate {exitGate.gateNumber}</strong> ({exitGate.leadsTo})</span>
                   </div>
                 )}
@@ -278,10 +279,10 @@ export function MetroTicketModal({
             {/* Select Preferred UPI Payment Method */}
             <div className="space-y-2.5 pt-1">
               <div className="flex items-center justify-between">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-[#6B7267]">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-[#6B7267] dark:text-[#9CAEA3]">
                   Pay Using UPI (Zero Fee):
                 </label>
-                <span className="text-[10px] text-emerald-700 font-bold flex items-center gap-1">
+                <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3" />
                   Instant Pass
                 </span>
@@ -294,21 +295,21 @@ export function MetroTicketModal({
                   onClick={() => setSelectedUpiApp('generic')}
                   className={`chip-tactile p-3 rounded-xl border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer ${
                     selectedUpiApp === 'generic'
-                      ? 'border-[#143428] bg-[#F4F6F2] shadow-xs'
-                      : 'border-[#E2E4DC] bg-white hover:border-[#143428]/40'
+                      ? 'border-[#143428] dark:border-[#38DF92] bg-[#F4F6F2] dark:bg-[#1E4333] shadow-xs'
+                      : 'border-[#E2E4DC] dark:border-white/10 bg-white dark:bg-[#16231D] hover:border-[#143428]/40 dark:hover:border-white/25'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <Zap className="w-4 h-4 text-emerald-600" />
+                    <Zap className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
-                      selectedUpiApp === 'generic' ? 'border-[#143428] bg-[#143428]' : 'border-[#C5C8BD]'
+                      selectedUpiApp === 'generic' ? 'border-[#143428] bg-[#143428] dark:border-[#38DF92] dark:bg-[#38DF92]' : 'border-[#C5C8BD] dark:border-white/30'
                     }`}>
-                      {selectedUpiApp === 'generic' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      {selectedUpiApp === 'generic' && <div className="w-1.5 h-1.5 rounded-full bg-white dark:bg-[#061C12]" />}
                     </div>
                   </div>
                   <div>
-                    <span className="font-extrabold text-[#17201B] text-xs block leading-tight">Instant Pass</span>
-                    <span className="text-[10px] text-[#6B7267]">Default UPI</span>
+                    <span className="font-extrabold text-[#17201B] dark:text-[#F3F5EE] text-xs block leading-tight">Instant Pass</span>
+                    <span className="text-[10px] text-[#6B7267] dark:text-[#9CAEA3]">Default UPI</span>
                   </div>
                 </button>
 
@@ -318,21 +319,21 @@ export function MetroTicketModal({
                   onClick={() => setSelectedUpiApp('gpay')}
                   className={`chip-tactile p-3 rounded-xl border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer ${
                     selectedUpiApp === 'gpay'
-                      ? 'border-[#143428] bg-[#F4F6F2] shadow-xs'
-                      : 'border-[#E2E4DC] bg-white hover:border-[#143428]/40'
+                      ? 'border-[#143428] dark:border-[#38DF92] bg-[#F4F6F2] dark:bg-[#1E4333] shadow-xs'
+                      : 'border-[#E2E4DC] dark:border-white/10 bg-white dark:bg-[#16231D] hover:border-[#143428]/40 dark:hover:border-white/25'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <Smartphone className="w-4 h-4 text-blue-600" />
+                    <Smartphone className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
-                      selectedUpiApp === 'gpay' ? 'border-[#143428] bg-[#143428]' : 'border-[#C5C8BD]'
+                      selectedUpiApp === 'gpay' ? 'border-[#143428] bg-[#143428] dark:border-[#38DF92] dark:bg-[#38DF92]' : 'border-[#C5C8BD] dark:border-white/30'
                     }`}>
-                      {selectedUpiApp === 'gpay' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      {selectedUpiApp === 'gpay' && <div className="w-1.5 h-1.5 rounded-full bg-white dark:bg-[#061C12]" />}
                     </div>
                   </div>
                   <div>
-                    <span className="font-extrabold text-[#17201B] text-xs block leading-tight">GPay</span>
-                    <span className="text-[10px] text-[#6B7267]">Google Pay</span>
+                    <span className="font-extrabold text-[#17201B] dark:text-[#F3F5EE] text-xs block leading-tight">GPay</span>
+                    <span className="text-[10px] text-[#6B7267] dark:text-[#9CAEA3]">Google Pay</span>
                   </div>
                 </button>
 
@@ -342,21 +343,21 @@ export function MetroTicketModal({
                   onClick={() => setSelectedUpiApp('phonepe')}
                   className={`chip-tactile p-3 rounded-xl border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer ${
                     selectedUpiApp === 'phonepe'
-                      ? 'border-[#143428] bg-[#F4F6F2] shadow-xs'
-                      : 'border-[#E2E4DC] bg-white hover:border-[#143428]/40'
+                      ? 'border-[#143428] dark:border-[#38DF92] bg-[#F4F6F2] dark:bg-[#1E4333] shadow-xs'
+                      : 'border-[#E2E4DC] dark:border-white/10 bg-white dark:bg-[#16231D] hover:border-[#143428]/40 dark:hover:border-white/25'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <Smartphone className="w-4 h-4 text-purple-600" />
+                    <Smartphone className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                     <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
-                      selectedUpiApp === 'phonepe' ? 'border-[#143428] bg-[#143428]' : 'border-[#C5C8BD]'
+                      selectedUpiApp === 'phonepe' ? 'border-[#143428] bg-[#143428] dark:border-[#38DF92] dark:bg-[#38DF92]' : 'border-[#C5C8BD] dark:border-white/30'
                     }`}>
-                      {selectedUpiApp === 'phonepe' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      {selectedUpiApp === 'phonepe' && <div className="w-1.5 h-1.5 rounded-full bg-white dark:bg-[#061C12]" />}
                     </div>
                   </div>
                   <div>
-                    <span className="font-extrabold text-[#17201B] text-xs block leading-tight">PhonePe</span>
-                    <span className="text-[10px] text-[#6B7267]">UPI Intent</span>
+                    <span className="font-extrabold text-[#17201B] dark:text-[#F3F5EE] text-xs block leading-tight">PhonePe</span>
+                    <span className="text-[10px] text-[#6B7267] dark:text-[#9CAEA3]">UPI Intent</span>
                   </div>
                 </button>
 
@@ -366,21 +367,21 @@ export function MetroTicketModal({
                   onClick={() => setSelectedUpiApp('paytm')}
                   className={`chip-tactile p-3 rounded-xl border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer ${
                     selectedUpiApp === 'paytm'
-                      ? 'border-[#143428] bg-[#F4F6F2] shadow-xs'
-                      : 'border-[#E2E4DC] bg-white hover:border-[#143428]/40'
+                      ? 'border-[#143428] dark:border-[#38DF92] bg-[#F4F6F2] dark:bg-[#1E4333] shadow-xs'
+                      : 'border-[#E2E4DC] dark:border-white/10 bg-white dark:bg-[#16231D] hover:border-[#143428]/40 dark:hover:border-white/25'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <CreditCard className="w-4 h-4 text-sky-600" />
+                    <CreditCard className="w-4 h-4 text-sky-600 dark:text-sky-400" />
                     <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
-                      selectedUpiApp === 'paytm' ? 'border-[#143428] bg-[#143428]' : 'border-[#C5C8BD]'
+                      selectedUpiApp === 'paytm' ? 'border-[#143428] bg-[#143428] dark:border-[#38DF92] dark:bg-[#38DF92]' : 'border-[#C5C8BD] dark:border-white/30'
                     }`}>
-                      {selectedUpiApp === 'paytm' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      {selectedUpiApp === 'paytm' && <div className="w-1.5 h-1.5 rounded-full bg-white dark:bg-[#061C12]" />}
                     </div>
                   </div>
                   <div>
-                    <span className="font-extrabold text-[#17201B] text-xs block leading-tight">Paytm</span>
-                    <span className="text-[10px] text-[#6B7267]">UPI / Wallet</span>
+                    <span className="font-extrabold text-[#17201B] dark:text-[#F3F5EE] text-xs block leading-tight">Paytm</span>
+                    <span className="text-[10px] text-[#6B7267] dark:text-[#9CAEA3]">UPI / Wallet</span>
                   </div>
                 </button>
               </div>
@@ -388,14 +389,14 @@ export function MetroTicketModal({
 
             {/* Error banner if payment fails */}
             {errorMessage && (
-              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/40 text-rose-700 dark:text-rose-300 text-xs">
                 {errorMessage}
               </div>
             )}
 
             {/* WhatsApp Fallback Option */}
-            <div className="pt-1 flex items-center justify-between border-t border-[#E2E4DC] text-[11px]">
-              <span className="text-[#6B7267]">Prefer official chatbot?</span>
+            <div className="pt-1 flex items-center justify-between border-t border-[#E2E4DC] dark:border-white/10 text-[11px]">
+              <span className="text-[#6B7267] dark:text-[#9CAEA3]">Prefer official chatbot?</span>
               <button
                 type="button"
                 onClick={handleBookViaWhatsApp}
@@ -409,14 +410,14 @@ export function MetroTicketModal({
           </div>
 
           {/* Modal Action Footer */}
-          <div className="p-4 sm:p-5 border-t border-[#E2E4DC] bg-white flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="p-4 sm:p-5 border-t border-[#E2E4DC] dark:border-white/10 bg-white dark:bg-[#111A15] flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="text-left w-full sm:w-auto">
-              <span className="text-[10px] text-[#6B7267] block uppercase font-bold tracking-wider">
+              <span className="text-[10px] text-[#6B7267] dark:text-[#9CAEA3] block uppercase font-bold tracking-wider">
                 Total ({passengerCount} {passengerCount === 1 ? 'Rider' : 'Riders'})
               </span>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-xl font-black text-[#143428] font-mono">₹{pricing.totalFare}</span>
-                <span className="text-xs text-[#6B7267] line-through font-mono">₹{pricing.totalBaseFare}</span>
+                <span className="text-xl font-black text-[#143428] dark:text-[#5ee9b5] font-mono">₹{pricing.totalFare}</span>
+                <span className="text-xs text-[#6B7267] dark:text-[#9CAEA3] line-through font-mono">₹{pricing.totalBaseFare}</span>
               </div>
             </div>
 
@@ -424,7 +425,7 @@ export function MetroTicketModal({
               type="button"
               onClick={handleDirectInAppBooking}
               disabled={isProcessing}
-              className="btn-tactile w-full sm:w-auto px-7 py-3.5 rounded-full bg-[#143428] hover:bg-[#1A3E31] disabled:opacity-75 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition cursor-pointer"
+              className="btn-tactile w-full sm:w-auto px-7 py-3.5 rounded-full bg-[#143428] dark:bg-emerald-500 hover:bg-[#1A3E31] dark:hover:bg-emerald-400 disabled:opacity-75 text-white dark:text-[#061C12] font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition cursor-pointer"
             >
               {isProcessing ? (
                 <>

@@ -8,6 +8,7 @@ import {
   METRO_STATIONS
 } from '@/lib/delhi-ncr-transit';
 import { resolveFreeformLocation, resolvePlaceSuggestion } from '@/lib/utils';
+import { apiFetch } from '@/lib/api-client';
 import {
   Search,
   ArrowLeft,
@@ -103,7 +104,7 @@ export function DestinationPicker({
       setIsSearchingPlaces(true);
       setSearchError(null);
       try {
-        const res = await fetch(`/api/places?q=${encodeURIComponent(q)}`);
+        const res = await apiFetch(`/api/places?q=${encodeURIComponent(q)}`);
         if (res.ok) {
           const data = await res.json();
           setPlacesResults(data.places || []);

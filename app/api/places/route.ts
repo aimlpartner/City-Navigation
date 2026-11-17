@@ -2,9 +2,47 @@ import { NextRequest, NextResponse } from "next/server";
 import { FAMOUS_DESTINATIONS, findNearestMetroStation, METRO_STATIONS } from "@/lib/delhi-ncr-transit";
 
 const NCR_BOUNDS = {
-  low: { latitude: 28.18, longitude: 76.75 },
-  high: { latitude: 28.92, longitude: 77.65 }
+  low: { latitude: 28.10, longitude: 76.55 },
+  high: { latitude: 29.05, longitude: 77.80 }
 };
+
+function haversineDistanceKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function formatDistanceText(distanceKm: number): string {
+  if (!Number.isFinite(distanceKm) || distanceKm < 0) return "";
+  if (distanceKm < 1) {
+    const meters = Math.max(50, Math.round((distanceKm * 1000) / 50) * 50);
+    return `${meters} m`;
+  }
+  if (distanceKm < 10) {
+    return `${distanceKm.toFixed(1)} km`;
+  }
+  return `${Math.round(distanceKm)} km`;
+}
+
+function isLikelyWithinNCR(text: string, distanceMeters?: number): boolean {
+  if (typeof distanceMeters === "number" && distanceMeters > 135000) {
+    return false;
+  }
+  const lower = text.toLowerCase();
+  const nonNcrStates =
+    /\b(maharashtra|mumbai|pune|nagpur|thane|karnataka|bengaluru|bangalore|mysore|tamil nadu|chennai|telangana|hyderabad|west bengal|kolkata|gujarat|ahmedabad|surat|vadodara|kerala|kochi|bihar|patna|madhya pradesh|bhopal|indore|odisha|assam|chandigarh|punjab|ludhiana|amritsar|jaipur|lucknow|kanpur|agra)\b/i;
+  if (nonNcrStates.test(lower) && !/\b(delhi|gurugram|gurgaon|noida|faridabad|ghaziabad|ncr)\b/i.test(lower)) {
+    return false;
+  }
+  return true;
+}
 
 interface CacheEntry {
   timestamp: number;
@@ -19,6 +57,8 @@ export interface PlaceSuggestion {
   areaHint: string;
   formattedAddress: string;
   category: string;
+  distanceKm?: number;
+  distanceText?: string;
   lat?: number;
   lng?: number;
   nearestStation?: {
@@ -165,14 +205,38 @@ function enrichWithCoordinates(params: {
   };
 }
 
-async function resolvePlaceById(placeId: string, apiKey: string): Promise<PlaceSuggestion | null> {
+async function resolvePlaceById(
+  placeId: string,
+  apiKey: string,
+  sessionToken?: string,
+  refLat?: number,
+  refLng?: number
+): Promise<PlaceSuggestion | null> {
+  const withDistance = (place: PlaceSuggestion): PlaceSuggestion => {
+    if (
+      typeof refLat === "number" &&
+      typeof refLng === "number" &&
+      typeof place.lat === "number" &&
+      typeof place.lng === "number"
+    ) {
+      const distKm = haversineDistanceKm(refLat, refLng, place.lat, place.lng);
+      return {
+        ...place,
+        distanceKm: Number(distKm.toFixed(1)),
+        distanceText: formatDistanceText(distKm)
+      };
+    }
+    return place;
+  };
+
   const cached = PLACE_DETAIL_CACHE.get(placeId);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-    return cached.place;
+    return withDistance(cached.place);
   }
 
   try {
-    const res = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`, {
+    const tokenQs = sessionToken ? `?sessionToken=${encodeURIComponent(sessionToken)}` : "";
+    const res = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}${tokenQs}`, {
       headers: {
         "X-Goog-Api-Key": apiKey,
         "X-Goog-FieldMask": "id,displayName,formattedAddress,location,types"
@@ -193,7 +257,7 @@ async function resolvePlaceById(placeId: string, apiKey: string): Promise<PlaceS
           types: data.types || []
         });
         PLACE_DETAIL_CACHE.set(placeId, { timestamp: Date.now(), place });
-        return place;
+        return withDistance(place);
       }
     }
 
@@ -216,7 +280,7 @@ async function resolvePlaceById(placeId: string, apiKey: string): Promise<PlaceS
           types: first.types || []
         });
         PLACE_DETAIL_CACHE.set(placeId, { timestamp: Date.now(), place });
-        return place;
+        return withDistance(place);
       }
     }
   } catch (err) {
@@ -226,14 +290,23 @@ async function resolvePlaceById(placeId: string, apiKey: string): Promise<PlaceS
   return null;
 }
 
-async function geocodeAddressInNCR(query: string, apiKey: string): Promise<PlaceSuggestion[]> {
+async function geocodeAddressInNCR(
+  query: string,
+  apiKey: string,
+  scope: "ncr" | "india",
+  refLat: number,
+  refLng: number
+): Promise<PlaceSuggestion[]> {
   try {
     const hasCity = /delhi|gurgaon|gurugram|noida|faridabad|ghaziabad|manesar/i.test(query);
-    const enrichedQuery = hasCity ? query : `${query}, Delhi NCR, India`;
+    const enrichedQuery = scope === "india" || hasCity ? query : `${query}, Delhi NCR, India`;
+    const boundsParam =
+      scope === "india"
+        ? ""
+        : `&bounds=${NCR_BOUNDS.low.latitude},${NCR_BOUNDS.low.longitude}|${NCR_BOUNDS.high.latitude},${NCR_BOUNDS.high.longitude}`;
     const geoUrl =
       `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(enrichedQuery)}` +
-      `&bounds=${NCR_BOUNDS.low.latitude},${NCR_BOUNDS.low.longitude}|${NCR_BOUNDS.high.latitude},${NCR_BOUNDS.high.longitude}` +
-      `&region=in&components=country:in&key=${apiKey}`;
+      `${boundsParam}&region=in&components=country:in&key=${apiKey}`;
 
     const geoRes = await fetch(geoUrl);
     if (!geoRes.ok) return [];
@@ -244,30 +317,101 @@ async function geocodeAddressInNCR(query: string, apiKey: string): Promise<Place
       .filter((r: any) => {
         const lat = r.geometry?.location?.lat;
         const lng = r.geometry?.location?.lng;
+        if (typeof lat !== "number" || typeof lng !== "number") return false;
+        if (scope === "india") return true;
         return (
-          typeof lat === "number" &&
-          typeof lng === "number" &&
           lat >= NCR_BOUNDS.low.latitude &&
           lat <= NCR_BOUNDS.high.latitude &&
           lng >= NCR_BOUNDS.low.longitude &&
           lng <= NCR_BOUNDS.high.longitude
         );
       })
-      .slice(0, 5)
+      .slice(0, 6)
       .map((r: any) => {
         const addr: string = r.formatted_address || query;
         const name = addr.split(",")[0] || query;
-        return enrichWithCoordinates({
-          id: r.place_id || `geo-${addr}`,
-          name,
-          formattedAddress: addr,
-          lat: r.geometry.location.lat,
-          lng: r.geometry.location.lng,
-          types: r.types || []
-        });
+        const distKm = haversineDistanceKm(refLat, refLng, r.geometry.location.lat, r.geometry.location.lng);
+        return {
+          ...enrichWithCoordinates({
+            id: r.place_id || `geo-${addr}`,
+            name,
+            formattedAddress: addr,
+            lat: r.geometry.location.lat,
+            lng: r.geometry.location.lng,
+            types: r.types || []
+          }),
+          distanceKm: Number(distKm.toFixed(1)),
+          distanceText: formatDistanceText(distKm)
+        };
       });
   } catch (err) {
     console.warn("geocodeAddressInNCR error:", err);
+    return [];
+  }
+}
+
+async function searchTextPlaces(
+  query: string,
+  apiKey: string,
+  scope: "ncr" | "india",
+  refLat: number,
+  refLng: number,
+  maxResultCount: number
+): Promise<PlaceSuggestion[]> {
+  try {
+    const textRes = await fetch("https://places.googleapis.com/v1/places:searchText", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.types"
+      },
+      body: JSON.stringify({
+        textQuery: query,
+        regionCode: "IN",
+        locationBias: {
+          circle: {
+            center: { latitude: refLat, longitude: refLng },
+            radius: scope === "india" ? 50000 : 35000
+          }
+        },
+        maxResultCount
+      })
+    });
+
+    if (!textRes.ok) return [];
+    const textData = await textRes.json();
+    const out: PlaceSuggestion[] = [];
+
+    for (const p of textData.places || []) {
+      const lat = p.location?.latitude;
+      const lng = p.location?.longitude;
+      if (typeof lat !== "number" || typeof lng !== "number") continue;
+
+      const distKm = haversineDistanceKm(refLat, refLng, lat, lng);
+      if (scope === "ncr" && !isLikelyWithinNCR(p.formattedAddress || "", distKm * 1000)) {
+        continue;
+      }
+
+      const enriched = enrichWithCoordinates({
+        id: p.id,
+        name: p.displayName?.text || p.formattedAddress?.split(",")[0] || query,
+        formattedAddress: p.formattedAddress || "",
+        lat,
+        lng,
+        types: p.types || []
+      });
+      PLACE_DETAIL_CACHE.set(p.id, { timestamp: Date.now(), place: enriched });
+      out.push({
+        ...enriched,
+        distanceKm: Number(distKm.toFixed(1)),
+        distanceText: formatDistanceText(distKm)
+      });
+    }
+
+    return out;
+  } catch (err) {
+    console.warn("searchTextPlaces error:", err);
     return [];
   }
 }
@@ -276,7 +420,14 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const placeIdParam = searchParams.get("placeId")?.trim();
+    const sessionToken = searchParams.get("sessionToken")?.trim() || undefined;
     const resolveTop = searchParams.get("resolve") === "1" || searchParams.get("resolve") === "true";
+    const mode = searchParams.get("mode") === "more" ? "more" : "autocomplete";
+    const scope: "ncr" | "india" = searchParams.get("scope") === "india" ? "india" : "ncr";
+    const parsedLat = parseFloat(searchParams.get("lat") || "");
+    const parsedLng = parseFloat(searchParams.get("lng") || "");
+    const refLat = Number.isFinite(parsedLat) ? parsedLat : 28.5355;
+    const refLng = Number.isFinite(parsedLng) ? parsedLng : 77.21;
     const cleanQuery = (searchParams.get("q") || "").trim();
     const apiKey = getGoogleApiKey();
 
@@ -285,7 +436,7 @@ export async function GET(req: NextRequest) {
       if (!apiKey) {
         return NextResponse.json({ error: "Google Maps API key not configured" }, { status: 500 });
       }
-      const place = await resolvePlaceById(placeIdParam, apiKey);
+      const place = await resolvePlaceById(placeIdParam, apiKey, sessionToken, refLat, refLng);
       if (!place) {
         return NextResponse.json({ error: "Place coordinates could not be resolved" }, { status: 404 });
       }
@@ -296,7 +447,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ places: [] });
     }
 
-    const cacheKey = `${cleanQuery.toLowerCase()}::${resolveTop ? "r1" : "r0"}`;
+    const originBucket = `${refLat.toFixed(2)},${refLng.toFixed(2)}`;
+    const cacheKey = `${cleanQuery.toLowerCase()}::${originBucket}::${scope}::${mode}::${resolveTop ? "r1" : "r0"}`;
     const cached = PLACES_CACHE.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
       return NextResponse.json({ places: cached.places });
@@ -305,16 +457,17 @@ export async function GET(req: NextRequest) {
     const queryLower = cleanQuery.toLowerCase();
     const tokens = queryLower.split(/\s+/).filter(Boolean);
 
-    // 1. Curated Local Database matches (0ms, includes verified Metro Exit Gate notes)
+    // 1. Curated Local Database matches (used strictly for strong landmark hits or fallback)
     const matchedCurated = FAMOUS_DESTINATIONS.filter((d) => {
       const nameLower = d.name.toLowerCase();
       const target = `${nameLower} ${d.city.toLowerCase()}`;
       return target.includes(queryLower) || tokens.every((token) => target.includes(token));
     })
-      .slice(0, 4)
+      .slice(0, 3)
       .map((d) => {
         const station = METRO_STATIONS[d.nearestStationId];
-        const strongNameMatch = d.name.toLowerCase().includes(queryLower);
+        const distKm = haversineDistanceKm(refLat, refLng, d.lat, d.lng);
+        const strongNameMatch = queryLower.length >= 4 && d.name.toLowerCase().includes(queryLower);
         return {
           suggestion: {
             id: `curated-${d.id}`,
@@ -324,6 +477,8 @@ export async function GET(req: NextRequest) {
             areaHint: d.city,
             formattedAddress: `${d.name}, ${d.city} (Near ${station?.name || "Metro"})`,
             category: d.category === "Mall" ? "Shopping Mall" : d.category,
+            distanceKm: Number(distKm.toFixed(1)),
+            distanceText: formatDistanceText(distKm),
             lat: d.lat,
             lng: d.lng,
             nearestStation: {
@@ -344,103 +499,104 @@ export async function GET(req: NextRequest) {
 
     let googleSuggestions: PlaceSuggestion[] = [];
 
-    // 2. Full Delhi-NCR Google Places Autocomplete (New API v1 - single fast call, strict NCR rectangle)
+    // 2. Full Uber-style Google Places Search (Hyperlocal Autocomplete w/ origin distance + "Get more results" deep search)
     if (apiKey) {
       try {
-        const autoRes = await fetch("https://places.googleapis.com/v1/places:autocomplete", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Goog-Api-Key": apiKey
-          },
-          body: JSON.stringify({
+        if (mode === "more") {
+          const [textHits, geoHits] = await Promise.all([
+            searchTextPlaces(cleanQuery, apiKey, scope, refLat, refLng, 15),
+            geocodeAddressInNCR(cleanQuery, apiKey, scope, refLat, refLng)
+          ]);
+          googleSuggestions = [...textHits, ...geoHits];
+        } else {
+          const autoBody: Record<string, any> = {
             input: cleanQuery,
             includedRegionCodes: ["in"],
-            locationRestriction: { rectangle: NCR_BOUNDS },
-            origin: { latitude: 28.5355, longitude: 77.21 }
-          })
-        });
-
-        if (autoRes.ok) {
-          const autoData = await autoRes.json();
-          const suggestions = autoData.suggestions || [];
-
-          for (const s of suggestions) {
-            const pred = s.placePrediction;
-            if (!pred?.placeId) continue;
-
-            const cachedDetail = PLACE_DETAIL_CACHE.get(pred.placeId);
-            if (cachedDetail && Date.now() - cachedDetail.timestamp < CACHE_TTL_MS) {
-              googleSuggestions.push(cachedDetail.place);
-              continue;
+            origin: { latitude: refLat, longitude: refLng },
+            locationBias: {
+              circle: {
+                center: { latitude: refLat, longitude: refLng },
+                radius: scope === "india" ? 50000 : 20000
+              }
             }
-
-            const mainText = pred.structuredFormat?.mainText?.text || pred.text?.text?.split(",")[0] || cleanQuery;
-            const secondaryText = pred.structuredFormat?.secondaryText?.text || "";
-            const fullText = pred.text?.text || [mainText, secondaryText].filter(Boolean).join(", ");
-            const city = detectCity(fullText, mainText);
-            const areaHint = extractAreaHint(fullText, mainText) || city;
-            const category = resolveCategory(pred.types || [], mainText);
-
-            googleSuggestions.push({
-              id: pred.placeId,
-              name: mainText,
-              city,
-              areaHint,
-              formattedAddress: fullText,
-              category,
-              isCurated: false,
-              needsResolve: true
-            });
+          };
+          if (sessionToken) {
+            autoBody.sessionToken = sessionToken;
           }
-        }
 
-        // Strategy B: If user hit Enter (resolveTop) OR autocomplete had 0 suggestions, run searchText + Geocoding fallback
-        if ((resolveTop && googleSuggestions.length > 0 && googleSuggestions[0].needsResolve) || googleSuggestions.length === 0) {
+          const autoRes = await fetch("https://places.googleapis.com/v1/places:autocomplete", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Goog-Api-Key": apiKey
+            },
+            body: JSON.stringify(autoBody)
+          });
+
+          if (autoRes.ok) {
+            const autoData = await autoRes.json();
+            const suggestions = autoData.suggestions || [];
+
+            for (const s of suggestions) {
+              const pred = s.placePrediction;
+              if (!pred?.placeId) continue;
+
+              const mainText = pred.structuredFormat?.mainText?.text || pred.text?.text?.split(",")[0] || cleanQuery;
+              const secondaryText = pred.structuredFormat?.secondaryText?.text || "";
+              const fullText = pred.text?.text || [mainText, secondaryText].filter(Boolean).join(", ");
+
+              if (scope === "ncr" && !isLikelyWithinNCR(fullText, pred.distanceMeters)) {
+                continue;
+              }
+
+              const cachedDetail = PLACE_DETAIL_CACHE.get(pred.placeId);
+              if (cachedDetail && Date.now() - cachedDetail.timestamp < CACHE_TTL_MS) {
+                const c = cachedDetail.place;
+                const dKm =
+                  typeof c.lat === "number" && typeof c.lng === "number"
+                    ? haversineDistanceKm(refLat, refLng, c.lat, c.lng)
+                    : typeof pred.distanceMeters === "number"
+                    ? pred.distanceMeters / 1000
+                    : undefined;
+                googleSuggestions.push({
+                  ...c,
+                  distanceKm: typeof dKm === "number" ? Number(dKm.toFixed(1)) : undefined,
+                  distanceText: typeof dKm === "number" ? formatDistanceText(dKm) : undefined
+                });
+                continue;
+              }
+
+              const distKm = typeof pred.distanceMeters === "number" ? pred.distanceMeters / 1000 : undefined;
+              const city = detectCity(fullText, mainText);
+              const areaHint = extractAreaHint(fullText, mainText) || city;
+              const category = resolveCategory(pred.types || [], mainText);
+
+              googleSuggestions.push({
+                id: pred.placeId,
+                name: mainText,
+                city,
+                areaHint,
+                formattedAddress: secondaryText || fullText,
+                category,
+                distanceKm: typeof distKm === "number" ? Number(distKm.toFixed(1)) : undefined,
+                distanceText: typeof distKm === "number" ? formatDistanceText(distKm) : undefined,
+                isCurated: false,
+                needsResolve: true
+              });
+            }
+          }
+
           if (resolveTop && googleSuggestions.length > 0 && googleSuggestions[0].needsResolve) {
-            const resolvedTop = await resolvePlaceById(googleSuggestions[0].id, apiKey);
+            const resolvedTop = await resolvePlaceById(googleSuggestions[0].id, apiKey, sessionToken, refLat, refLng);
             if (resolvedTop) {
               googleSuggestions[0] = resolvedTop;
             }
           }
 
           if (googleSuggestions.length === 0) {
-            const textRes = await fetch("https://places.googleapis.com/v1/places:searchText", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "X-Goog-Api-Key": apiKey,
-                "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.types"
-              },
-              body: JSON.stringify({
-                textQuery: cleanQuery,
-                regionCode: "IN",
-                locationRestriction: { rectangle: NCR_BOUNDS },
-                maxResultCount: 6
-              })
-            });
-
-            if (textRes.ok) {
-              const textData = await textRes.json();
-              for (const p of textData.places || []) {
-                if (typeof p.location?.latitude === "number" && typeof p.location?.longitude === "number") {
-                  const enriched = enrichWithCoordinates({
-                    id: p.id,
-                    name: p.displayName?.text || p.formattedAddress?.split(",")[0] || cleanQuery,
-                    formattedAddress: p.formattedAddress || "",
-                    lat: p.location.latitude,
-                    lng: p.location.longitude,
-                    types: p.types || []
-                  });
-                  PLACE_DETAIL_CACHE.set(p.id, { timestamp: Date.now(), place: enriched });
-                  googleSuggestions.push(enriched);
-                }
-              }
-            }
-
-            // Final Strategy C fallback: Geocoding API for specific street/sector/pincode addresses
+            googleSuggestions = await searchTextPlaces(cleanQuery, apiKey, scope, refLat, refLng, 8);
             if (googleSuggestions.length === 0) {
-              googleSuggestions = await geocodeAddressInNCR(cleanQuery, apiKey);
+              googleSuggestions = await geocodeAddressInNCR(cleanQuery, apiKey, scope, refLat, refLng);
             }
           }
         }
@@ -449,29 +605,32 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 3. Merge Curated & Google results cleanly:
-    // Direct curated name matches go first, then all live Google Maps suggestions, then partial curated fallback matches
+    // 3. Merge clean list: exact curated landmark matches (4+ char query) + live Google Maps suggestions + weak curated fallback
     const combined: PlaceSuggestion[] = [];
     const seenKeys = new Set<string>();
-    const normalizeKey = (name: string, city: string) =>
-      `${name.toLowerCase().replace(/[^a-z0-9]/g, "")}-${city.toLowerCase()}`;
+    const normalizeKey = (name: string, addr: string) =>
+      `${name.toLowerCase().replace(/[^a-z0-9]/g, "")}-${addr.slice(0, 24).toLowerCase().replace(/[^a-z0-9]/g, "")}`;
 
     const pushUnique = (item: PlaceSuggestion) => {
-      const k = normalizeKey(item.name, item.city);
+      const k = normalizeKey(item.name, item.formattedAddress || item.city);
       if (!seenKeys.has(k)) {
         seenKeys.add(k);
         combined.push(item);
       }
     };
 
-    for (const c of matchedCurated) {
-      if (c.strongNameMatch) pushUnique(c.suggestion);
+    if (mode !== "more") {
+      for (const c of matchedCurated) {
+        if (c.strongNameMatch) pushUnique(c.suggestion);
+      }
     }
     for (const item of googleSuggestions) {
       pushUnique(item);
     }
-    for (const c of matchedCurated) {
-      if (!c.strongNameMatch) pushUnique(c.suggestion);
+    if (mode !== "more" && combined.length < 3) {
+      for (const c of matchedCurated) {
+        if (!c.strongNameMatch) pushUnique(c.suggestion);
+      }
     }
 
     if (combined.length > 0) {

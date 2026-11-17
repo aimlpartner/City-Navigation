@@ -13,6 +13,7 @@ import {
   MultiModalTripPlan
 } from '@/lib/delhi-ncr-transit';
 import { decodeGooglePolyline } from '@/lib/utils';
+import { apiFetch } from '@/lib/api-client';
 import {
   MapPinned,
   Navigation,
@@ -638,7 +639,7 @@ function MapView({
 
     try {
       if (placeId) {
-        const res = await fetch(`/api/places?placeId=${encodeURIComponent(placeId)}`);
+        const res = await apiFetch(`/api/places?placeId=${encodeURIComponent(placeId)}`);
         if (res.ok) {
           const data = await res.json();
           if (data.place) {
@@ -653,7 +654,7 @@ function MapView({
         }
       }
 
-      const geoRes = await fetch(`/api/geocode?lat=${coords.lat}&lng=${coords.lng}`);
+      const geoRes = await apiFetch(`/api/geocode?lat=${coords.lat}&lng=${coords.lng}`);
       if (geoRes.ok) {
         const geoData = await geoRes.json();
         setDroppedPin({
@@ -1165,7 +1166,7 @@ export function MapComponent({ plan, userCoords, onPickMapLocation }: MapCompone
 
   return (
     <div className="w-full h-full min-h-[440px]">
-      <APIProvider apiKey={apiKey}>
+      <APIProvider apiKey={apiKey} libraries={['places', 'geometry']}>
         <MapView plan={plan} userCoords={userCoords} onPickMapLocation={onPickMapLocation} />
       </APIProvider>
     </div>

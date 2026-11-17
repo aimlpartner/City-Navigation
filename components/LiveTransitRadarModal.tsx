@@ -10,6 +10,7 @@ import {
   LiveBusArrival,
   TransitServiceAlert
 } from '@/lib/realtime-transit';
+import { apiFetch } from '@/lib/api-client';
 import {
   TrainFront,
   BusFront,
@@ -86,7 +87,7 @@ export function LiveTransitRadarModal({
   const fetchLiveAiAdvisory = async () => {
     setIsLoadingAiSummary(true);
     try {
-      const res = await fetch('/api/realtime-transit', {
+      const res = await apiFetch('/api/realtime-transit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

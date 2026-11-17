@@ -10,6 +10,7 @@ import { TrainFront, Radar, Download } from 'lucide-react';
 import { triggerPwaInstall } from './PwaInstallPrompt';
 import { LiquidGlass } from './ui/liquid-glass';
 import { useIsAppInstalled } from '@/hooks/useIsAppInstalled';
+import type { StageNavigationState } from '@/hooks/useStageNavigationNotifier';
 
 const TABS: MobileTab[] = ['go', 'map', 'guide'];
 
@@ -52,9 +53,11 @@ interface MobileAppShellProps {
   onDetectLocation: () => void;
   onSelectOrigin: (name: string, coords: { lat: number; lng: number }) => void;
   onSelectDestination: (dest: any) => void;
+  onSwapLocations?: () => void;
   onPickMapLocation?: (role: 'origin' | 'destination', name: string, coords: { lat: number; lng: number }) => void;
   onOpenTransitRadar?: () => void;
   onRequestAiRefresh?: () => void;
+  stageNav?: StageNavigationState;
 }
 
 export function MobileAppShell({
@@ -79,9 +82,11 @@ export function MobileAppShell({
   onDetectLocation,
   onSelectOrigin,
   onSelectDestination,
+  onSwapLocations,
   onPickMapLocation,
   onOpenTransitRadar,
   onRequestAiRefresh,
+  stageNav,
 }: MobileAppShellProps) {
   const isAppInstalled = useIsAppInstalled();
   const [activeTab, setActiveTab] = useState<MobileTab>('go');
@@ -128,6 +133,12 @@ export function MobileAppShell({
       trackRef.current.style.transform = `translate3d(${-targetIndex * 100}%, 0, 0)`;
     }
   }, []);
+
+  useEffect(() => {
+    const onNotifTap = () => handleTabChange('go');
+    window.addEventListener('metronav:stage-notification-tap', onNotifTap);
+    return () => window.removeEventListener('metronav:stage-notification-tap', onNotifTap);
+  }, [handleTabChange]);
 
   // Sync track position with activeIndex whenever activeTab changes
   useEffect(() => {
@@ -428,8 +439,10 @@ export function MobileAppShell({
               onDetectLocation={onDetectLocation}
               onSelectOrigin={onSelectOrigin}
               onSelectDestination={onSelectDestination}
+              onSwapLocations={onSwapLocations}
               onSwitchToMap={() => handleTabChange('map')}
               onOpenTransitRadar={onOpenTransitRadar}
+              stageNav={stageNav}
             />
           </div>
 

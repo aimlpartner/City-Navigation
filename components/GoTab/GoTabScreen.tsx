@@ -1,14 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MultiModalTripPlan, FamousDestination, RideMode, TravelModeChoice } from '@/lib/delhi-ncr-transit';
-import { LocationPicker } from './LocationPicker';
-import { DestinationPicker } from './DestinationPicker';
+import { UberRidePlanner } from './UberRidePlanner';
 import { RouteResult } from './RouteResult';
-import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, Navigation, Route, Check, ChevronRight } from 'lucide-react';
+import { Navigation, Route, ChevronRight } from 'lucide-react';
 import { LiquidGlass } from '@/components/ui/liquid-glass';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import type { StageNavigationState } from '@/hooks/useStageNavigationNotifier';
 
 interface GoTabScreenProps {
   originName: string;
@@ -49,15 +48,16 @@ interface GoTabScreenProps {
   onDetectLocation: () => void;
   onSelectOrigin: (name: string, coords: { lat: number; lng: number }) => void;
   onSelectDestination: (dest: any) => void;
+  onSwapLocations?: () => void;
   onSwitchToMap: () => void;
   onOpenTransitRadar?: () => void;
+  stageNav?: StageNavigationState;
 }
 
 export function GoTabScreen({
   originName,
   originCoords,
   detectedLocation,
-  locationError,
   selectedDestination,
   customDestCoords,
   tripPlan,
@@ -75,27 +75,39 @@ export function GoTabScreen({
   onDetectLocation,
   onSelectOrigin,
   onSelectDestination,
+  onSwapLocations,
   onSwitchToMap,
   onOpenTransitRadar,
+  stageNav,
 }: GoTabScreenProps) {
-  // Always start from the first step ('origin') - do not jump to the last step
-  const [currentStep, setCurrentStep] = useState<'origin' | 'destination' | 'route'>('origin');
+  const [currentStep, setCurrentStep] = useState<'plan' | 'route'>('plan');
 
-  const handlePickOrigin = (name: string, coords: { lat: number; lng: number }) => {
-    onSelectOrigin(name, coords);
-    // After picking origin (step 1), always advance to step 2 (destination), never jump directly to route
-    setCurrentStep('destination');
-  };
+  useEffect(() => {
+    const onNotifTap = () => {
+      if (tripPlan) setCurrentStep('route');
+    };
+    window.addEventListener('metronav:stage-notification-tap', onNotifTap);
+    return () => window.removeEventListener('metronav:stage-notification-tap', onNotifTap);
+  }, [tripPlan]);
+
+  const destinationName = selectedDestination
+    ? selectedDestination.name
+    : customDestCoords?.name || '';
+
+  const destinationCoords = selectedDestination
+    ? { lat: selectedDestination.lat, lng: selectedDestination.lng }
+    : customDestCoords
+    ? { lat: customDestCoords.lat, lng: customDestCoords.lng }
+    : undefined;
 
   const handlePickDestination = (dest: any) => {
     onSelectDestination(dest);
-    // After picking destination (step 2), advance to step 3 (route)
     setCurrentStep('route');
   };
 
   return (
     <div className="w-full max-w-md mx-auto h-full relative overflow-hidden flex flex-col">
-      {/* Floating Fixed Liquid Glass Step Wizard Indicator Header */}
+      {/* Top Floating Bar */}
       <div className="absolute top-0 inset-x-0 z-50 px-3 pt-2 pb-2 pointer-events-none">
         <div className="pointer-events-auto flex items-center gap-2">
           <div className="flex-1 min-w-0">
@@ -109,39 +121,21 @@ export function GoTabScreen({
               className="w-full rounded-full p-1 border border-white/70 dark:border-white/15 shadow-[0_16px_36px_-6px_rgba(20,52,40,0.18)] dark:shadow-[0_16px_36px_-6px_rgba(0,0,0,0.6)]"
               contentClassName="flex items-center justify-between gap-1 w-full"
             >
-              {/* Step 1: Start */}
               <button
                 type="button"
-                onClick={() => setCurrentStep('origin')}
+                onClick={() => setCurrentStep('plan')}
                 className={`chip-tactile relative z-10 flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                  currentStep === 'origin'
-                    ? 'bg-[#143428] dark:bg-emerald-500 text-white dark:text-[#061C12] shadow-xs'
-                    : 'text-[#1F2C24] dark:text-[#D1DDD6] hover:bg-white/40 dark:hover:bg-white/10'
-                }`}
-              >
-                <MapPin className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">1. Start</span>
-              </button>
-
-              <ChevronRight className="w-3.5 h-3.5 text-[#143428]/30 dark:text-emerald-400/40 shrink-0 relative z-10" />
-
-              {/* Step 2: Destination */}
-              <button
-                type="button"
-                onClick={() => setCurrentStep('destination')}
-                className={`chip-tactile relative z-10 flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                  currentStep === 'destination'
+                  currentStep === 'plan'
                     ? 'bg-[#143428] dark:bg-emerald-500 text-white dark:text-[#061C12] shadow-xs'
                     : 'text-[#1F2C24] dark:text-[#D1DDD6] hover:bg-white/40 dark:hover:bg-white/10'
                 }`}
               >
                 <Navigation className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">2. Where to</span>
+                <span className="truncate">1. Plan Ride</span>
               </button>
 
               <ChevronRight className="w-3.5 h-3.5 text-[#143428]/30 dark:text-emerald-400/40 shrink-0 relative z-10" />
 
-              {/* Step 3: Route */}
               <button
                 type="button"
                 onClick={() => {
@@ -157,7 +151,7 @@ export function GoTabScreen({
                 }`}
               >
                 <Route className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">3. Route</span>
+                <span className="truncate">2. Route</span>
               </button>
             </LiquidGlass>
           </div>
@@ -165,55 +159,28 @@ export function GoTabScreen({
         </div>
       </div>
 
-      {/* Scrollable Wizard Content Screens - scrolls smoothly UNDER the liquid glass bar */}
-      <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain px-4 pt-16 pb-28 sm:pb-32 no-scrollbar">
-      <AnimatePresence mode="wait">
-        {currentStep === 'origin' && (
-          <motion.div
-            key="origin-step"
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 10 }}
-            transition={{ duration: 0.18 }}
-          >
-            <LocationPicker
-              currentOriginName={originName}
-              isDetectingLocation={isDetectingLocation}
-              locationError={locationError}
-              detectedLocation={detectedLocation}
-              onDetectLocation={onDetectLocation}
-              onSelectOrigin={handlePickOrigin}
-              onProceedToDestination={() => setCurrentStep('destination')}
-            />
-          </motion.div>
-        )}
-
-        {currentStep === 'destination' && (
-          <motion.div
-            key="destination-step"
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
-            transition={{ duration: 0.18 }}
-          >
-            <DestinationPicker
-              currentDestination={selectedDestination}
-              customDestination={customDestCoords}
-              originName={originName}
-              onSelectDestination={handlePickDestination}
-              onBackToOrigin={() => setCurrentStep('origin')}
-            />
-          </motion.div>
-        )}
-
-        {currentStep === 'route' && tripPlan && (
-          <motion.div
-            key="route-step"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.18 }}
-          >
+      {currentStep === 'plan' ? (
+        <div className="flex-1 min-h-0 flex flex-col px-4 pt-16 overflow-hidden">
+          <UberRidePlanner
+            originName={originName}
+            originCoords={originCoords}
+            destinationName={destinationName}
+            destinationCoords={destinationCoords}
+            hasActiveDestination={Boolean(tripPlan)}
+            passengerCount={passengerCount}
+            onPassengerCountChange={onPassengerCountChange}
+            isDetectingLocation={isDetectingLocation}
+            detectedLocation={detectedLocation}
+            onDetectLocation={onDetectLocation}
+            onSelectOrigin={onSelectOrigin}
+            onSelectDestination={handlePickDestination}
+            onSwapLocations={() => onSwapLocations?.()}
+            onViewRoute={tripPlan ? () => setCurrentStep('route') : undefined}
+          />
+        </div>
+      ) : (
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain px-4 pt-16 pb-28 sm:pb-32 no-scrollbar">
+          {tripPlan && (
             <RouteResult
               plan={tripPlan}
               travelMode={travelMode}
@@ -227,13 +194,13 @@ export function GoTabScreen({
               deepLinks={deepLinks}
               aiGuide={aiGuide}
               onSwitchToMap={onSwitchToMap}
-              onChangeDestination={() => setCurrentStep('destination')}
+              onChangeDestination={() => setCurrentStep('plan')}
               onOpenTransitRadar={onOpenTransitRadar}
+              stageNav={stageNav}
             />
-          </motion.div>
-        )}
-      </AnimatePresence>
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

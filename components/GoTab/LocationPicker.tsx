@@ -24,6 +24,7 @@ import {
   MapPinned
 } from 'lucide-react';
 import { resolveFreeformLocation, resolvePlaceSuggestion } from '@/lib/utils';
+import { apiFetch } from '@/lib/api-client';
 
 export interface OriginOption {
   name: string;
@@ -192,7 +193,7 @@ export function LocationPicker({
     const timer = setTimeout(async () => {
       setIsSearchingPlaces(true);
       try {
-        const res = await fetch(`/api/places?q=${encodeURIComponent(q)}`);
+        const res = await apiFetch(`/api/places?q=${encodeURIComponent(q)}`);
         if (res.ok) {
           const data = await res.json();
           setPlacesResults(data.places || []);

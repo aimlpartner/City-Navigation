@@ -42,6 +42,8 @@ import { MetroTicketModal } from './MetroTicketModal';
 import { ActiveTicketPassModal } from './ActiveTicketPassModal';
 import { useActiveMetroTicket } from '@/hooks/useActiveMetroTicket';
 import { calculateTicketPricing, getDmrcWhatsAppUrl, MetroTicket } from '@/lib/metro-ticketing';
+import { LiveStageAlertBanner } from '@/components/LiveStageAlertBanner';
+import type { StageNavigationState } from '@/hooks/useStageNavigationNotifier';
 
 interface RouteResultProps {
   plan: MultiModalTripPlan;
@@ -69,6 +71,7 @@ interface RouteResultProps {
   onSwitchToMap: () => void;
   onChangeDestination: () => void;
   onOpenTransitRadar?: () => void;
+  stageNav?: StageNavigationState;
 }
 
 export function RouteResult({
@@ -86,9 +89,11 @@ export function RouteResult({
   onSwitchToMap,
   onChangeDestination,
   onOpenTransitRadar,
+  stageNav,
 }: RouteResultProps) {
   const [copiedText, setCopiedText] = useState(false);
   const [isFareBreakdownOpen, setIsFareBreakdownOpen] = useState(true);
+  const [isPlatformBoardOpen, setIsPlatformBoardOpen] = useState(false);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [isActivePassModalOpen, setIsActivePassModalOpen] = useState(false);
   const { activeTicket, markUsed } = useActiveMetroTicket();
@@ -420,18 +425,18 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
         <>
       <div className="p-3 sm:p-3.5 rounded-[20px] bg-white dark:bg-[#0D1813] border border-[#E2E4DC] dark:border-white/10 shadow-xs flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="w-8 h-8 rounded-[10px] bg-[#143428]/10 text-[#143428] flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-[10px] bg-[#143428]/10 dark:bg-emerald-500/20 text-[#143428] dark:text-[#5ee9b5] flex items-center justify-center shrink-0">
             <Users className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <div className="text-xs font-black text-[#17201B] truncate">Passengers / Commuters</div>
-            <div className="text-[10px] text-[#6B7267] truncate">
+            <div className="text-xs font-black text-[#17201B] dark:text-white truncate">Passengers / Commuters</div>
+            <div className="text-[10px] text-[#6B7267] dark:text-[#9AA59D] truncate">
               Metro tickets multiply; cabs/autos are shared
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-1 bg-[#F4F5F0] p-1 rounded-full shrink-0">
+        <div className="flex items-center gap-1 bg-[#F4F5F0] dark:bg-white/10 p-1 rounded-full shrink-0">
           {[1, 2, 3, 4].map((num) => (
             <button
               key={num}
@@ -439,8 +444,8 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
               onClick={() => handlePaxChange(num)}
               className={`chip-tactile px-3 py-1 rounded-full text-xs font-black cursor-pointer ${
                 pax === num
-                  ? 'bg-[#143428] text-white shadow-xs'
-                  : 'text-[#53584E] hover:text-[#17201B] hover:bg-white/60'
+                  ? 'bg-[#143428] dark:bg-emerald-500 text-white dark:text-[#061C12] shadow-xs'
+                  : 'text-[#53584E] dark:text-[#A7B2A8] hover:text-[#17201B] dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/10'
               }`}
             >
               {num} {num === 1 ? 'pax' : 'pax'}
@@ -604,6 +609,9 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
         </a>
       </div>
 
+      {/* Live Stage Notifications Banner (Google Maps Style) */}
+      <LiveStageAlertBanner stageNav={stageNav} compact />
+
       {isDirectRoadMode ? (
         <div className="space-y-3.5">
           {activeTravelMode === 'driving' && (
@@ -738,12 +746,6 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
               ))}
             </div>
           </div>
-
-          <LiveStationDepartures
-            stationId={plan.originStation.id}
-            stationName={plan.originStation.name}
-            lineColor={plan.originStation.lineColor}
-          />
         </div>
       ) : (
         <>
@@ -1012,15 +1014,6 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
             </p>
           </div>
         )}
-
-        {/* Live Platform Departures Board */}
-        <div className="pt-2 border-t border-[#F0F2EB] dark:border-white/10">
-          <LiveStationDepartures
-            stationId={plan.originStation.id}
-            stationName={plan.originStation.name}
-            lineColor={plan.originStation.lineColor}
-          />
-        </div>
       </div>
 
       {/* STAGE 3: Crucial Exit Gate (High Priority Highlight) */}
@@ -1200,6 +1193,47 @@ ${plan.metroLeg.requiresTransfer ? `   Interchange at ${plan.metroLeg.transferSt
 
       {/* Bottom Switch Destination Button */}
       </>
+      )}
+
+      {!isDirectRoadMode && (
+        <div className="rounded-2xl bg-white dark:bg-[#0D1813] border border-[#E2E4DC] dark:border-white/10 shadow-xs overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setIsPlatformBoardOpen((prev) => !prev)}
+            className="w-full px-4 py-3.5 flex items-center justify-between gap-2.5 text-left hover:bg-[#F8F9F5] dark:hover:bg-white/5 transition cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span
+                className="w-7 h-7 rounded-lg text-white flex items-center justify-center shrink-0"
+                style={{ backgroundColor: plan.originStation.lineColor }}
+              >
+                <TrainFront className="w-3.5 h-3.5" />
+              </span>
+              <div className="min-w-0">
+                <div className="text-xs font-extrabold text-[#17201B] dark:text-white truncate">
+                  Live Train Timings • {plan.originStation.name}
+                </div>
+                <div className="text-[10px] text-[#6B7267] dark:text-[#9AA59D] truncate">
+                  Optional platform departures &amp; feeder info
+                </div>
+              </div>
+            </div>
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#143428] dark:text-[#5ee9b5] shrink-0">
+              <span>{isPlatformBoardOpen ? 'Hide' : 'View'}</span>
+              {isPlatformBoardOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </span>
+          </button>
+
+          {isPlatformBoardOpen && (
+            <div className="p-3 pt-0 border-t border-[#E2E4DC] dark:border-white/10">
+              <LiveStationDepartures
+                stationId={plan.originStation.id}
+                stationName={plan.originStation.name}
+                lineColor={plan.originStation.lineColor}
+              />
+            </div>
+          )}
+        </div>
       )}
 
       <div className="pt-2">
